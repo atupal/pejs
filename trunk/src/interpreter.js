@@ -36,8 +36,9 @@ function Stack() {
     this.push(array[sp]);
   }
 }
-
 var stack = new Stack();
+
+var varTable = new Array(); 
 
 function interpret(progName) {
   var prog = eval(progName); 
@@ -272,7 +273,8 @@ function interpret(progName) {
           throw "BUILD_CLASS is not implemented yet!";
           break;
       case 90: //STORE_NAME ------------------ HAVE_ARGUMENT ------------------
-          throw "STORE_NAME is not implemented yet!";
+          //Only works for type GLOBAL VARIABLE
+          varTable[prog[i][1]] = stack.pop();
           break;
       case 91: //DELETE_NAME
           throw "DELETE_NAME is not implemented yet!";
@@ -299,10 +301,12 @@ function interpret(progName) {
           throw "DUP_TOPX is not implemented yet!";
           break;
       case 100: //LOAD_CONST
+          //Only works for type GLOBAL VARIABLE
           stack.push(constPool[prog[i][1]]);
           break;
       case 101: //LOAD_NAME
-          throw "LOAD_NAME is not implemented yet!";
+          //Only works for type GLOBAL VARIABLE
+          stack.push(varTable[prog[i][1]]);
           break;
       case 102: //BUILD_TUPLE
           throw "BUILD_TUPLE is not implemented yet!";
