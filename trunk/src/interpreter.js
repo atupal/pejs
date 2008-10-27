@@ -299,7 +299,6 @@ function interpret(progName) {
           throw "DUP_TOPX is not implemented yet!";
           break;
       case 100: //LOAD_CONST
-          throw "LOAD_CONST is not implemented yet!";
           stack.push(constPool[prog[i][1]]);
           break;
       case 101: //LOAD_NAME
