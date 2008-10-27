@@ -161,7 +161,7 @@ def js_file_print_trimmed(instructions, filename):
                 
   file.write("var "+ filename +"Names = new Array();\n")
   for i in range(0, len(co_names)):
-    file.write("  "+ filename +"Names["+str(i)+"] = "+ co_names[i] +";\n")
+    file.write("  "+ filename +"Names["+str(i)+"] = \""+ co_names[i] +"\";\n")
 
   file.write("\nvar "+ filename +"Const = new Array();\n")
   for i in range(0, len(co_const)):
