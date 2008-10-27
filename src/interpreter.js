@@ -16,7 +16,9 @@ var stack = new Stack();
 
 function interpret(progName) {
   var prog = eval(progName); 
-  var constPool = eval(progName+"Const"); 
+  var constPool = eval(progName+"Const");
+  var symbolTable = [];
+  
   for (i in prog) {
     switch(prog[i][0]) {
       case 71: //PRINT_ITEM
@@ -27,7 +29,7 @@ function interpret(progName) {
           break;
       case 83: //RETURN_VALUE
           break;
-      case 90: //HAVE_ARGUMENTS
+      case 90: //STORE_NAME
           break;
       case 100: //LOAD_CONST
           stack.push(constPool[prog[i][1]]);
