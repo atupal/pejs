@@ -5,16 +5,17 @@
 # instruction, the array is named the same as the python
 # file.
 # An instruction consists of an array with the following:
-# [0] Offset
-# [1] Opcode Value
-# [2] Opcode Name
-# [3] Argument
-# [4] Argument Type
-# [5] Argument Value
+# [0] Opcode
+# [1] Argument
+# [2] Argument Type
+# [3] Argument Value
+# [4] Opcode name
+# [5] Offset
 
 import sys, py_compile, marshal, opcode, os
 
-constpool = []
+co_const = []
+co_names = []
 
 # Handle tedious input details
 def main():
@@ -47,6 +48,8 @@ def decompile(filename):
   moddate = f.read(4) #Read modification date
   code_object = marshal.load(f) #Read the code
   code = code_object.co_code
+  global co_names
+  co_names = code_object.co_names
   variables = code_object.co_cellvars + code_object.co_freevars
   instructions = []
   n = len(code)
@@ -91,8 +94,8 @@ def decompile(filename):
     
     instructions.append( (i_offset, i_opcode, opcode.opname[i_opcode],\
                           i_argument, i_arg_type, i_arg_value) )
-  global constpool                        
-  constpool = code_object.co_consts
+  global co_const                        
+  co_const = code_object.co_consts
   return instructions
 
 # Pretty print the instructions
@@ -144,25 +147,38 @@ def js_file_print(instructions, filename):
   
 # Print js info to file from instructions
 def js_file_print_trimmed(instructions, filename):
-  global constpool
+  global co_const
+  global co_names
   
   file = open(filename + ".js", 'w')
-  file.write("var "+ filename +"Const = new Array();\n")
-  for i in range(0, len(constpool)):
-    if type(constpool[i]) == type(""):
-      file.write("  "+filename +"Const["+str(i)+"] = \""+constpool[i].replace("\"","\\\"")+"\"\n")
-    elif type(constpool[i]) == type(42):
-      file.write("  "+filename +"Const["+str(i)+"] = "+str(constpool[i])+"\n")
-    elif type(constpool[i]) == type(None):
-      file.write("  "+filename +"Const["+str(i)+"] = \""+str(constpool[i])+"\"\n")
+  
+  file.write("/*\n[0] Opcode\n"+ 
+                "[1] Argument   (optional)\n"+
+                "[2] Arg Type   (optional)\n"+
+                "[3] Arg Value  (optional)\n"+
+                "[4] Opcode name\n"+
+                "[5] Offset\n */\n")
+                
+  file.write("var "+ filename +"Names = new Array();\n")
+  for i in range(0, len(co_names)):
+    file.write("  "+ filename +"Names["+str(i)+"] = "+ co_names[i] +";\n")
+
+  file.write("\nvar "+ filename +"Const = new Array();\n")
+  for i in range(0, len(co_const)):
+    if type(co_const[i]) == type(""):
+      file.write("  "+filename +"Const["+str(i)+"] = \""+co_const[i].replace("\"","\\\"")+"\"\n")
+    elif type(co_const[i]) == type(42):
+      file.write("  "+filename +"Const["+str(i)+"] = "+str(co_const[i])+"\n")
+    elif type(co_const[i]) == type(None):
+      file.write("  "+filename +"Const["+str(i)+"] = \""+str(co_const[i])+"\"\n")
     else:
-      file.write("  "+filename +"Const["+str(i)+"] = undefined //"+str(constpool[i])+"\n")
-  file.write("\nvar "+ filename +" = new Array();\n")
+      file.write("  "+filename +"Const["+str(i)+"] = undefined //"+str(co_const[i])+"\n")
+  file.write("\nvar "+ filename +" = new Array();")
   i = 0
   for (offset, op, name, argument, argtype, argvalue) in instructions:
     file.write("\nvar temp = new Array();\n")
     file.write("  temp[0] = "+ str(op) +";\n")            # Opcode value
-    if (op > opcode.HAVE_ARGUMENT):
+    if (op >= opcode.HAVE_ARGUMENT):
       file.write("  temp[1] = "+ str(argument) +";\n")  # Argument
       file.write("  temp[2] = \""+ str(argtype) +"\";\n")   # Argument Type
       if type(argvalue) == type("v8 sucks!"):
