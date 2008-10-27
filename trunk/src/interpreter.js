@@ -89,7 +89,8 @@ function interpret(progName) {
           stack.push(Math.pow(stack.pop(), temp));
           break;
       case 20: //BINARY_MULTIPLY
-          stack.push(stack.pop() * stack.pop());
+          var temp = stack.pop();
+          stack.push(stack.pop() * temp);
           break;
       case 21: //BINARY_DIVIDE
           var temp = stack.pop();
@@ -101,11 +102,11 @@ function interpret(progName) {
           stack.push(stack.pop() % temp);
           break;
       case 23: //BINARY_ADD
-          stack.push(stack.pop() + stack.pop());
+          var temp = stack.pop();
+          stack.push(stack.pop() + temp);
           break;
       case 24: //BINARY_SUBTRACT
-          var temp = stack.pop();
-          stack.push(stack.pop() - temp);
+          throw "BINARY_SUBTRACT is not implemented yet!";
           break;
       case 25: //BINARY_SUBSCR
           var temp = stack.pop();
@@ -160,14 +161,16 @@ function interpret(progName) {
           throw "DELETE_SLICE+3 is not implemented yet!";
           break;
       case 55: //INPLACE_ADD
-          stack.push(stack.pop() + stack.pop());
+          var temp = stack.pop();
+          stack.push(stack.pop() + temp);
           break;
       case 56: //INPLACE_SUBTRACT
           var temp = stack.pop();
           stack.push(stack.pop() - temp);
           break;
       case 57: //INPLACE_MULTIPLY
-          stack.push(stack.pop() * stack.pop());
+          var temp = stack.pop();
+          stack.push(stack.pop() * temp);
           break;
       case 58: //INPLACE_DIVIDE
           throw "INPLACE_DIVIDE is not implemented yet!";
