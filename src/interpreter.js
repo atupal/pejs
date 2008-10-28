@@ -43,7 +43,7 @@ var varTable = new Array();
 function interpret(progName) {
   var prog = eval(progName); 
   var constPool = eval(progName+"Const");
-  var symbolTable = [];
+  var symbolTable = eval(progName+"Names");
 
   for (i in prog) {
     switch(prog[i][0]) {

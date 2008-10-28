@@ -19,7 +19,7 @@ var benchmarkConst = new Array();
   benchmarkConst[1] = "prut"
 
 var benchmark = [
-   [100,0,"CONSTANT","<code object test at 0xb7f56a60, file \"benchmark.py\", line 4>","LOAD_CONST","0"],
+   [100,0,"CONSTANT","<code object test at 0x9bdade8, file \"benchmark.py\", line 4>","LOAD_CONST","0"],
    [132,0,"OTHER","0","MAKE_FUNCTION","3"],
    [90,0,"GLOBAL VARIABLE","test","STORE_NAME","6"],
    [101,0,"GLOBAL VARIABLE","test","LOAD_NAME","9"],
