@@ -6,19 +6,20 @@
 # file.
 # An instruction consists of an array with the following:
 # [0] Opcode
-# [1] Argument
-# [2] Argument Type
-# [3] Argument Value
+# [1] Argument        (Optional)
+# [2] Argument Type   (Optional)
+# [3] Argument Value  (Optional)
 # [4] Opcode name
 # [5] Offset
 
 import sys, py_compile, marshal, opcode, os
 
+# Global variables.
 co_const = []
 co_names = []
 code_object = None
 
-# Handle tedious input details
+# Handle tedious input details.
 def main():
   if len(sys.argv) < 2:
     print "Usage:\n ./pejs.py [pythonfile.{py|pyc}]"
@@ -44,13 +45,14 @@ def main():
     else:
       print "File \"%s\" doesnt exist" % (filename)
 
-# Create a python array from .pyc file
+# Create a codeobject from pyc file.
 def get_code_object(filename):
   f = open(filename, "rb")
-  magic = f.read(4) #Read magic number
-  moddate = f.read(4) #Read modification date
+  magic = f.read(4)      #Read magic number
+  moddate = f.read(4)    #Read modification date
   return marshal.load(f) #Read the code
 
+# Create python array containing instructions.
 def decompile(code_object):
   code = code_object.co_code
   global co_names
@@ -96,14 +98,13 @@ def decompile(code_object):
       i_argument = None
       i_arg_value = None
       i_arg_type = None
-   
     instructions.append( (i_offset, i_opcode, opcode.opname[i_opcode],\
                           i_argument, i_arg_type, i_arg_value) )
-  global co_const                        
+  global co_const
   co_const = code_object.co_consts
   return instructions
 
-# Pretty print the instructions
+# Pretty print the instructions.
 def pretty_print(instructions):
   print '%5s %-20s %3s  %5s  %-20s  %s' % \
     ('OFFSET', 'INSTRUCTION', 'OPCODE', 'ARG', 'TYPE', 'VALUE')
@@ -113,7 +114,7 @@ def pretty_print(instructions):
       print '%5d  %-20s  (%s)' % (argument, argtype, argvalue),
     print 
 
-# Print js info to stdout from instructions
+# Print js info to stdout from instructions.
 def js_print(instructions, filename):
   print "var %s = new Array();" % (filename)
   i = 0
@@ -130,7 +131,7 @@ def js_print(instructions, filename):
     print "  %s[%d] = temp;" % (filename, i)
     i = i + 1
 
-# Print js info to file from instructions
+# Print js info to file from instructions.
 def js_file_print(instructions, filename):
   file = open(filename + ".js", 'w')
   file.write("var "+ filename +" = new Array();\n")
@@ -149,8 +150,10 @@ def js_file_print(instructions, filename):
     i = i + 1
   file.close()
   print "%s.js created" % (filename)
-  
-# Print js info to file from instructions
+
+# Print js info to file from instructions.
+# Output in more efficient format compared to
+# js_file_print().
 def js_file_print_trimmed(instructions, filename):
   global co_const
   global co_names
@@ -167,7 +170,6 @@ def js_file_print_trimmed(instructions, filename):
   file.write("var "+ filename +"Names = new Array();\n")
   for i in range(0, len(co_names)):
     file.write("  "+ filename +"Names["+str(i)+"] = \""+ co_names[i] +"\";\n")
-
   file.write("\nvar "+ filename +"Const = new Array();\n")
   for i in range(0, len(co_const)):
     if type(co_const[i]) == type(""):
@@ -183,27 +185,28 @@ def js_file_print_trimmed(instructions, filename):
   file.write("\nvar "+ filename +" = ")
   file.write(print_nice(instructions))
   file.close()
-  print "%s.js created" % (filename)  
+  print "%s.js created" % (filename)
 
+# Helper method to create arraystring from instructions.
 def print_nice(instructions):
   result = "[\n"
   i = 0
   for (offset, op, name, argument, argtype, argvalue) in instructions:
-    result = result +"   ["+ str(op)            # Opcode value
+    result = result +"   ["+ str(op)              # Opcode value
     if (op >= opcode.HAVE_ARGUMENT):
-      result = result +","+ str(argument)  # Argument
-      result = result +",\""+ str(argtype) +"\""   # Argument Type
+      result = result +","+ str(argument)         # Argument
+      result = result +",\""+ str(argtype) +"\""  # Argument Type
       if type(argvalue) == type("v8 sucks!"):
         argvalue = argvalue.replace("\"","\\\"")
-      result = result +",\""+ str(argvalue) +"\""  # Argument Value
-    result = result +",\""+ str(name) +"\""      # Name
-    result = result +",\""+ str(offset) +"\"],\n"    # Offset
+      result = result +",\""+ str(argvalue) +"\"" # Argument Value
+    result = result +",\""+ str(name) +"\""       # Name
+    result = result +",\""+ str(offset) +"\"],\n" # Offset
     i = i + 1
   result = result[:len(result)-2] + "];"
   return result
 
 
-
+# Boolean file_exist test.
 def file_exists(filename):
   try:
     file = open(filename)
