@@ -1,14 +1,33 @@
+var compareOps = ['<', '<=', '==', '!=', '>', '>=', 'in', 'not in', 'is', 'is not', 'exception match', 'BAD'];
 
 function Stack() {
-  var array = new Array();
-  var sp = -1;
+  var array = [0,0];
+  var sp = 1;
+  var bp = 1;
 
   this.pop = function() {
     return array[sp--];
   }
 
+  this.newFrame = function() {
+    this.push(bp);
+    bp = sp;
+    this.rotate2();
+  }
+
+  this.removeFrame = function() {
+    var returnVal = array[sp];
+    sp = bp-1;
+    bp = array[sp];
+    array[sp] = returnVal;
+  }
+
   this.push = function(val) {
     array[++sp] = val;
+  }
+
+  this.peek = function(val) {
+    return array[bp + val];
   }
 
   this.rotate2 = function() {
@@ -35,16 +54,53 @@ function Stack() {
   this.duplicateTop = function() {
     this.push(array[sp]);
   }
+
+  this.printStack = function(desc) {
+    document.write("<br/><br/>--- stack: " + desc + " ---<br/>");
+    for (var i = array.length-1; i >= 0; i--) {
+      document.write(array[i]);
+      if (i == sp) document.write(" &lt;-- sp");
+      if (i == bp) document.write(" &lt;-- bp");
+      document.write("<br/>");
+    }
+    document.write("--- stack end ---<br/><br/>");
+  }
 }
+
 var stack = new Stack();
 
-var varTable = new Array(); 
+function FunctionObject(defaultArgc, codeObject) {
+  var defArgc = defaultArgc;
+  var codeObject = codeObject;
+  var defArgs = new Array();
+
+  this.getArgs = function() {
+    return defArgs;
+  }
+
+  this.addArg = function(index, val) {
+    defArgs[index] = val;
+  }
+
+  this.getArgc = function() {
+    return argc;
+  }
+
+  this.getArgs = function() {
+    return defArgs;
+  }
+
+  this.getCodeObject = function() {
+    return codeObject;
+  }
+} 
 
 function interpret(progName) {
-  var prog = eval(progName); 
-  var constPool = eval(progName+"Const");
-  var symbolTable = eval(progName+"Names");
+  execute(eval(progName));
+}
 
+function execute(code_object) {
+  var prog = code_object[0];
   for (i in prog) {
     switch(prog[i][0]) {
       case 0: //STOP_CODE
@@ -255,7 +311,7 @@ function interpret(progName) {
           throw "LOAD_LOCALS is not implemented yet!";
           break;
       case 83: //RETURN_VALUE
-          throw "RETURN_VALUE is not implemented yet!";
+          stack.removeFrame();
           break;
       case 84: //IMPORT_STAR
           throw "IMPORT_STAR is not implemented yet!";
@@ -277,7 +333,7 @@ function interpret(progName) {
           break;
       case 90: //STORE_NAME ------------------ HAVE_ARGUMENT ------------------
           //Only works for type GLOBAL VARIABLE
-          varTable[prog[i][1]] = stack.pop();
+          code_object[2][prog[i][1]] = stack.pop();
           break;
       case 91: //DELETE_NAME
           throw "DELETE_NAME is not implemented yet!";
@@ -305,11 +361,11 @@ function interpret(progName) {
           break;
       case 100: //LOAD_CONST
           //Only works for type GLOBAL VARIABLE
-          stack.push(constPool[prog[i][1]]);
+          stack.push(code_object[1][prog[i][1]]);
           break;
       case 101: //LOAD_NAME
           //Only works for type GLOBAL VARIABLE
-          stack.push(varTable[prog[i][1]]);
+          stack.push(code_object[2][prog[i][1]]);
           break;
       case 102: //BUILD_TUPLE
           throw "BUILD_TUPLE is not implemented yet!";
@@ -324,7 +380,8 @@ function interpret(progName) {
           throw "LOAD_ATTR is not implemented yet!";
           break;
       case 106: //COMPARE_OP
-          throw "COMPARE_OP is not implemented yet!";
+          var temp = stack.pop();
+          stack.push(eval(stack.pop() + compareOps[prog[i][1]] + temp));
           break;
       case 107: //IMPORT_NAME
           throw "IMPORT_NAME is not implemented yet!";
@@ -345,6 +402,7 @@ function interpret(progName) {
           throw "JUMP_ABSOLUTE is not implemented yet!";
           break;
       case 116: //LOAD_GLOBAL
+          stack.push()
           throw "LOAD_GLOBAL is not implemented yet!";
           break;
       case 119: //CONTINUE_LOOP
@@ -360,10 +418,10 @@ function interpret(progName) {
           throw "SETUP_FINALLY is not implemented yet!";
           break;
       case 124: //LOAD_FAST
-          throw "LOAD_FAST is not implemented yet!";
+          stack.push(stack.peek(0).getCodeObject()[2][prog[i][1]]);
           break;
       case 125: //STORE_FAST
-          throw "STORE_FAST is not implemented yet!";
+          stack.peek(0).getCodeObject()[2][prog[i][1]] = stack.pop();
           break;
       case 126: //DELETE_FAST
           throw "DELETE_FAST is not implemented yet!";
@@ -372,10 +430,22 @@ function interpret(progName) {
           throw "RAISE_VARARGS is not implemented yet!";
           break;
       case 131: //CALL_FUNCTION
-          throw "CALL_FUNCTION is not implemented yet!";
+          var localVars = new Array();
+          for (var j = prog[i][1]-1; j >= 0; j--){
+            localVars[j] = [stack.pop()];
+          }
+          //document.write(localVars);
+          stack.newFrame();
+          var codeObject = stack.peek(0).getCodeObject();
+          codeObject[2] = localVars;
+          execute(codeObject);
           break;
       case 132: //MAKE_FUNCTION
-          throw "MAKE_FUNCTION is not implemented yet!";
+          var functionObject = new FunctionObject(prog[i][1], stack.pop());
+          for (var j = prog[i][1]-1; j >= 0; j--){
+            functionObject.addArg(j, stack.pop());
+          }
+          stack.push(functionObject);
           break;
       case 133: //BUILD_SLICE
           throw "BUILD_SLICE is not implemented yet!";
@@ -403,6 +473,9 @@ function interpret(progName) {
           break;
       case 143: //EXTENDED_ARG
           throw "EXTENDED_ARG is not implemented yet!";
+          break;
+      default:
+          throw "Unexpected bytecode!";
           break;
     }
   }
