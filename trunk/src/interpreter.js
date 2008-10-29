@@ -402,7 +402,6 @@ function execute(code_object) {
           throw "JUMP_ABSOLUTE is not implemented yet!";
           break;
       case 116: //LOAD_GLOBAL
-          stack.push()
           throw "LOAD_GLOBAL is not implemented yet!";
           break;
       case 119: //CONTINUE_LOOP
