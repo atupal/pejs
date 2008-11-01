@@ -3,7 +3,7 @@
 #t1 = time.time()
 
 
-if "ost" == "cheese":
+if True:
   print "hat"
 
 #t2 = time.time()
