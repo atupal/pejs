@@ -1,30 +1,24 @@
 #!/usr/bin/python
 # Input a .py or .pyc file, and a js file with an array
-# containing the instructions will be created.
-# Each index in the array will correspond to a singe
-# instruction, the array is named the same as the python
-# file.
-# An instruction consists of an array with the following:
-# [0] Opcode
-# [1] Argument        (Optional)
-# [2] Argument Type   (Optional)
-# [3] Argument Value  (Optional)
-# [4] Opcode name
-# [5] Offset
-# ----
-# codeObject[0] = opcodes
+# containing the instructions, constants, local varialbles(initialy empty)
+# and symboltable will be created.
+# The array is named the same as the python file.
+# The array we call the code object has the following structure:
+# codeObject[0] = instructions
 # codeObject[1] = consts
 # codeObject[2] = localVars
 # codeObject[3] = symTable
-#
-# [ [ [opcode], [opcode] ] , ["a", "b"] , ["var1", "var2"] , ["var1", "var2"] ]
+# An instruction consists of an array with the following:
+# [0] Opcode
+# [1] Offset
+# [2] Argument        (Optional)
+# [3] Argument Type   (Optional)
+# [4] Argument Value  (Optional)
+# [5] Opcode name
+# Overall the structure of the code object is:
+# [ [[opcode]+] , [const*] , [] , [Symbols*] ]
 
 import sys, py_compile, marshal, opcode, os
-
-# Global variables.
-co_const = []
-co_names = []
-code_object = None
 
 # Handle tedious input details.
 def main():
@@ -47,8 +41,6 @@ def main():
         return
       global code_object
       code_object = get_code_object(filename)
-      #inst = decompile(code_object)
-      #js_file_print_trimmed(inst, filename[:len(filename) - 4])
       js_file_print(code_object, filename[:len(filename) - 4])
       print "%s.js created" % (filename[:len(filename) - 4])
     else:
@@ -64,8 +56,6 @@ def get_code_object(filename):
 # Create python array containing instructions.
 def decompile(code_object):
   code = code_object.co_code
-  global co_names
-  co_names = code_object.co_names
   variables = code_object.co_cellvars + code_object.co_freevars
   instructions = []
   n = len(code)
@@ -109,66 +99,22 @@ def decompile(code_object):
       i_arg_type = None
     instructions.append( (i_offset, i_opcode, opcode.opname[i_opcode],\
                           i_argument, i_arg_type, i_arg_value) )
-  global co_const
-  co_const = code_object.co_consts
   return instructions
 
-# Pretty print the instructions.
-#def pretty_print(instructions):
-#  print '%5s %-20s %3s  %5s  %-20s  %s' % \
-#    ('OFFSET', 'INSTRUCTION', 'OPCODE', 'ARG', 'TYPE', 'VALUE')
-#  for (offset, op, name, argument, argtype, argvalue) in instructions:
-#    print '%5d  %-20s (%3d)  ' % (offset, name, op),
-#    if argument != None:
-#      print '%5d  %-20s  (%s)' % (argument, argtype, argvalue),
-#    print 
-
-# Print js info to stdout from instructions.
-#def js_print(instructions, filename):
-#  print "var %s = new Array();" % (filename)
-#  i = 0
-  #for (offset, op, name, argument, argtype, argvalue) in instructions:
-    #print "\nvar temp = new Array();"
-    #print "  temp[0] = \"%s\";" % (offset)   # Offset
-    #print "  temp[1] = \"%s\";" % (op)       # Opcode value
-    #print "  temp[2] = \"%s\";" % (name)     # Name
-    #print "  temp[3] = \"%s\";" % (argument) # Argument
-    #print "  temp[4] = \"%s\";" % (argtype)  # Argument Type
-    #if type(argvalue) == type("v8 sucks!"):
-      #argvalue = argvalue.replace("\"","\\\"")
-    #print "  temp[5] = \"%s\";" % (argvalue) # Argument Value
-    #print "  %s[%d] = temp;" % (filename, i)
-    #i = i + 1
-
-# Print js info to file from instructions.
-#def js_file_print(instructions, filename):
-  #file = open(filename + ".js", 'w')
-  #file.write("var "+ filename +" = new Array();\n")
-  #i = 0
-  #for (offset, op, name, argument, argtype, argvalue) in instructions:
-    #file.write("\nvar temp = new Array();\n")
-    #file.write("  temp[0] = \""+ str(offset) +"\";\n")    # Offset
-    #file.write("  temp[1] = \""+ str(op) +"\";\n")        # Opcode value
-    #file.write("  temp[2] = \""+ str(name) +"\";\n")      # Name
-    #file.write("  temp[3] = \""+ str(argument) +"\";\n")  # Argument
-    #file.write("  temp[4] = \""+ str(argtype) +"\";\n")   # Argument Type
-    #if type(argvalue) == type("v8 sucks!"):
-      #argvalue = argvalue.replace("\"","\\\"")
-    #file.write("  temp[5] = \""+ str(argvalue) +"\";\n")  # Argument Value
-    #file.write("  "+ filename +"["+ str(i) +"] = temp;\n")
-    #i = i + 1
-  #file.close()
-  #print "%s.js created" % (filename)
-
+# Opens the js file for reading, calls the print methods and closes the file.
 def js_file_print(code_object, filename):
   file = open(filename + ".js", 'w')
+  file.write("// This file was automaticly created with pejs.py\n\n")
+  file.write("// The structure of the code object is:\n"+
+             "// [ [[opcode]+] , [const*] , [] , [Symbols*] ]\n\n")
   file.write("var "+filename+" =\n")
   file.write(print_code(code_object, "")+";")
   file.close()
 
+# Creates a string with the js code, calls the appropriete methods
+# to collect all the information.
 def print_code(code_object, indent):
   instructions = decompile(code_object)
-
   # codeObject[0] = opcodes
   # codeObject[1] = consts
   # codeObject[2] = localVars
@@ -181,6 +127,7 @@ def print_code(code_object, indent):
   result = result + indent + "]"
   return result
 
+# Helper for print_code, prints the symbol table.
 def print_names(names, indent):
   result = indent + "[ //Symbol table\n"
   i = 0
@@ -191,6 +138,7 @@ def print_names(names, indent):
     result = result[:len(result)-2]
   return result + "\n" + indent + "]\n"
 
+# Helper for print_code, prints the constants.
 def print_consts(consts, indent):
   result = indent + "[ //Constants\n"
   i = 0
@@ -210,94 +158,22 @@ def print_consts(consts, indent):
     result = result[:len(result) - 2]
   return result + "\n" + indent +"]"
 
-# Helper method to create arraystring from instructions.
+# Helper for print_code, prints the instructions.
 def print_instructions(instructions, indent):
   result = indent + "[ //Instructions\n"
   i = 0
   for (offset, op, name, argument, argtype, argvalue) in instructions:
-    result = result + indent +"  ["+ str(op)              # Opcode value
+    result = result + indent +"  ["+ str(op)        # Opcode value
+    result = result +","+ str(offset)               # Offset
     if (op >= opcode.HAVE_ARGUMENT):
-      result = result +","+ str(argument)         # Argument
-      result = result +",\""+ str(argtype) +"\""  # Argument Type
+      result = result +","+ str(argument)           # Argument
+      result = result +",\""+ str(argtype) +"\""    # Argument Type
       if type(argvalue) == type("v8 sucks!"):
         argvalue = argvalue.replace("\"","\\\"")
-      result = result +",\""+ str(argvalue) +"\"" # Argument Value
-    result = result +",\""+ str(name) +"\""       # Name
-    result = result +","+ str(offset) +"],\n" # Offset
+      result = result +",\""+ str(argvalue) +"\""   # Argument Value
+    result = result +",\""+ str(name) +"\""+ "],\n" # Name
     i = i + 1
   return result[:len(result)-2] + "\n" + indent + "]"
-
-# Print js info to file from instructions.
-# Output in more efficient format compared to
-# js_file_print().
-def js_file_print_trimmed(instructions, filename):
-  global co_const
-  global co_names
-  global code_object
-  
-  file = open(filename + ".js", 'w')
-  
-  file.write("/*\n[0] Opcode\n"+ 
-                "[1] Argument   (optional)\n"+
-                "[2] Arg Type   (optional)\n"+
-                "[3] Arg Value  (optional)\n"+
-                "[4] Opcode name\n"+
-                "[5] Offset\n */\n")
-  file.write("var "+ filename +"Names = new Array();\n")
-  i = 0
-  for (name) in co_names:
-    file.write("  "+ filename +"Names["+str(i)+"] = \""+ name +"\";\n")
-    i = i + 1
-  file.write("\nvar "+ filename +"Const = new Array();\n")
-  i = 0
-  for (const) in co_const:
-    if type(const) == type(""):
-      file.write("  "+filename +"Const["+str(i)+"] = \""+const.replace("\"","\\\"")+"\";\n")
-    elif type(const) == type(42):
-      file.write("  "+filename +"Const["+str(i)+"] = "+str(const)+";\n")
-    elif type(const) == type(None):
-      file.write("  "+filename +"Const["+str(i)+"] = \""+str(const)+"\";\n")
-    elif type(const) == type(code_object):
-      file.write("  "+filename +"Const["+str(i)+"] = ["+print_code_object(decompile(const))+";\n")
-    else:
-      file.write("  "+filename +"Const["+str(i)+"] = \"undefined\" //"+str(const)+";\n")
-    i = i + 1
-  file.write("\nvar "+ filename +" = ")
-  file.write(print_nice(instructions) + ";")
-  file.close()
-  print "%s.js created" % (filename)
-
-
-
-def print_code_object(code_object):
-  global co_const
-  global co_names
-  result = print_instructions(code_object)+", ["
-  
-  i = 0
-  for (name) in co_names:
-    result = result + "\""+name + "\", "
-    i = i + 1
-  if i > 0:
-    result = result[:len(result) - 2]
-  result = result + "], ["
-  i = 0
-  for (const) in co_const:
-    if type(const) == type(""):
-      result = result + "\""+ const.replace("\"","\\\"") + "\", "
-    elif type(const) == type(42):
-      result = result + str(const) + ", "
-    elif type(const) == type(None):
-      result = result + "\"" + str(const) + "\"" + ", "
-    elif type(const) == type(code_object):
-      result = result + print_code_object(decompile(const)) + ", "
-    else:
-      result = result + str(const) + ", "
-    i = i + 1
-  if i > 0:
-    result = result[:len(result) - 2]
-  result = result +"]]"
-  return result
 
 # Boolean file_exist test.
 def file_exists(filename):
