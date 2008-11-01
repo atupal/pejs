@@ -16,7 +16,7 @@
 # [4] Argument Value  (Optional)
 # [5] Opcode name
 # Overall the structure of the code object is:
-# [ [[opcode]+] , [const*] , [] , [Symbols*] ]
+# [ [[opcode]+], [const*], [], [Symbols*] ]
 
 import sys, py_compile, marshal, opcode, os
 
@@ -106,11 +106,18 @@ def js_file_print(code_object, filename):
   file = open(filename + ".js", 'w')
   file.write("// This file was automaticly created with pejs.py\n\n")
   file.write("// The structure of the code object is:\n"+
-             "// [ [[opcode]+] , [const*] , [] , [Symbols*] ]\n\n")
+             "// [ [[opcode]+], [const*], [], [Symbols*] ]\n\n")
+  file.write("// The structure of an instruction is:\n")
+  file.write("// [Opcode, Offset, (Arg, Arg Type, Arg Value,)? Opcode Name]\n\n")
   file.write("var "+filename+" =\n")
   file.write(print_code(code_object, "")+";")
   file.close()
-
+# [0] Opcode
+# [1] Offset
+# [2] Argument        (Optional)
+# [3] Argument Type   (Optional)
+# [4] Argument Value  (Optional)
+# [5] Opcode name
 # Creates a string with the js code, calls the appropriete methods
 # to collect all the information.
 def print_code(code_object, indent):
@@ -120,10 +127,10 @@ def print_code(code_object, indent):
   # codeObject[2] = localVars
   # codeObject[3] = symTable
   result = indent+"[ //Code object\n"
-  result = result + print_instructions(instructions, indent + "  ")+",\n" #code_object[0] = opcodes
-  result = result + print_consts(code_object.co_consts, indent + "  ")+",\n"  #consts
-  result = result + indent + "  " + "[], //Local vars\n"  #localVars
-  result = result + print_names(code_object.co_names, indent + "  ") #symTable
+  result = result + print_instructions(instructions, indent + "  ")+",\n"    #opcodes
+  result = result + print_consts(code_object.co_consts, indent + "  ")+",\n" #consts
+  result = result + indent + "  " + "[], //Local vars\n"                     #localVars
+  result = result + print_names(code_object.co_names, indent + "  ")         #symTable
   result = result + indent + "]"
   return result
 
