@@ -3,6 +3,9 @@
 // The structure of the code object is:
 // [ [[opcode]+] , [const*] , [] , [Symbols*] ]
 
+// The structure of an instruction is:
+// [Opcode, Offset, (Arg, Arg Type, Arg Value,)? Opcode Name]
+
 var benchmark =
 [ //Code object
   [ //Instructions
