@@ -130,7 +130,8 @@ def print_code(code_object, indent):
   result = result + print_instructions(instructions, indent + "  ")+",\n"    #opcodes
   result = result + print_consts(code_object.co_consts, indent + "  ")+",\n" #consts
   result = result + indent + "  " + "[], //Local vars\n"                     #localVars
-  result = result + print_names(code_object.co_names, indent + "  ")         #symTable
+  result = result + print_names(code_object.co_names, indent + "  ")+",\n"   #symTable
+  result = result + indent + "  \"" + code_object.co_name + "\"\n"
   result = result + indent + "]"
   return result
 
