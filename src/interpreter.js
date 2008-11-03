@@ -30,6 +30,10 @@ function Stack() {
     return array[bp + val];
   }
 
+  this.peekTop = function() {
+    return array[sp];
+  }
+
   this.rotate2 = function() {
     var temp = array[sp];
     array[sp] = array[sp-1];
@@ -95,14 +99,21 @@ function FunctionObject(defaultArgc, codeObject) {
   }
 } 
 
+var globalCodeObject;
+
 function interpret(progName) {
-  execute(eval(progName));
+  globalCodeObject = eval(progName);
+  execute(globalCodeObject);
 }
 
 function execute(code_object) {
+  var bytecode, offset, argument;
   var prog = code_object[0];
-  for (i in prog) {
-    switch(prog[i][0]) {
+  for (var i=0; i<prog.length; i++) {
+    bytecode = prog[i][0];
+    offset = prog[i][1];
+    argument = prog[i][2]; // Unknown contents if no argument
+    switch(bytecode) {
       case 0: //STOP_CODE
           break;
       case 1: //POP_TOP
@@ -308,7 +319,9 @@ function execute(code_object) {
           throw "BREAK_LOOP is not implemented yet!";
           break;
       case 82: //LOAD_LOCALS
-          throw "LOAD_LOCALS is not implemented yet!";
+          // Naive ??
+          stack.push(code_object[2]);
+          //throw "LOAD_LOCALS is not implemented yet!";
           break;
       case 83: //RETURN_VALUE
           stack.removeFrame();
@@ -329,11 +342,15 @@ function execute(code_object) {
           throw "END_FINALLY is not implemented yet!";
           break;
       case 89: //BUILD_CLASS
+          //Creates a new class object. TOS is the methods dictionary,
+          // TOS1 the tuple of the names of the base classes, and TOS2
+          // the class name.
+          stack.printStack("Before build");
           throw "BUILD_CLASS is not implemented yet!";
           break;
       case 90: //STORE_NAME ------------------ HAVE_ARGUMENT ------------------
           //Only works for type GLOBAL VARIABLE
-          code_object[2][prog[i][1]] = stack.pop();
+          code_object[2][argument] = stack.pop();
           break;
       case 91: //DELETE_NAME
           throw "DELETE_NAME is not implemented yet!";
@@ -361,14 +378,32 @@ function execute(code_object) {
           break;
       case 100: //LOAD_CONST
           //Only works for type GLOBAL VARIABLE
-          stack.push(code_object[1][prog[i][1]]);
+          stack.push(code_object[1][argument]);
           break;
       case 101: //LOAD_NAME
           //Only works for type GLOBAL VARIABLE
-          stack.push(code_object[2][prog[i][1]]);
+          var name = code_object[2][argument];
+          if (typeof(name) == "undefined") {
+            name = code_object[3][argument];
+            if (name == "True") {
+              name = true;
+            } else if (name == "False"){
+              name = false;
+            }
+          }
+          stack.push(name);
           break;
       case 102: //BUILD_TUPLE
-          throw "BUILD_TUPLE is not implemented yet!";
+          // Creates a tuple consuming count items from the stack,
+          // and pushes the resulting tuple onto the stack.
+          var tuple = [];
+          var j = argument - 1;
+          while(j >= 0){
+            tuple[j] = stack.pop();
+            j--;
+          }
+          stack.push(tuple);
+          stack.printStack("After Build tuple");
           break;
       case 103: //BUILD_LIST
           throw "BUILD_LIST is not implemented yet!";
@@ -381,7 +416,7 @@ function execute(code_object) {
           break;
       case 106: //COMPARE_OP
           var temp = stack.pop();
-          stack.push(eval(stack.pop() + compareOps[prog[i][1]] + temp));
+          stack.push(eval(stack.pop() + compareOps[argument] + temp));
           break;
       case 107: //IMPORT_NAME
           throw "IMPORT_NAME is not implemented yet!";
@@ -390,25 +425,85 @@ function execute(code_object) {
           throw "IMPORT_FROM is not implemented yet!";
           break;
       case 110: //JUMP_FORWARD
-          throw "JUMP_FORWARD is not implemented yet!";
+          // current_offset + jump + bytecode + argument
+          var targetOffset = offset + argument + 1 + 2;
+          var j = parseInt(i) + 1;
+          while(prog[j][1] != targetOffset) {
+            j = j + 1;
+          }
+          i = j - 1;
           break;
-      case 111: //JUMP_IF_FALSE
-          throw "JUMP_IF_FALSE is not implemented yet!";
+      case 111: //JUMP_IF_FALSE 
+          //If TOS is false, increment the byte code counter by delta.
+          //TOS is not changed.
+          //stack.printStack("before JUMP_IF_FALSE");
+          if(!stack.peekTop()) {
+            // current_offset + jump + bytecode + argument
+            var targetOffset = offset + argument + 1 + 2;
+            if (argument > 0) {
+              var j = parseInt(i);
+              while(prog[j][1] != targetOffset) {
+                j = j + 1;
+              }
+              i = j - 1;
+            } else {
+              var j = parseInt(i);
+              while(prog[j][1] != targetOffset) {
+                j = j - 1;
+              }
+              i = j - 1;
+            }
+          }
           break;
-      case 112: //JUMP_IF_FALSE
-          throw "JUMP_IF_FALSE is not implemented yet!";
+      case 112: //JUMP_IF_TRUE 
+          //If TOS is true, increment the byte code counter by delta.
+          //TOS is left on the stack
+          //stack.printStack("before JUMP_IF_TRUE");
+          if(stack.peekTop()) {
+            // current_offset + jump + bytecode + argument
+            var targetOffset = offset + argument + 1 + 2;
+            if (argument > 0) {
+              var j = parseInt(i);
+              while(prog[j][1] != targetOffset) {
+                j = j + 1;
+              }
+              i = j - 1;
+            } else {
+              var j = parseInt(i);
+              while(prog[j][1] != targetOffset) {
+                j = j - 1;
+              }
+              i = j - 1;
+            }
+          }
           break;
       case 113: //JUMP_ABSOLUTE
-          throw "JUMP_ABSOLUTE is not implemented yet!";
+          //Perhaps a bit naive
+          var j = 1;
+          while(prog[j][1] != argument) {
+            j = j + 1;
+          }
+          i = j - 1;
           break;
       case 116: //LOAD_GLOBAL
-          throw "LOAD_GLOBAL is not implemented yet!";
+          // Loads the global named co_names[namei] onto the stack.
+          if (code_object[3][argument] == "__name__") {
+            stack.push(code_object[4]);
+          } else {
+            throw "LOAD_GLOBAL is not implemented yet!";
+          }
           break;
       case 119: //CONTINUE_LOOP
           throw "CONTINUE_LOOP is not implemented yet!";
           break;
       case 120: //SETUP_LOOP
-          throw "SETUP_LOOP is not implemented yet!";
+          // Pushes a block for a loop onto the block stack.
+          // The block spans from the current instruction with
+          // a size of delta bytes.
+
+          // Implementation needed to support correct scoping rules.
+
+          //throw "SETUP_LOOP is not implemented yet!";
           break;
       case 121: //SETUP_EXCEPT
           throw "SETUP_EXCEPT is not implemented yet!";
@@ -417,10 +512,10 @@ function execute(code_object) {
           throw "SETUP_FINALLY is not implemented yet!";
           break;
       case 124: //LOAD_FAST
-          stack.push(stack.peek(0).getCodeObject()[2][prog[i][1]]);
+          stack.push(stack.peek(0).getCodeObject()[2][argument]);
           break;
       case 125: //STORE_FAST
-          stack.peek(0).getCodeObject()[2][prog[i][1]] = stack.pop();
+          stack.peek(0).getCodeObject()[2][argument] = stack.pop();
           break;
       case 126: //DELETE_FAST
           throw "DELETE_FAST is not implemented yet!";
@@ -430,18 +525,17 @@ function execute(code_object) {
           break;
       case 131: //CALL_FUNCTION
           var localVars = new Array();
-          for (var j = prog[i][1]-1; j >= 0; j--){
+          for (var j = argument-1; j >= 0; j--){
             localVars[j] = [stack.pop()];
           }
-          //document.write(localVars);
           stack.newFrame();
           var codeObject = stack.peek(0).getCodeObject();
           codeObject[2] = localVars;
           execute(codeObject);
           break;
       case 132: //MAKE_FUNCTION
-          var functionObject = new FunctionObject(prog[i][1], stack.pop());
-          for (var j = prog[i][1]-1; j >= 0; j--){
+          var functionObject = new FunctionObject(argument, stack.pop());
+          for (var j = argument-1; j >= 0; j--){
             functionObject.addArg(j, stack.pop());
           }
           stack.push(functionObject);
