@@ -1,0 +1,34 @@
+<html>
+ <head>
+  <title>Test Page for multiplyAndAddFive(value1, value2)</title>
+  <script type="text/javascript" src="jsunit/app/jsUnitCore.js"></script>
+  <script type="text/javascript" src="../src/interpreter.js"></script>
+ </head>
+ <body>
+  <script type="text/javascript">
+
+    document.write('<script type="text/javascript" src="two_plus_five.js"></scr'+'ipt>');
+    function testTwoPlusFive() {
+        assertEquals("print 2 + 5", "7\n", run("two_plus_five"));
+    }
+
+    document.write('<script type="text/javascript" src="variables.js"></scr'+'ipt>');
+    function testVariables() {
+        assertEquals("print four +\"\"+ two", "42\n", run("variables"));
+    }
+
+    document.write('<script type="text/javascript" src="functions.js"></scr'+'ipt>');
+    function testFunctions() {
+        assertEquals("print four() +\"\"+ two()", "42\n", run("functions"));
+    }
+
+    var printResult;
+    function run(progName) {
+      env = "JSUnit";
+      printResult = "";
+      interpret(progName);
+      return printResult;
+    }
+  </script>
+ </body>
+</html>
