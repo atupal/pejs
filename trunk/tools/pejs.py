@@ -20,6 +20,8 @@
 
 import sys, py_compile, marshal, opcode, os
 
+queue = []
+
 # Handle tedious input details.
 def main():
   if len(sys.argv) < 2:
@@ -104,13 +106,21 @@ def decompile(code_object):
 # Opens the js file for reading, calls the print methods and closes the file.
 def js_file_print(code_object, filename):
   file = open(filename + ".js", 'w')
-  file.write("// This file was automaticly created with pejs.py\n\n")
-  file.write("// The structure of the code object is:\n"+
-             "// [ [[opcode]+], [const*], [], [Symbols*] ]\n\n")
+  file.write("// This file was automatically created with pejs.py\n\n")
   file.write("// The structure of an instruction is:\n")
   file.write("// [Opcode, Offset, (Arg, Arg Type, Arg Value,)? Opcode Name]\n\n")
-  file.write("var "+filename+" =\n")
-  file.write(print_code(code_object, "")+";")
+  global queue
+  file.write("var "+filename+" = new Object();\n")
+  file.write(print_code(code_object, "", filename))
+  
+  while len(queue) > 0:
+    code_object = queue[0]
+    queue.remove(code_object)
+    varname = filename+"_"+code_object.co_name
+    file.write("var "+ varname + " = new Object();\n")
+    file.write(print_code(code_object, "", varname))
+  
+  
   file.close()
 # [0] Opcode
 # [1] Offset
@@ -120,51 +130,62 @@ def js_file_print(code_object, filename):
 # [5] Opcode name
 # Creates a string with the js code, calls the appropriete methods
 # to collect all the information.
-def print_code(code_object, indent):
+def print_code(code_object, indent, varname):
   instructions = decompile(code_object)
   # codeObject[0] = opcodes
   # codeObject[1] = consts
   # codeObject[2] = localVars
-  # codeObject[3] = symTable
-  result = indent+"[ //Code object\n"
-  result = result + print_instructions(instructions, indent + "  ")+",\n"    #opcodes
-  result = result + print_consts(code_object.co_consts, indent + "  ")+",\n" #consts
-  result = result + indent + "  " + "[], //Local vars\n"                     #localVars
-  result = result + print_names(code_object.co_names, indent + "  ")+",\n"   #symTable
-  result = result + indent + "  \"" + code_object.co_name + "\"\n"
-  result = result + indent + "]"
+  # codeObject[3] = symTable  
+  
+  result = "  " + varname + ".co_name = \"" + code_object.co_name + "\";\n"
+  result = result + "  " + varname + ".co_argcount = " + str(code_object.co_argcount) + ";\n"
+  result = result + "  " + varname + ".co_nlocals = " + str(code_object.co_nlocals) + ";\n"
+  result = result + "  " + varname + ".co_varnames = " + print_names(code_object.co_varnames, "") + ";\n"
+  result = result + "  " + varname + ".co_cellvars = " + print_names(code_object.co_cellvars, "") + ";\n"
+  result = result + "  " + varname + ".co_freevars = " + print_names(code_object.co_freevars, "") + ";\n"
+  result = result + "  " + varname + ".co_code = " + print_instructions(instructions, indent + "  ")+";\n"    #opcodes
+  result = result + "  " + varname + ".co_consts = " + print_consts(code_object.co_consts, "", varname) + ";\n"
+  result = result + "  " + varname + ".co_names = " + print_names(code_object.co_names, "")  + ";\n"
+  result = result + "  " + varname + ".co_filename = " + code_object.co_filename + ";\n"
+  result = result + "  " + varname + ".co_firstlineno = " + str(code_object.co_firstlineno) + ";\n"
+  #result = result + "  " + varname + ".co_lnotab = " + code_object.co_lnotab + ";\n"
+  result = result + "  " + varname + ".co_stacksize = " + str(code_object.co_stacksize) + ";\n"
+  result = result + "  " + varname + ".co_flags = " + str(code_object.co_flags) + ";\n"
+  result = result + "  " + varname + ".co_locals = [];\n\n"
+  
   return result
 
-# Helper for print_code, prints the symbol table.
+# Helper for print_code, prints names
 def print_names(names, indent):
-  result = indent + "[ //Symbol table\n"
+  result = indent + "["
   i = 0
   for (name) in names:
-    result = result + indent + "  " + "\"" + name +"\",\n"
+    result = result + indent + "\"" + name +"\", "
     i = i + 1
   if i > 0:
     result = result[:len(result)-2]
-  return result + "\n" + indent + "]\n"
+  return result + indent + "]"
 
 # Helper for print_code, prints the constants.
-def print_consts(consts, indent):
-  result = indent + "[ //Constants\n"
+def print_consts(consts, indent, varname):
+  result = indent + "["
   i = 0
   for (const) in consts:
     if type(const) == type(""):
-      result = result + indent + "  " + "\""+ const.replace("\"","\\\"") + "\",\n"
+      result = result + indent + "\""+ const.replace("\"","\\\"") + "\", "
     elif type(const) == type(42):
-      result = result + indent + "  " + str(const) + ",\n"
+      result = result + indent + str(const) + ", "
     elif type(const) == type(None):
-      result = result + indent + "  " + "\"" + str(const) + "\"" + ",\n"
+      result = result + indent + "\"" + str(const) + "\"" + ", "
     elif type(const) == type(code_object):
-      result = result  + print_code(const, indent + "  ") + ",\n"
+      result = result + indent + "\"CODEOBJ: " + varname +"_"+const.co_name + "\", "
+      queue.append(const)
     else:
-      result = result + indent + "  " + str(const) + ",\n"
+      result = result + indent + str(const) + ", "
     i = i + 1
   if i > 0:
     result = result[:len(result) - 2]
-  return result + "\n" + indent +"]"
+  return result + indent +"]"
 
 # Helper for print_code, prints the instructions.
 def print_instructions(instructions, indent):

@@ -73,6 +73,13 @@ function Stack() {
 
 var stack = new Stack();
 
+function contains(array, elm) {
+  for (var i = 0; i<array.length; i++) {
+    if (array[i] == elm) return true;
+  }
+  return false;
+}
+
 function FunctionObject(defaultArgc, codeObject) {
   var defArgc = defaultArgc;
   var codeObject = codeObject;
@@ -99,16 +106,15 @@ function FunctionObject(defaultArgc, codeObject) {
   }
 } 
 
-var globalCodeObject;
+var globalVars = new Array();
 
 function interpret(progName) {
-  globalCodeObject = eval(progName);
-  execute(globalCodeObject);
+  execute(eval(progName));
 }
 
 function execute(code_object) {
   var bytecode, offset, argument;
-  var prog = code_object[0];
+  var prog = code_object.co_code;
   for (var i=0; i<prog.length; i++) {
     bytecode = prog[i][0];
     offset = prog[i][1];
@@ -173,7 +179,8 @@ function execute(code_object) {
           stack.push(stack.pop() + temp);
           break;
       case 24: //BINARY_SUBTRACT
-          throw "BINARY_SUBTRACT is not implemented yet!";
+          var temp = stack.pop();
+          stack.push(stack.pop() - temp);
           break;
       case 25: //BINARY_SUBSCR
           var temp = stack.pop();
@@ -319,9 +326,8 @@ function execute(code_object) {
           throw "BREAK_LOOP is not implemented yet!";
           break;
       case 82: //LOAD_LOCALS
-          // Naive ??
-          stack.push(code_object[2]);
-          //throw "LOAD_LOCALS is not implemented yet!";
+          //Pushes a reference to the locals of the current scope on the stack.
+          stack.push(code_object.co_locals);
           break;
       case 83: //RETURN_VALUE
           stack.removeFrame();
@@ -346,11 +352,21 @@ function execute(code_object) {
           // TOS1 the tuple of the names of the base classes, and TOS2
           // the class name.
           stack.printStack("Before build");
-          throw "BUILD_CLASS is not implemented yet!";
+          var methods = stack.pop();
+          var base = stack.pop();
+          var className = stack.pop();
+          stack.push(new Class(className, base, methods));
           break;
       case 90: //STORE_NAME ------------------ HAVE_ARGUMENT ------------------
-          //Only works for type GLOBAL VARIABLE
-          code_object[2][argument] = stack.pop();
+          //Implements name = TOS. namei is the index of name in the attribute
+          // co_names of the code object 
+          //The compiler tries to use STORE_LOCAL or STORE_GLOBAL if possible
+          var name = code_object.co_names[argument];
+          if (contains(code_object.co_varnames, name) {
+            code_object.co_locals[argument] = stack.pop();
+          } else {
+            globalVars[argument] = stack.pop();
+          }
           break;
       case 91: //DELETE_NAME
           throw "DELETE_NAME is not implemented yet!";
@@ -368,30 +384,37 @@ function execute(code_object) {
           throw "DELETE_ATTR is not implemented yet!";
           break;
       case 97: //STORE_GLOBAL
-          throw "STORE_GLOBAL is not implemented yet!";
+          globalVars[argument] = stack.pop();
           break;
       case 98: //DELETE_GLOBAL
-          throw "DELETE_GLOBAL is not implemented yet!";
+          delete globalVars[argument];
           break;
       case 99: //DUP_TOPX
           throw "DUP_TOPX is not implemented yet!";
           break;
       case 100: //LOAD_CONST
           //Only works for type GLOBAL VARIABLE
-          stack.push(code_object[1][argument]);
+          var temp = code_object.co_consts[argument];
+          if (typeof(temp) == typeof("") && temp.match(/^CODEOBJ: \w+$/)) {
+            stack.push(eval(temp.substring(9, temp.length)));
+          } else {
+            stack.push(temp);
+          }
+ 
+          
           break;
       case 101: //LOAD_NAME
-          //Only works for type GLOBAL VARIABLE
-          var name = code_object[2][argument];
-          if (typeof(name) == "undefined") {
-            name = code_object[3][argument];
+          //TODO: check if name is a local or global
+          var val = code_object.localVars[argument];
+          if (typeof(val) == "undefined") {
+            var name = code_object.co_names[argument];
             if (name == "True") {
-              name = true;
+              val = true;
             } else if (name == "False"){
-              name = false;
+              val = false;
             }
           }
-          stack.push(name);
+          stack.push(val);
           break;
       case 102: //BUILD_TUPLE
           // Creates a tuple consuming count items from the stack,
@@ -487,10 +510,10 @@ function execute(code_object) {
           break;
       case 116: //LOAD_GLOBAL
           // Loads the global named co_names[namei] onto the stack.
-          if (code_object[3][argument] == "__name__") {
-            stack.push(code_object[4]);
+          if (code_object.co_names[argument] == "__name__") {
+            stack.push(code_object.co_name);
           } else {
-            throw "LOAD_GLOBAL is not implemented yet!";
+            stack.push(globalVars[argument]);
           }
           break;
       case 119: //CONTINUE_LOOP
@@ -511,14 +534,14 @@ function execute(code_object) {
       case 122: //SETUP_FINALLY
           throw "SETUP_FINALLY is not implemented yet!";
           break;
-      case 124: //LOAD_FAST
-          stack.push(stack.peek(0).getCodeObject()[2][argument]);
+      case 124: //LOAD_FAST - Pushes a reference to the local co_varnames[var_num] onto the stack. 
+          stack.push(code_object.localVars[argument]);
           break;
-      case 125: //STORE_FAST
-          stack.peek(0).getCodeObject()[2][argument] = stack.pop();
+      case 125: //STORE_FAST - Stores TOS into the local co_varnames[var_num]. 
+          code_object.localVars[argument] = stack.pop();
           break;
       case 126: //DELETE_FAST
-          throw "DELETE_FAST is not implemented yet!";
+          delete code_object.localVars[argument];
           break;
       case 130: //RAISE_VARARGS
           throw "RAISE_VARARGS is not implemented yet!";
@@ -574,6 +597,16 @@ function execute(code_object) {
   }
 }
 
+function Class(name, base, methods) {
+  this.__name__ = name;
+  this.__base__ = base;
+
+
+  this.__methods__ = methods;
+
+}
+
+
 function printOut(str) {
   switch(env) {
     case "browser":
@@ -581,6 +614,9 @@ function printOut(str) {
       break;
     case "v8":
       print(str);
+      break;
+    case "JSUnit":
+      printResult += str;
       break;
   }
 }
