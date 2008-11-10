@@ -110,18 +110,14 @@ def js_file_print(code_object, filename):
   file.write("// The structure of an instruction is:\n")
   file.write("// [Opcode, Offset, (Arg, Arg Type, Arg Value,)? Opcode Name]\n\n")
   global queue
-  file.write("var "+filename+" = new Object();\n")
   file.write(print_code(code_object, "", filename))
-  
   while len(queue) > 0:
-    code_object = queue[0]
-    queue.remove(code_object)
-    varname = filename+"_"+code_object.co_name
-    file.write("var "+ varname + " = new Object();\n")
+    code_object, varname = queue[0]
+    queue.remove((code_object, varname))
+    #varname = filename+"_"+code_object.co_name
     file.write(print_code(code_object, "", varname))
-  
-  
   file.close()
+
 # [0] Opcode
 # [1] Offset
 # [2] Argument        (Optional)
@@ -137,21 +133,22 @@ def print_code(code_object, indent, varname):
   # codeObject[2] = localVars
   # codeObject[3] = symTable  
   
-  result = "  " + varname + ".co_name = \"" + code_object.co_name + "\";\n"
-  result = result + "  " + varname + ".co_argcount = " + str(code_object.co_argcount) + ";\n"
-  result = result + "  " + varname + ".co_nlocals = " + str(code_object.co_nlocals) + ";\n"
-  result = result + "  " + varname + ".co_varnames = " + print_names(code_object.co_varnames, "") + ";\n"
-  result = result + "  " + varname + ".co_cellvars = " + print_names(code_object.co_cellvars, "") + ";\n"
-  result = result + "  " + varname + ".co_freevars = " + print_names(code_object.co_freevars, "") + ";\n"
-  result = result + "  " + varname + ".co_code = " + print_instructions(instructions, indent + "  ")+";\n"    #opcodes
-  result = result + "  " + varname + ".co_consts = " + print_consts(code_object.co_consts, "", varname) + ";\n"
-  result = result + "  " + varname + ".co_names = " + print_names(code_object.co_names, "")  + ";\n"
-  result = result + "  " + varname + ".co_filename = " + code_object.co_filename + ";\n"
-  result = result + "  " + varname + ".co_firstlineno = " + str(code_object.co_firstlineno) + ";\n"
-  #result = result + "  " + varname + ".co_lnotab = " + code_object.co_lnotab + ";\n"
-  result = result + "  " + varname + ".co_stacksize = " + str(code_object.co_stacksize) + ";\n"
-  result = result + "  " + varname + ".co_flags = " + str(code_object.co_flags) + ";\n"
-  result = result + "  " + varname + ".co_locals = [];\n\n"
+  result = "var "+ varname + " = new Object();\n"
+  result = result + "    " + varname + ".co_name = \"" + code_object.co_name + "\";\n"
+  result = result + "    " + varname + ".co_argcount = " + str(code_object.co_argcount) + ";\n"
+  result = result + "    " + varname + ".co_nlocals = " + str(code_object.co_nlocals) + ";\n"
+  result = result + "    " + varname + ".co_varnames = " + print_names(code_object.co_varnames, "") + ";\n"
+  result = result + "    " + varname + ".co_cellvars = " + print_names(code_object.co_cellvars, "") + ";\n"
+  result = result + "    " + varname + ".co_freevars = " + print_names(code_object.co_freevars, "") + ";\n"
+  result = result + "    " + varname + ".co_code = " + print_instructions(instructions, indent + "    ")+";\n"    #opcodes
+  result = result + "    " + varname + ".co_consts = " + print_consts(code_object.co_consts, "", varname) + ";\n"
+  result = result + "    " + varname + ".co_names = " + print_names(code_object.co_names, "")  + ";\n"
+  result = result + "    " + varname + ".co_filename = " + code_object.co_filename + ";\n"
+  result = result + "    " + varname + ".co_firstlineno = " + str(code_object.co_firstlineno) + ";\n"
+  #result = result + "    " + varname + ".co_lnotab = " + code_object.co_lnotab + ";\n"
+  result = result + "    " + varname + ".co_stacksize = " + str(code_object.co_stacksize) + ";\n"
+  result = result + "    " + varname + ".co_flags = " + str(code_object.co_flags) + ";\n"
+  result = result + "    " + varname + ".co_locals = [];\n\n"
   
   return result
 
@@ -179,7 +176,7 @@ def print_consts(consts, indent, varname):
       result = result + indent + "\"" + str(const) + "\"" + ", "
     elif type(const) == type(code_object):
       result = result + indent + "\"CODEOBJ: " + varname +"_"+const.co_name + "\", "
-      queue.append(const)
+      queue.append((const, varname +"_"+const.co_name))
     else:
       result = result + indent + str(const) + ", "
     i = i + 1
