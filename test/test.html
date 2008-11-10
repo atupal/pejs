@@ -9,17 +9,17 @@
 
     document.write('<script type="text/javascript" src="two_plus_five.js"></scr'+'ipt>');
     function testTwoPlusFive() {
-        assertEquals("print 2 + 5", "7\n", run("two_plus_five"));
+        assertEquals("print 2 + 5", "7", run("two_plus_five"));
     }
 
     document.write('<script type="text/javascript" src="variables.js"></scr'+'ipt>');
     function testVariables() {
-        assertEquals("print four +\"\"+ two", "42\n", run("variables"));
+        assertEquals("print four +\"\"+ two", "42", run("variables"));
     }
 
     document.write('<script type="text/javascript" src="functions.js"></scr'+'ipt>');
     function testFunctions() {
-        assertEquals("print four() +\"\"+ two()", "42\n", run("functions"));
+        assertEquals("print four() +\"\"+ two()", "42", run("functions"));
     }
 
     var printResult;

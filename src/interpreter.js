@@ -1,4 +1,7 @@
-var compareOps = ['<', '<=', '==', '!=', '>', '>=', 'in', 'not in', 'is', 'is not', 'exception match', 'BAD'];
+var compareOps = ['<', '<=', '==', '!=',
+                  '>', '>=', 'in', 'not in',
+                  'is', 'is not', 'exception match',
+                  'BAD'];
 
 function Stack() {
   var array = [0,0];
@@ -80,36 +83,40 @@ function contains(array, elm) {
   return false;
 }
 
-function FunctionObject(defaultArgc, codeObject) {
-  var defArgc = defaultArgc;
-  var codeObject = codeObject;
-  var defArgs = new Array();
+function FunctionObject(defaultArgc, codeObj) {
+  this.defArgc = defaultArgc;
+  this.codeObject = codeObj;
+  this.defArgs = new Array();
 
   this.getArgs = function() {
-    return defArgs;
+    return this.defArgs;
   }
 
   this.addArg = function(index, val) {
-    defArgs[index] = val;
+    this.defArgs[index] = val;
   }
 
   this.getArgc = function() {
-    return argc;
+    return this.defArgc;
   }
 
   this.getArgs = function() {
-    return defArgs;
+    return this.defArgs;
   }
 
   this.getCodeObject = function() {
-    return codeObject;
+    return this.codeObject;
   }
-} 
+}
 
-var globalVars = new Array();
+var globals;
+var globalNames;
 
 function interpret(progName) {
-  execute(eval(progName));
+  var code_object = eval(progName)
+  globals = code_object.co_locals;
+  globalNames = code_object.co_varnames;
+  execute(code_object);
 }
 
 function execute(code_object) {
@@ -294,7 +301,7 @@ function execute(code_object) {
           printOut(stack.pop());
           break;
       case 72: //PRINT_NEWLINE
-          printOut("\n");
+          printNewline();
           break;
       case 73: //PRINT_ITEM_TO
           throw "PRINT_ITEM_TO is not implemented yet!";
@@ -326,8 +333,13 @@ function execute(code_object) {
           throw "BREAK_LOOP is not implemented yet!";
           break;
       case 82: //LOAD_LOCALS
-          //Pushes a reference to the locals of the current scope on the stack.
-          stack.push(code_object.co_locals);
+          //Pushes a reference to the locals of the
+          //current scope on the stack.
+          //This is used in the code for a class definition: After the class body is evaluated,
+          //the locals are passed to the class definition. 
+          //document.write("Locals: "+code_object.co_locals);
+          //stack.push([code_object.co_varnames, code_object.co_locals]);
+          stack.push(code_object);
           break;
       case 83: //RETURN_VALUE
           stack.removeFrame();
@@ -351,21 +363,26 @@ function execute(code_object) {
           //Creates a new class object. TOS is the methods dictionary,
           // TOS1 the tuple of the names of the base classes, and TOS2
           // the class name.
-          stack.printStack("Before build");
-          var methods = stack.pop();
+          var codeObj = stack.pop();
           var base = stack.pop();
           var className = stack.pop();
-          stack.push(new Class(className, base, methods));
+          //document.write("Methods: " + methods);
+          stack.push(new PyClass(className, base, codeObj));
           break;
       case 90: //STORE_NAME ------------------ HAVE_ARGUMENT ------------------
           //Implements name = TOS. namei is the index of name in the attribute
-          // co_names of the code object 
+          //co_names of the code object.
           //The compiler tries to use STORE_LOCAL or STORE_GLOBAL if possible
           var name = code_object.co_names[argument];
-          if (contains(code_object.co_varnames, name) {
-            code_object.co_locals[argument] = stack.pop();
+          if (contains(code_object.co_varnames, name)) {
+            code_object.co_locals[code_object.co_varnames.indexOf(name)] = stack.pop();
+          } else if(contains(globalNames, name)) {
+            globals[globalNames.indexOf(name)] = stack.pop();
           } else {
-            globalVars[argument] = stack.pop();
+            //new variable
+            var index = code_object.co_varnames.length;
+            code_object.co_varnames[index] = name;
+            code_object.co_locals[index] = stack.pop();
           }
           break;
       case 91: //DELETE_NAME
@@ -384,10 +401,22 @@ function execute(code_object) {
           throw "DELETE_ATTR is not implemented yet!";
           break;
       case 97: //STORE_GLOBAL
-          globalVars[argument] = stack.pop();
+          var name = code_object.co_names[argument];
+          if (contains(globalNames, name)) {
+            globals[globalNames.indexOf(name)] = stack.pop();
+          } else {
+            var index = globalNames.length;
+            globalNames[index] = name;
+            globals[index] = stack.pop();
+          }
           break;
       case 98: //DELETE_GLOBAL
-          delete globalVars[argument];
+          var name = code_object.co_names[argument];
+          delete code_object.co_names[argument];
+          if (contains(globalNames, name)) {
+            delete globals[globalNames.indexOf(name)];
+            delete globalNames[globalNames.indexOf(name)];
+          }
           break;
       case 99: //DUP_TOPX
           throw "DUP_TOPX is not implemented yet!";
@@ -400,11 +429,20 @@ function execute(code_object) {
           } else {
             stack.push(temp);
           }
- 
-          
           break;
       case 101: //LOAD_NAME
-          //TODO: check if name is a local or global
+          //Pushes the value associated with "co_names[namei]" onto the stack.
+          // First we try to find the value in locals then in globals.
+          var name = code_object.co_names[argument];
+          if(contains(code_object.co_varnames, name)){
+             stack.push(code_object.co_locals[code_object.co_varnames.indexOf(name)]);
+          } else if (contains(globalNames, name)) {
+             stack.push(globals[globalNames.indexOf(name)]);
+          } else {
+            // We possibly need the "True" workaround here
+            throw "In LOAD_NAME: Attempted to load nonexisting name: "+name;
+          }
+          /*
           var val = code_object.localVars[argument];
           if (typeof(val) == "undefined") {
             var name = code_object.co_names[argument];
@@ -415,6 +453,7 @@ function execute(code_object) {
             }
           }
           stack.push(val);
+          */
           break;
       case 102: //BUILD_TUPLE
           // Creates a tuple consuming count items from the stack,
@@ -426,7 +465,6 @@ function execute(code_object) {
             j--;
           }
           stack.push(tuple);
-          stack.printStack("After Build tuple");
           break;
       case 103: //BUILD_LIST
           throw "BUILD_LIST is not implemented yet!";
@@ -435,7 +473,18 @@ function execute(code_object) {
           throw "BUILD_MAP is not implemented yet!";
           break;
       case 105: //LOAD_ATTR
-          throw "LOAD_ATTR is not implemented yet!";
+          //Replaces TOS with getattr(TOS, co_names[namei])
+          //stack.printStack("before load_attr");
+          var name = code_object.co_names[argument];
+          var callee = stack.pop();
+          index = callee.class.getCodeObject().co_varnames.indexOf(name);
+          var attrObject = callee.class.getCodeObject().co_locals[index];
+          if (typeof(attrObject.getCodeObject) == typeof(function() {})) {
+            attrObject.getCodeObject().co_varnames[0] = "self";
+            attrObject.getCodeObject().co_locals[0] = callee;
+          }
+          //attrObject.self = callee;
+          stack.push(attrObject);
           break;
       case 106: //COMPARE_OP
           var temp = stack.pop();
@@ -456,7 +505,7 @@ function execute(code_object) {
           }
           i = j - 1;
           break;
-      case 111: //JUMP_IF_FALSE 
+      case 111: //JUMP_IF_FALSE
           //If TOS is false, increment the byte code counter by delta.
           //TOS is not changed.
           //stack.printStack("before JUMP_IF_FALSE");
@@ -478,7 +527,7 @@ function execute(code_object) {
             }
           }
           break;
-      case 112: //JUMP_IF_TRUE 
+      case 112: //JUMP_IF_TRUE
           //If TOS is true, increment the byte code counter by delta.
           //TOS is left on the stack
           //stack.printStack("before JUMP_IF_TRUE");
@@ -510,10 +559,11 @@ function execute(code_object) {
           break;
       case 116: //LOAD_GLOBAL
           // Loads the global named co_names[namei] onto the stack.
-          if (code_object.co_names[argument] == "__name__") {
+          var name = code_object.co_names[argument];
+          if (name == "__name__") {
             stack.push(code_object.co_name);
           } else {
-            stack.push(globalVars[argument]);
+            stack.push(globals[globalNames.indexOf(name)]);
           }
           break;
       case 119: //CONTINUE_LOOP
@@ -534,27 +584,36 @@ function execute(code_object) {
       case 122: //SETUP_FINALLY
           throw "SETUP_FINALLY is not implemented yet!";
           break;
-      case 124: //LOAD_FAST - Pushes a reference to the local co_varnames[var_num] onto the stack. 
-          stack.push(code_object.localVars[argument]);
+      case 124: //LOAD_FAST
+          // Pushes a reference to the local co_varnames[var_num] onto the stack.
+          stack.push(code_object.co_locals[argument]);
           break;
-      case 125: //STORE_FAST - Stores TOS into the local co_varnames[var_num]. 
-          code_object.localVars[argument] = stack.pop();
+      case 125: //STORE_FAST
+          // Stores TOS into the local co_varnames[var_num].
+          code_object.co_locals[argument] = stack.pop();
           break;
       case 126: //DELETE_FAST
-          delete code_object.localVars[argument];
+          delete code_object.co_locals[argument];
+          delete code_object.co_varnames[argument];
           break;
       case 130: //RAISE_VARARGS
           throw "RAISE_VARARGS is not implemented yet!";
           break;
       case 131: //CALL_FUNCTION
-          var localVars = new Array();
-          for (var j = argument-1; j >= 0; j--){
-            localVars[j] = [stack.pop()];
+          if (typeof(stack.peekTop().__name__) == typeof("")) {
+            stack.push(new PyObject(stack.pop()));
+          } else {
+            var localVars = [];
+            for (var j = argument; j > 0; j--){
+              localVars[j] = stack.pop();
+            }
+            //localVars[0] = stack.peekTop().self;
+            stack.newFrame();
+            var codeObject = stack.peekTop().getCodeObject();
+            localVars[0] = codeObject.co_locals[0]; 
+            codeObject.co_locals = localVars;
+            execute(codeObject);
           }
-          stack.newFrame();
-          var codeObject = stack.peek(0).getCodeObject();
-          codeObject[2] = localVars;
-          execute(codeObject);
           break;
       case 132: //MAKE_FUNCTION
           var functionObject = new FunctionObject(argument, stack.pop());
@@ -597,13 +656,19 @@ function execute(code_object) {
   }
 }
 
-function Class(name, base, methods) {
+function PyClass(name, base, codeObj) {
   this.__name__ = name;
   this.__base__ = base;
+  //this.__methods__ = ;
+  this.codeObject = codeObj;
 
+  this.getCodeObject = function() {
+    return this.codeObject;
+  }
+}
 
-  this.__methods__ = methods;
-
+function PyObject(clss) {
+  this.class = clss;
 }
 
 
@@ -617,6 +682,19 @@ function printOut(str) {
       break;
     case "JSUnit":
       printResult += str;
+      break;
+  }
+}
+
+function printNewline() {
+  switch(env) {
+    case "browser":
+      document.write("<br/>");
+      break;
+    case "v8":
+      print("\n");
+      break;
+    case "JSUnit":
       break;
   }
 }
