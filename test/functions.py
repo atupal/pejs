@@ -15,4 +15,4 @@ def inc(value):
 def four():
   return inc(three)
 
-print four() +""+ two()
+print str(four()) + str(two())

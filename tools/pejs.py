@@ -23,30 +23,26 @@ import sys, py_compile, marshal, opcode, os
 queue = []
 
 # Handle tedious input details.
-def main():
-  if len(sys.argv) < 2:
-    print "Usage:\n ./pejs.py [pythonfile.{py|pyc}]"
-  else:
-    filename = sys.argv[1]
-    if file_exists(filename):
-      if filename.endswith(".py"):
-        if file_exists(filename + "c"):
-          os.remove(filename + "c")
-        py_compile.compile(filename)
-        if file_exists(filename + "c"):
-          filename = filename + "c"
-        else:
-          print "Syntactic errors in input file"
-          return
-      elif not filename.endswith(".pyc"):
-        print "Usage:\n ./pejs.py [pythonfile.{py|pyc}]"
+def main(filename):
+  if file_exists(filename):
+    if filename.endswith(".py"):
+      if file_exists(filename + "c"):
+        os.remove(filename + "c")
+      py_compile.compile(filename)
+      if file_exists(filename + "c"):
+        filename = filename + "c"
+      else:
+        print "Syntactic errors in input file"
         return
-      global code_object
-      code_object = get_code_object(filename)
-      js_file_print(code_object, filename[:len(filename) - 4])
-      print "%s.js created" % (filename[:len(filename) - 4])
-    else:
-      print "File \"%s\" doesnt exist" % (filename)
+    elif not filename.endswith(".pyc"):
+      print "Usage:\n ./pejs.py [pythonfile.{py|pyc}]"
+      return
+    global code_object
+    code_object = get_code_object(filename)
+    js_file_print(code_object, filename[:len(filename) - 4])
+    print "%s.js created" % (filename[:len(filename) - 4])
+  else:
+    print "File \"%s\" doesnt exist" % (filename)
 
 # Create a codeobject from pyc file.
 def get_code_object(filename):
@@ -211,4 +207,8 @@ def file_exists(filename):
     exists = 1
   return exists
 
-main()
+if __name__ == "__main__":
+  if len(sys.argv) < 2:
+    print "Usage:\n ./pejs.py [pythonfile.{py|pyc}]"
+  else:
+    main(sys.argv[1])
