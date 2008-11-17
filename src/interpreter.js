@@ -408,7 +408,7 @@ function execute(code_object) {
           //indicates it is exhausted TOS is popped, and the byte code counter is
           //incremented by delta.
           var pair = stack.peekTop();
-          if (pair[0] < pair[1]) {
+          if (pair[0] <= pair[1]) {
             stack.push(pair[0]++);
           } else {
             stack.pop();
