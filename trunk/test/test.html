@@ -41,6 +41,16 @@
       color: blue;
       text-decoration: underline;
     }
+    div.banana {
+      position: relative;
+      left: 17em;
+      top: -10em;
+      z-index: 5;
+      text-align: left;
+    }
+    img.db {
+      width: 150px;
+    }
   </style>
  </head>
  <body>
@@ -91,12 +101,16 @@
                    (total-(success+exceptions.length))+" returned wrong result and "+
                    exceptions.length +" failed with an exception.<br/><br/>");
 
+    if (success == total)
+      document.write("<div class='banana'><img class='db' src='dancing-banana.gif'/></div>");
+
     if (exceptions.length > 0) {
       document.write("<hr/><h3>Exceptions</h3>");
       for (var i=0; i<exceptions.length; i++) {
         document.write(exceptions[i]+"</br>");
       }
     }
+
   </script>
  </body>
 </html>
