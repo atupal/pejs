@@ -111,9 +111,20 @@ function FunctionObject(defaultArgc, codeObj) {
 
 var globals;
 var globalNames;
+var libraryValues;
+var libraryNames;
 
 function interpret(progName) {
-  var code_object = eval(progName)
+  if (typeof(pejs_library) != typeof(undefined)) {
+    libraryValues = globals = pejs_library.co_locals;
+    libraryNames = globalNames = pejs_library.co_varnames;
+    execute(pejs_library);
+  } else {
+    throw "pejs_library not found";
+  }
+
+  stack = new Stack();
+  var code_object = eval(progName);
   globals = code_object.co_locals;
   globalNames = code_object.co_varnames;
   execute(code_object);
@@ -292,7 +303,7 @@ function execute(code_object) {
           stack.push(Math.pow(stack.pop(), temp));
           break;
       case 68: //GET_ITER
-          throw "GET_ITER is not implemented yet!";
+          //Implements TOS = iter(TOS).
           break;
       case 70: //PRINT_EXPR
           throw "PRINT_EXPR is not implemented yet!";
@@ -354,7 +365,7 @@ function execute(code_object) {
           throw "YIELD_VALUE is not implemented yet!";
           break;
       case 87: //POP_BLOCK
-          throw "POP_BLOCK is not implemented yet!";
+          //throw "POP_BLOCK is not implemented yet!";
           break;
       case 88: //END_FINALLY
           throw "END_FINALLY is not implemented yet!";
@@ -392,7 +403,31 @@ function execute(code_object) {
           throw "UNPACK_SEQUENCE is not implemented yet!";
           break;
       case 93: //FOR_ITER
-          throw "FOR_ITER is not implemented yet!";
+          //TOS is an iterator. Call its next() method. If this yields a new value,
+          //push it on the stack (leaving the iterator below it). If the iterator
+          //indicates it is exhausted TOS is popped, and the byte code counter is
+          //incremented by delta.
+          var pair = stack.peekTop();
+          if (pair[0] < pair[1]) {
+            stack.push(pair[0]++);
+          } else {
+            stack.pop();
+
+            var targetOffset = offset + argument + 1 + 2;
+            if (argument > 0) {
+              var j = parseInt(i);
+              while(prog[j][1] != targetOffset) {
+                j = j + 1;
+              }
+              i = j - 1;
+            } else {
+              var j = parseInt(i);
+              while(prog[j][1] != targetOffset) {
+                j = j - 1;
+              }
+              i = j - 1;
+            }
+          }
           break;
       case 95: //STORE_ATTR
           throw "STORE_ATTR is not implemented yet!";
@@ -438,22 +473,12 @@ function execute(code_object) {
              stack.push(code_object.co_locals[code_object.co_varnames.indexOf(name)]);
           } else if (contains(globalNames, name)) {
              stack.push(globals[globalNames.indexOf(name)]);
+          } else if (contains(libraryNames, name)) {
+             stack.push(libraryValues[libraryNames.indexOf(name)]);
           } else {
             // We possibly need the "True" workaround here
-            throw "In LOAD_NAME: Attempted to load nonexisting name: "+name;
+            throw "LOAD_NAME attempted to load nonexisting name \""+name+"\"";
           }
-          /*
-          var val = code_object.localVars[argument];
-          if (typeof(val) == "undefined") {
-            var name = code_object.co_names[argument];
-            if (name == "True") {
-              val = true;
-            } else if (name == "False"){
-              val = false;
-            }
-          }
-          stack.push(val);
-          */
           break;
       case 102: //BUILD_TUPLE
           // Creates a tuple consuming count items from the stack,
@@ -610,7 +635,13 @@ function execute(code_object) {
             //localVars[0] = stack.peekTop().self;
             stack.newFrame();
             var codeObject = stack.peekTop().getCodeObject();
-            localVars[0] = codeObject.co_locals[0]; 
+            if (contains(codeObject.co_varnames, "self")) {
+              localVars[0] = codeObject.co_locals[0];
+            } else {
+              for (var j=0; j<localVars.length;) {
+                localVars[j] = localVars[++j];
+              }
+            }
             codeObject.co_locals = localVars;
             execute(codeObject);
           }

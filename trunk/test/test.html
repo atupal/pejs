@@ -1,33 +1,101 @@
 <html>
  <head>
-  <title>Test Page for multiplyAndAddFive(value1, value2)</title>
-  <script type="text/javascript" src="jsunit/app/jsUnitCore.js"></script>
+  <title>Test Page for PEJS</title>
   <script type="text/javascript" src="../src/interpreter.js"></script>
+  <script type="text/javascript" src="../src/pejs_library.js"></script>
+  <script type="text/javascript" src="test.js"></script>
+  <script type="text/javascript">
+    delayTest(delayArray);
+
+    function delayTest(nameArray) {
+      for (var i=0; i<nameArray.length; i++) {
+        progName = nameArray[i];
+        document.write("<script type=\"text/javascript\" src=\""+progName+".js\"></scr"+"ipt>");
+      }
+    }
+  </script>
+  <style type="text/css">
+    body {
+      font-family: Verdana, Tahoma, Sans;
+      font-size: 12pt;
+    }
+    td {
+      padding: 3pt;
+      border: 1pt gray solid
+    }
+    td.no {
+      text-align: right;
+    }
+    td.progName {
+      width: 12em;
+    }
+    td.result {
+      width: 6em;
+      text-align: center;
+    }
+    td a {
+      color: black;
+      text-decoration: none;
+    }
+    td.progName a:hover {
+      color: blue;
+      text-decoration: underline;
+    }
+  </style>
  </head>
  <body>
+  <H1>PEJS Test</H1>
+  <table><tr><th>No.</th><th>Test</th><th>Result</th></tr>
+    <script type="text/javascript">
+      var exceptions = new Array();
+      var success = 0;
+      var total = 0;
+
+      function runTest(delayArr, withExceptions) {
+        for (var i=0; i<delayArr.length; i++) {
+          var progName = delayArr[i];
+          document.write("<tr><td class='no'>"+(i+1)+"</td><td class='progName'><a href='"+progName+".js'>"+progName+"</a> [<a href='"+progName+".py'>py</a>]</td><td class='result'>");
+          total++;
+          if (withExceptions) {
+            try {
+              interpret(progName);
+            } catch (exception) {
+              document.write("<a title='"+exception+"'>FAIL</a>");
+              exceptions.push(progName+": "+exception);
+            }
+          } else {
+            interpret(progName);
+          }
+          document.write("</td>");
+        }
+      }
+
+      runTest(delayArray, true);
+
+      var ary = document.getElementsByTagName("td");
+      for(var i=0; i < ary.length; i++) {
+        if(ary[i].className == "result") {
+          if (ary[i].firstChild != null && ary[i].firstChild.nodeValue == "42") {
+            success++;
+            ary[i].firstChild.nodeValue = "OK";
+            ary[i].style.background = "green";
+          } else {
+            ary[i].style.background = "red";
+          }
+        }
+      }
+    </script>
+  </table><br/>
   <script type="text/javascript">
+    document.write(total+" tests run. "+success+" succeeded, "+
+                   (total-(success+exceptions.length))+" returned wrong result and "+
+                   exceptions.length +" failed with an exception.<br/><br/>");
 
-    document.write('<script type="text/javascript" src="two_plus_five.js"></scr'+'ipt>');
-    function testTwoPlusFive() {
-        assertEquals("print 2 + 5", "7", run("two_plus_five"));
-    }
-
-    document.write('<script type="text/javascript" src="variables.js"></scr'+'ipt>');
-    function testVariables() {
-        assertEquals("print four +\"\"+ two", "42", run("variables"));
-    }
-
-    document.write('<script type="text/javascript" src="functions.js"></scr'+'ipt>');
-    function testFunctions() {
-        assertEquals("print four() +\"\"+ two()", "42", run("functions"));
-    }
-
-    var printResult;
-    function run(progName) {
-      env = "JSUnit";
-      printResult = "";
-      interpret(progName);
-      return printResult;
+    if (exceptions.length > 0) {
+      document.write("<hr/><h3>Exceptions</h3>");
+      for (var i=0; i<exceptions.length; i++) {
+        document.write(exceptions[i]+"</br>");
+      }
     }
   </script>
  </body>
