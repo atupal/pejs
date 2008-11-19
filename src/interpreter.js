@@ -4,9 +4,9 @@ var compareOps = ['<', '<=', '==', '!=',
                   'BAD'];
 
 function Stack() {
-  var array = [0,0];
-  var sp = 1;
-  var bp = 1;
+  var array = [];
+  var sp = -1;
+  var bp = -1;
 
   this.pop = function() {
     return array[sp--];
@@ -22,6 +22,10 @@ function Stack() {
     var returnVal = array[sp];
     sp = bp-1;
     bp = array[sp];
+    if (sp < 1) {
+      sp = 0;
+      bp = -1; 
+    }
     array[sp] = returnVal;
   }
 
@@ -63,14 +67,14 @@ function Stack() {
   }
 
   this.printStack = function(desc) {
-    printOut("<br/><br/>--- stack: " + desc + " ---<br/>");
+    printDebug("<br/><br/>--- stack: " + desc + " ---<br/>");
     for (var i = array.length-1; i >= 0; i--) {
-      printOut(array[i]);
-      if (i == sp) printOut(" &lt;-- sp");
-      if (i == bp) printOut(" &lt;-- bp");
-      printOut("<br/>");
+      printDebug(array[i]);
+      if (i == sp) printDebug(" &lt;-- sp");
+      if (i == bp) printDebug(" &lt;-- bp");
+      printDebug("<br/>");
     }
-    printOut("--- stack end ---<br/><br/>");
+    printDebug("--- stack end ---<br/><br/>");
   }
 }
 
@@ -115,7 +119,9 @@ var globalNames;
 var libraryValues;
 var libraryNames;
 
-function interpret(progName) {
+function interpret(progName, debugEnabled) {
+  if (debugEnabled)
+    debug = true;
   if (typeof(pejs_library) != typeof(undefined)) {
     libraryValues = globals = pejs_library.co_locals;
     libraryNames = globalNames = pejs_library.co_varnames;
@@ -138,7 +144,10 @@ function execute(code_object) {
   for (var pc=0; pc<prog.length; pc++) {
     bytecode = prog[pc][0];
     offset = prog[pc][1];
-    argument = prog[pc][2]; // Unknown contents if no argument
+    argument = prog[pc][2]; //Unknown contents if no argument
+    
+    //printDebug(prog[pc]+"<br/>");
+    
     switch(bytecode) {
       case 0: //STOP_CODE
           break;
@@ -195,6 +204,7 @@ function execute(code_object) {
           stack.push(stack.pop() % temp);
           break;
       case 23: //BINARY_ADD
+          stack.printStack("Before BINADD");
           var temp = stack.pop();
           stack.push(stack.pop() + temp);
           break;
@@ -362,8 +372,9 @@ function execute(code_object) {
           stack.push(code_object);
           break;
       case 83: //RETURN_VALUE
+          stack.printStack("Before return with "+stack.peekTop());
           stack.removeFrame();
-          break;
+          return;
       case 84: //IMPORT_STAR
           throw "IMPORT_STAR is not implemented yet!";
           break;
@@ -442,7 +453,18 @@ function execute(code_object) {
           }
           break;
       case 95: //STORE_ATTR
-          throw "STORE_ATTR is not implemented yet!";
+          //Implements TOS.name = TOS1, where namei is
+          //the index of name in co_names.
+          var obj = stack.pop();
+          var name = code_object.co_names[argument];
+          var index = obj.fieldNames.indexOf(name);
+          if (index > -1) {
+            obj.fieldValues[index] = stack.pop();
+          } else {
+            index = obj.fieldNames.length;
+            obj.fieldNames[index] = name;
+            obj.fieldValues[index] = stack.pop();
+          }
           break;
       case 96: //DELETE_ATTR
           throw "DELETE_ATTR is not implemented yet!";
@@ -510,15 +532,23 @@ function execute(code_object) {
           break;
       case 105: //LOAD_ATTR
           //Replaces TOS with getattr(TOS, co_names[namei])
+          var object = stack.pop();
           var name = code_object.co_names[argument];
-          var callee = stack.pop();
-          index = callee.class.getCodeObject().co_varnames.indexOf(name);
-          var attrObject = callee.class.getCodeObject().co_locals[index];
-          if (typeof(attrObject.getCodeObject) == typeof(function() {})) {
-            attrObject.getCodeObject().co_varnames[0] = "self";
-            attrObject.getCodeObject().co_locals[0] = callee;
+          var index = object.fieldNames.indexOf(name);
+          if (index > -1) {
+            stack.push(object.fieldValues[index]);
+          } else {
+            var index = object.class.getCodeObject().co_varnames.indexOf(name);
+            var attrObject = object.class.getCodeObject().co_locals[index];
+            if (typeof(attrObject.getCodeObject) == typeof(function() {})) {
+              attrObject.getCodeObject().co_varnames[0] = "self";
+              attrObject.getCodeObject().co_locals[0] = object;
+            } else {
+              throw "LOAD_ATTR tried to load non-function "+ name +
+                    " from class "+ object.class.__name__;
+            }
+            stack.push(attrObject);
           }
-          stack.push(attrObject);
           break;
       case 106: //COMPARE_OP
           var temp = stack.pop();
@@ -549,7 +579,6 @@ function execute(code_object) {
       case 111: //JUMP_IF_FALSE
           //If TOS is false, increment the byte code counter by delta.
           //TOS is not changed.
-          //stack.printStack("before JUMP_IF_FALSE");
           if(!stack.peekTop()) {
             // current_offset + jump + bytecode + argument
             var targetOffset = offset + argument + 1 + 2;
@@ -571,7 +600,6 @@ function execute(code_object) {
       case 112: //JUMP_IF_TRUE
           //If TOS is true, increment the byte code counter by delta.
           //TOS is left on the stack
-          //stack.printStack("before JUMP_IF_TRUE");
           if(stack.peekTop()) {
             // current_offset + jump + bytecode + argument
             var targetOffset = offset + argument + 1 + 2;
@@ -657,27 +685,63 @@ function execute(code_object) {
 	  pc = j - 1;
           break;
       case 131: //CALL_FUNCTION
+          var localVars = [];
+          for (var j = argument; j > 0; j--){
+            localVars[j] = stack.pop();
+          }
+          printDebug("Local vars: "+localVars+"<br/>");
           if (typeof(stack.peekTop().__name__) == typeof("")) {
-            stack.push(new PyObject(stack.pop()));
-          } else {
-            var localVars = [];
-            for (var j = argument; j > 0; j--){
-              localVars[j] = stack.pop();
+            var newObj = new PyObject(stack.pop());
+            var classCodeObject = newObj.class.getCodeObject();
+            var index = classCodeObject.co_varnames.indexOf("__init__");
+            if (index > -1) {
+              var initCodeObject = classCodeObject.co_locals[index].getCodeObject();
+              localVars[0] = newObj;
+              initCodeObject.co_locals = localVars;
+              stack.newFrame();
+              execute(initCodeObject);
             }
+            for (var j=0; j<classCodeObject.co_locals.length; j++) {
+              if (typeof(classCodeObject.co_locals[j].getCodeObject) == typeof(function() {}))
+                continue;
+              if (/__\w+__/.test(classCodeObject.co_varnames[j]))
+                continue;
+              newObj.fieldNames.push(classCodeObject.co_varnames[j]);
+              newObj.fieldValues.push(classCodeObject.co_locals[j]);
+            }
+            stack.push(newObj);
+          } else {
             stack.newFrame();
             var codeObject = stack.peekTop().getCodeObject();
             if (contains(codeObject.co_varnames, "self")) {
+              //insert self reference
               localVars[0] = codeObject.co_locals[0];
             } else {
+              //no self reference, move all parameters down 
               for (var j=0; j<localVars.length;) {
                 localVars[j] = localVars[++j];
               }
+              localVars.pop();
+            }            
+            //insert default parameters if necessary                        
+            var totalArgc = codeObject.co_argcount;
+            var actualArgc = argument;
+            var defArgc = stack.peekTop().getArgc();
+            var defArgs = stack.peekTop().getArgs();
+            var overlap = (actualArgc + defArgc) - totalArgc;            
+            var index = localVars.length;
+            while (index < totalArgc) {
+              localVars[index] = defArgs[index - actualArgc + overlap];
+              index = localVars.length;
             }
             codeObject.co_locals = localVars;
             execute(codeObject);
           }
           break;
       case 132: //MAKE_FUNCTION
+          //Pushes a new function object on the stack. TOS is the code
+          //associated with the function. The function object is defined
+          //to have argc default parameters, which are found below TOS. 
           var functionObject = new FunctionObject(argument, stack.pop());
           for (var j = argument-1; j >= 0; j--){
             functionObject.addArg(j, stack.pop());
@@ -731,8 +795,24 @@ function PyClass(name, base, codeObj) {
 
 function PyObject(clss) {
   this.class = clss;
+  this.fieldNames = [];
+  this.fieldValues = [];
 }
 
+function printObject(object) {
+  printOut("-------Object------<br/>");
+  for(prop in object) {
+    printOut(prop +": "+ object[prop] +"<br/>");
+  }
+  printOut("---End Of Object---<br/>");
+}
+
+var debug = false;
+function printDebug(str) {
+  if (debug) {
+    printOut(str);
+  }
+}
 
 function printOut(str) {
   switch(env) {

@@ -27,7 +27,7 @@
       text-align: right;
     }
     td.progName {
-      width: 12em;
+      width: 17em;
     }
     td.result {
       width: 6em;
@@ -55,7 +55,7 @@
  </head>
  <body>
   <h1>PEJS Full Test</h1>
-  <table><tr><th>No.</th><th>Test</th><th>Result</th></tr>
+    <table><tr><th>No.</th><th>Test</th><th>Result</th><th></th></tr>
     <script type="text/javascript">
       var exceptions = new Array();
       var success = 0;
@@ -76,7 +76,7 @@
               exceptions.push(progName+": "+exception);
             }
           }
-          document.write("</td>");
+          document.write("</td><td class=\"single\"><a href=\"testSingle.html?"+progName+"\">&gt;</a></td>");
         }
       }
 

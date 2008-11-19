@@ -1,6 +1,6 @@
 class MyObject:
-  myField = 0
-  def __init__(self):
-    self.myField = 42
+  myField = ""
+  def __init__(self, arg1, arg2):
+    self.myField = arg1 + arg2
 
-print MyObject().myField
+print MyObject("4", "2").myField
