@@ -63,18 +63,19 @@ function Stack() {
   }
 
   this.printStack = function(desc) {
-    document.write("<br/><br/>--- stack: " + desc + " ---<br/>");
+    printOut("<br/><br/>--- stack: " + desc + " ---<br/>");
     for (var i = array.length-1; i >= 0; i--) {
-      document.write(array[i]);
-      if (i == sp) document.write(" &lt;-- sp");
-      if (i == bp) document.write(" &lt;-- bp");
-      document.write("<br/>");
+      printOut(array[i]);
+      if (i == sp) printOut(" &lt;-- sp");
+      if (i == bp) printOut(" &lt;-- bp");
+      printOut("<br/>");
     }
-    document.write("--- stack end ---<br/><br/>");
+    printOut("--- stack end ---<br/><br/>");
   }
 }
 
 var stack = new Stack();
+var blockStack = new Stack();
 
 function contains(array, elm) {
   for (var i = 0; i<array.length; i++) {
@@ -124,6 +125,7 @@ function interpret(progName) {
   }
 
   stack = new Stack();
+  blockStack = new Stack();
   var code_object = eval(progName);
   globals = code_object.co_locals;
   globalNames = code_object.co_varnames;
@@ -133,10 +135,10 @@ function interpret(progName) {
 function execute(code_object) {
   var bytecode, offset, argument;
   var prog = code_object.co_code;
-  for (var i=0; i<prog.length; i++) {
-    bytecode = prog[i][0];
-    offset = prog[i][1];
-    argument = prog[i][2]; // Unknown contents if no argument
+  for (var pc=0; pc<prog.length; pc++) {
+    bytecode = prog[pc][0];
+    offset = prog[pc][1];
+    argument = prog[pc][2]; // Unknown contents if no argument
     switch(bytecode) {
       case 0: //STOP_CODE
           break;
@@ -341,7 +343,14 @@ function execute(code_object) {
           stack.push(stack.pop() | temp);
           break;
       case 80: //BREAK_LOOP
-          throw "BREAK_LOOP is not implemented yet!";
+	  //Terminates a loop due to a break statement.
+	  var block = blockStack.pop();
+	  var targetOffset = block[0] + block[1] + 1;
+          var j = pc + 1;
+          while(prog[j][1] != targetOffset) {
+            j = j + 1;
+          }
+          pc = j - 1;
           break;
       case 82: //LOAD_LOCALS
           //Pushes a reference to the locals of the
@@ -365,10 +374,13 @@ function execute(code_object) {
           throw "YIELD_VALUE is not implemented yet!";
           break;
       case 87: //POP_BLOCK
-          //throw "POP_BLOCK is not implemented yet!";
+	  blockStack.pop();
           break;
       case 88: //END_FINALLY
-          throw "END_FINALLY is not implemented yet!";
+	  //Terminates a finally clause. The interpreter recalls whether
+	  //the exception has to be re-raised, or whether the function
+	  //returns, and continues with the outer-next block. 
+	  blockStack.pop();
           break;
       case 89: //BUILD_CLASS
           //Creates a new class object. TOS is the methods dictionary,
@@ -415,17 +427,17 @@ function execute(code_object) {
 
             var targetOffset = offset + argument + 1 + 2;
             if (argument > 0) {
-              var j = parseInt(i);
+              var j = pc;
               while(prog[j][1] != targetOffset) {
                 j = j + 1;
               }
-              i = j - 1;
+              pc = j - 1;
             } else {
-              var j = parseInt(i);
+              var j = pc;
               while(prog[j][1] != targetOffset) {
                 j = j - 1;
               }
-              i = j - 1;
+              pc = j - 1;
             }
           }
           break;
@@ -476,7 +488,6 @@ function execute(code_object) {
           } else if (contains(libraryNames, name)) {
              stack.push(libraryValues[libraryNames.indexOf(name)]);
           } else {
-            // We possibly need the "True" workaround here
             throw "LOAD_NAME attempted to load nonexisting name \""+name+"\"";
           }
           break;
@@ -499,7 +510,6 @@ function execute(code_object) {
           break;
       case 105: //LOAD_ATTR
           //Replaces TOS with getattr(TOS, co_names[namei])
-          //stack.printStack("before load_attr");
           var name = code_object.co_names[argument];
           var callee = stack.pop();
           index = callee.class.getCodeObject().co_varnames.indexOf(name);
@@ -508,7 +518,6 @@ function execute(code_object) {
             attrObject.getCodeObject().co_varnames[0] = "self";
             attrObject.getCodeObject().co_locals[0] = callee;
           }
-          //attrObject.self = callee;
           stack.push(attrObject);
           break;
       case 106: //COMPARE_OP
@@ -516,7 +525,14 @@ function execute(code_object) {
           stack.push(eval(stack.pop() + compareOps[argument] + temp));
           break;
       case 107: //IMPORT_NAME
-          throw "IMPORT_NAME is not implemented yet!";
+	  //Imports the module co_names[namei]. The module object is pushed
+	  //onto the stack. The current namespace is not affected: for a
+	  //proper import statement, a subsequent STORE_FAST instruction
+	  //modifies the namespace.
+	  var module = code_object.co_names[argument];
+	  //document.write("<script language=\"text/javascript\" src=\""+ module +".js\"></scr"+"ipt>");
+	  var codeObj = execute(eval(module));
+          stack.push(new PyClass(module, [], codeObj));
           break;
       case 108: //IMPORT_FROM
           throw "IMPORT_FROM is not implemented yet!";
@@ -524,11 +540,11 @@ function execute(code_object) {
       case 110: //JUMP_FORWARD
           // current_offset + jump + bytecode + argument
           var targetOffset = offset + argument + 1 + 2;
-          var j = parseInt(i) + 1;
+          var j = pc + 1;
           while(prog[j][1] != targetOffset) {
             j = j + 1;
           }
-          i = j - 1;
+          pc = j - 1;
           break;
       case 111: //JUMP_IF_FALSE
           //If TOS is false, increment the byte code counter by delta.
@@ -538,17 +554,17 @@ function execute(code_object) {
             // current_offset + jump + bytecode + argument
             var targetOffset = offset + argument + 1 + 2;
             if (argument > 0) {
-              var j = parseInt(i);
+              var j = pc;
               while(prog[j][1] != targetOffset) {
                 j = j + 1;
               }
-              i = j - 1;
+              pc = j - 1;
             } else {
-              var j = parseInt(i);
+              var j = pc;
               while(prog[j][1] != targetOffset) {
                 j = j - 1;
               }
-              i = j - 1;
+              pc = j - 1;
             }
           }
           break;
@@ -560,17 +576,17 @@ function execute(code_object) {
             // current_offset + jump + bytecode + argument
             var targetOffset = offset + argument + 1 + 2;
             if (argument > 0) {
-              var j = parseInt(i);
+              var j = pc;
               while(prog[j][1] != targetOffset) {
                 j = j + 1;
               }
-              i = j - 1;
+              pc = j - 1;
             } else {
-              var j = parseInt(i);
+              var j = pc;
               while(prog[j][1] != targetOffset) {
                 j = j - 1;
               }
-              i = j - 1;
+              pc = j - 1;
             }
           }
           break;
@@ -580,7 +596,7 @@ function execute(code_object) {
           while(prog[j][1] != argument) {
             j = j + 1;
           }
-          i = j - 1;
+          pc = j - 1;
           break;
       case 116: //LOAD_GLOBAL
           // Loads the global named co_names[namei] onto the stack.
@@ -598,16 +614,17 @@ function execute(code_object) {
           // Pushes a block for a loop onto the block stack.
           // The block spans from the current instruction with
           // a size of delta bytes.
-
-          // Implementation needed to support correct scoping rules.
-
-          //throw "SETUP_LOOP is not implemented yet!";
+	  blockStack.push([offset,argument,"loop"]);
           break;
       case 121: //SETUP_EXCEPT
-          throw "SETUP_EXCEPT is not implemented yet!";
+	  //Pushes a try block from a try-except clause onto the block
+	  //stack. delta points to the first except block.
+	  blockStack.push([offset,argument,"except"]);
           break;
       case 122: //SETUP_FINALLY
-          throw "SETUP_FINALLY is not implemented yet!";
+	  //Pushes a try block from a try-except clause onto the block
+	  //stack. delta points to the finally block.
+	  blockStack.push([offset,argument,"finally"]);
           break;
       case 124: //LOAD_FAST
           // Pushes a reference to the local co_varnames[var_num] onto the stack.
@@ -622,7 +639,22 @@ function execute(code_object) {
           delete code_object.co_varnames[argument];
           break;
       case 130: //RAISE_VARARGS
-          throw "RAISE_VARARGS is not implemented yet!";
+	  //Raises an exception. argc indicates the number of parameters
+	  //to the raise statement, ranging from 0 to 3. The handler will
+	  //find the traceback as TOS2, the parameter as TOS1, and the
+	  //exception as TOS.
+	  var parameters = [];
+	  for (var j = argument-1; j >= 0; j--){
+	    parameters[j] = stack.pop();
+	  }
+	  var exceptBlock = blockStack.pop();
+	  
+	  var targetOffset = exceptBlock[0] + exceptBlock[1] + 1 + 2;
+	  var j = pc;
+	  while(prog[j][1] != targetOffset) {
+	    j = j + 1;
+	  }
+	  pc = j - 1;
           break;
       case 131: //CALL_FUNCTION
           if (typeof(stack.peekTop().__name__) == typeof("")) {
@@ -632,7 +664,6 @@ function execute(code_object) {
             for (var j = argument; j > 0; j--){
               localVars[j] = stack.pop();
             }
-            //localVars[0] = stack.peekTop().self;
             stack.newFrame();
             var codeObject = stack.peekTop().getCodeObject();
             if (contains(codeObject.co_varnames, "self")) {
