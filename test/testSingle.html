@@ -1,0 +1,33 @@
+<html>
+ <head>
+  <title>Test Page for PEJS</title>
+  <script type="text/javascript" src="../src/interpreter.js"></script>
+  <script type="text/javascript" src="../src/pejs_library.js"></script>
+  <script type="text/javascript">
+    var progName;
+    var strHref = window.location.href;
+    if (strHref.indexOf("?") > -1) {
+      progName = strHref.substr(strHref.indexOf("?")+1);
+    }
+
+    delayTest(progName);
+
+    function delayTest(name) {
+      document.write("<script type=\"text/javascript\" src=\""+name+".js\"></scr"+"ipt>");
+    }
+  </script>
+  <style type="text/css">
+    body {
+      font-family: Verdana, Tahoma, Sans;
+      font-size: 12pt;
+    }
+  </style>
+ </head>
+ <body>
+  <h1>PEJS Single Test</h1>
+  <a href="test.html">Back to Full Test</a><br/>
+  <script type="text/javascript">
+    interpret(progName);
+  </script>
+</body>
+</html>

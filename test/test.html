@@ -54,7 +54,7 @@
   </style>
  </head>
  <body>
-  <H1>PEJS Test</H1>
+  <h1>PEJS Full Test</h1>
   <table><tr><th>No.</th><th>Test</th><th>Result</th></tr>
     <script type="text/javascript">
       var exceptions = new Array();
@@ -67,20 +67,20 @@
           document.write("<tr><td class='no'>"+(i+1)+"</td><td class='progName'><a href='"+progName+".js'>"+progName+"</a> [<a href='"+progName+".py'>py</a>]</td><td class='result'>");
           total++;
           if (withExceptions) {
+            interpret(progName);
+          } else {
             try {
               interpret(progName);
             } catch (exception) {
-              document.write("<a title='"+exception+"'>FAIL</a>");
+              document.write("<a href=\"testSingle.html?"+progName+"\" title=\""+exception+"\">FAIL</a>");
               exceptions.push(progName+": "+exception);
             }
-          } else {
-            interpret(progName);
           }
           document.write("</td>");
         }
       }
 
-      runTest(delayArray, true);
+      runTest(delayArray, false);
 
       var ary = document.getElementsByTagName("td");
       for(var i=0; i < ary.length; i++) {
@@ -97,7 +97,7 @@
     </script>
   </table><br/>
   <script type="text/javascript">
-    document.write(total+" tests run. "+success+" succeeded, "+
+    document.write("<b>"+total+" tests run</b>: "+success+" succeeded, "+
                    (total-(success+exceptions.length))+" returned wrong result and "+
                    exceptions.length +" failed with an exception.<br/><br/>");
 
