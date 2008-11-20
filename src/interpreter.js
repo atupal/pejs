@@ -146,7 +146,7 @@ function execute(code_object) {
     offset = prog[pc][1];
     argument = prog[pc][2]; //Unknown contents if no argument
     
-    //printDebug(prog[pc]+"<br/>");
+    printDebug(prog[pc]+"<br/>");
     
     switch(bytecode) {
       case 0: //STOP_CODE
