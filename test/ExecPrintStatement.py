@@ -1,1 +1,1 @@
-exec("$document.write(42);") 
+exec "document.write(42);" in "javascript"
