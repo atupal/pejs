@@ -1,6 +1,5 @@
 <html>
  <head>
-  <title>Test Page for PEJS</title>
   <script type="text/javascript" src="../src/interpreter.js"></script>
   <script type="text/javascript" src="../src/pejs_library.js"></script>
   <script type="text/javascript">
@@ -15,6 +14,7 @@
     function delayTest(name) {
       document.write("<script type=\"text/javascript\" src=\""+name+".js\"></scr"+"ipt>");
     }
+    document.write("<title>Test Page for PEJS: Single test of "+ progName +"</title>");
   </script>
   <style type="text/css">
     body {
@@ -46,12 +46,12 @@
     td.red {
       text-align: left;
       font-weight: bold;
-      color: blue;
+      color: red;
     }
     td.green {
       text-align: left;
       font-weight: bold;
-      color: blue;
+      color: green;
     }
     td.blue {
       text-align: left;
