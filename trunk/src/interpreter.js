@@ -67,14 +67,26 @@ function Stack() {
   }
 
   this.printStack = function(desc) {
-    printDebug("<br/><br/>--- stack: " + desc + " ---<br/>");
+    printDebug("<tr><td colspan=\"6\" class=\"stackHeader\">Stack print: "+desc+"</td></tr>")
     for (var i = array.length-1; i >= 0; i--) {
+      printDebug("<tr><td colspan=\"3\" class=\"stackContent\">");
       printDebug(array[i]);
+      printDebug("</td><td colspan=\"3\" class=\"stackPointer\">");
       if (i == sp) printDebug(" &lt;-- sp");
       if (i == bp) printDebug(" &lt;-- bp");
-      printDebug("<br/>");
+      printDebug("</td><td></td></tr>");
     }
-    printDebug("--- stack end ---<br/><br/>");
+  }
+
+  this.printLine = function(desc) {
+    var res = "";
+    for (var i = 0; i <= sp; i++) {
+      res += array[i];
+      if (i == bp) res += " (bp)";
+      if (i == sp) res += " (sp)";
+      res += ", ";
+    }
+    return res;
   }
 }
 
@@ -125,6 +137,7 @@ function interpret(progName, debugEnabled) {
   if (typeof(pejs_library) != typeof(undefined)) {
     libraryValues = globals = pejs_library.co_locals;
     libraryNames = globalNames = pejs_library.co_varnames;
+    printfDebug("blue","Execution trace of PEJS Library");
     execute(pejs_library);
   } else {
     throw "pejs_library not found";
@@ -135,10 +148,12 @@ function interpret(progName, debugEnabled) {
   var code_object = eval(progName);
   globals = code_object.co_locals;
   globalNames = code_object.co_varnames;
+  printfDebug("blue","Execution trace of "+progName);
   execute(code_object);
 }
 
 function execute(code_object) {
+  printfDebug("blue","Execution trace of "+code_object.co_name);
   var bytecode, offset, argument;
   var prog = code_object.co_code;
   for (var pc=0; pc<prog.length; pc++) {
@@ -146,7 +161,7 @@ function execute(code_object) {
     offset = prog[pc][1];
     argument = prog[pc][2]; //Unknown contents if no argument
     
-    printDebug(prog[pc]+"<br/>");
+    printInstruction(prog[pc]);
     
     switch(bytecode) {
       case 0: //STOP_CODE
@@ -204,7 +219,6 @@ function execute(code_object) {
           stack.push(stack.pop() % temp);
           break;
       case 23: //BINARY_ADD
-          stack.printStack("Before BINADD");
           var temp = stack.pop();
           stack.push(stack.pop() + temp);
           break;
@@ -372,7 +386,6 @@ function execute(code_object) {
           stack.push(code_object);
           break;
       case 83: //RETURN_VALUE
-          stack.printStack("Before return with "+stack.peekTop());
           stack.removeFrame();
           return;
       case 84: //IMPORT_STAR
@@ -410,13 +423,16 @@ function execute(code_object) {
           var name = code_object.co_names[argument];
           if (contains(code_object.co_varnames, name)) {
             code_object.co_locals[code_object.co_varnames.indexOf(name)] = stack.pop();
+printfDebug("red","Stored as local");
           } else if(contains(globalNames, name)) {
             globals[globalNames.indexOf(name)] = stack.pop();
+printfDebug("red","Stored as global");
           } else {
             //new variable
             var index = code_object.co_varnames.length;
             code_object.co_varnames[index] = name;
             code_object.co_locals[index] = stack.pop();
+printfDebug("red","Stored as new local");
           }
           break;
       case 91: //DELETE_NAME
@@ -561,7 +577,14 @@ function execute(code_object) {
 	  //modifies the namespace.
 	  var module = code_object.co_names[argument];
 	  //document.write("<script language=\"text/javascript\" src=\""+ module +".js\"></scr"+"ipt>");
-	  var codeObj = execute(eval(module));
+	  var codeObj = eval(module);
+	  for (i=0; i<codeObj.co_locals.length; i++) {
+	    var index = globalNames.length;
+	    globalNames[index] = codeObj.co_varnames[i];
+	    globals[index] = codeObj.co_locals[i];
+	  }
+	  execute(codeObj);
+throw "I'm here now!"
           stack.push(new PyClass(module, [], codeObj));
           break;
       case 108: //IMPORT_FROM
@@ -632,6 +655,7 @@ function execute(code_object) {
           if (name == "__name__") {
             stack.push(code_object.co_name);
           } else {
+printfDebug("green", "Global names: ["+globalNames+"]");
             stack.push(globals[globalNames.indexOf(name)]);
           }
           break;
@@ -689,8 +713,8 @@ function execute(code_object) {
           for (var j = argument; j > 0; j--){
             localVars[j] = stack.pop();
           }
-          printDebug("Local vars: "+localVars+"<br/>");
-          if (typeof(stack.peekTop().__name__) == typeof("")) {
+	  printfDebug("blue", "Local vars: ["+localVars+"]");
+	  if (typeof(stack.peekTop().__name__) == typeof("")) {
             var newObj = new PyObject(stack.pop());
             var classCodeObject = newObj.class.getCodeObject();
             var index = classCodeObject.co_varnames.indexOf("__init__");
@@ -800,11 +824,11 @@ function PyObject(clss) {
 }
 
 function printObject(object) {
-  printOut("-------Object------<br/>");
+  printDebug("-------Object------<br/>");
   for(prop in object) {
-    printOut(prop +": "+ object[prop] +"<br/>");
+    printDebug(prop +": "+ object[prop] +"<br/>");
   }
-  printOut("---End Of Object---<br/>");
+  printDebug("---End Of Object---<br/>");
 }
 
 var debug = false;
@@ -813,6 +837,32 @@ function printDebug(str) {
     printOut(str);
   }
 }
+
+function printfDebug(color, str) {
+  printDebug("<tr><td colspan=\"7\" class=\""+color+"\">"+str+"</td></tr>");
+}
+
+function printInstruction(inst) {
+  var res = "<tr>";
+  if (inst.length == 3) {
+    res += "<td class=\"offset\">"+inst[1]+"</td>"+
+	   "<td class=\"inst\">"+inst[2]+"</td>"+
+	   "<td></td>"+
+	   "<td></td>"+
+	   "<td class=\"code\">"+inst[0]+"</td>"+
+	   "<td></td>";
+  } else { //length == 6
+    res += "<td class=\"offset\">"+inst[1]+"</td>"+
+	   "<td class=\"inst\">"+inst[5]+"</td>"+
+	   "<td class=\"value\">"+inst[4]+"</td>"+
+	   "<td class=\"type\">"+inst[3]+"</td>"+
+	   "<td class=\"code\">"+inst[0]+"</td>"+
+	   "<td class=\"arg\">"+inst[2]+"</td>";
+  }
+  res += "<td class=\"stack\">"+stack.printLine()+"</td>";
+  printDebug(res +"</tr>");
+}
+
 
 function printOut(str) {
   switch(env) {

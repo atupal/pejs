@@ -21,13 +21,61 @@
       font-family: Verdana, Tahoma, Sans;
       font-size: 12pt;
     }
+    td {
+      font-size: 10pt;
+      padding: 2pt;
+      border: 1pt silver solid
+    }
+    td.inst {
+      color: red;
+    }
+    td.stack {
+      color: green;
+    }
+    td.stackHeader {
+      color: green;
+      text-align: center;
+      font-weight: bold;
+    }
+    td.stackContent {
+      text-align: right;
+    }
+    td.stackPointer {
+      text-align: left;
+    }
+    td.red {
+      text-align: left;
+      font-weight: bold;
+      color: blue;
+    }
+    td.green {
+      text-align: left;
+      font-weight: bold;
+      color: blue;
+    }
+    td.blue {
+      text-align: left;
+      font-weight: bold;
+      color: blue;
+    }
   </style>
  </head>
  <body>
   <h1>PEJS Single Test</h1>
   <a href="test.html">Back to Full Test</a><br/>
-  <script type="text/javascript">
-    interpret(progName, true);
-  </script>
+  <table>
+    <tr>
+      <th>Offset</th>
+      <th>Instruction</th>
+      <th>Value</th>
+      <th>Type</th>
+      <th>Code</th>
+      <th>Arg#</th>
+      <th>Stack</th>
+    </tr>
+    <script type="text/javascript">
+      interpret(progName, true);
+    </script>
+  </table>
 </body>
 </html>

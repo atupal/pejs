@@ -1,6 +1,6 @@
-import functions
+import Functions
 
-if functions.two() != 2:
-  print "error in call to imported function"
+if Functions.two() != 2:
+  print 123
 else:
   print 42
