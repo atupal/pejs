@@ -441,11 +441,10 @@ function execute(code_object) {
       case 85: //EXEC_STMT
 	  //Implements exec TOS2,TOS1,TOS. The compiler fills
 	  //missing optional parameters with None.
-	  var expr1 = stack.pop(); //Currently ignored
-	  var expr2 = stack.pop(); //Currently ignored
+	  var expr1 = stack.pop();
+	  var expr2 = stack.pop();
 	  var stmt = stack.pop();
-	  if (stmt.charAt(0) == '$') {
-	    stmt = stmt.substring(1,stmt.length);
+	  if (expr2 == "JavaScript") {
 	    eval(stmt);
 	  } else {
 	    printfDebug("blue", "Could not execute \""+stmt+"\"");
