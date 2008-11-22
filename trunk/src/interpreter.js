@@ -126,17 +126,64 @@ function FunctionObject(defaultArgc, codeObj) {
   }
 }
 
-var globals;
-var globalNames;
-var libraryValues;
-var libraryNames;
+var globals = new Globals();
+function Globals() {
+  var values = [[]]; //Initialized with a special array for new globals
+  var names = [[]];
+
+  this.add = function(nameArray, valueArray) {
+    names[names.length] = nameArray;
+    values[values.length] = valueArray;
+  }
+
+  this.store = function(name, value) {
+    for(var i=0; i<names.length; i++) {
+      var index = names[i].indexOf(name);
+      if (index > -1) {
+	values[i][index] = value;
+	return;
+      }
+    }
+    //new global variable - added to a special array
+    var index = names[0].length;
+    names[0][index] = name;
+    values[0][index] = value;
+  }
+
+  this.lookup = function(name) {
+    for(var i=0; i<names.length; i++) {
+      var index = names[i].indexOf(name);
+      if (index > -1) return values[i][index];
+    }
+    throw "Global lookup of \""+name+"\" failed.";
+  }
+
+  this.contains = function(name) {
+    for(var i=0; i<names.length; i++) {
+      var index = names[i].indexOf(name);
+      if (index > -1) return true;
+    }
+    return false;
+  }
+
+  this.delete = function(name) {
+    for(var i=0; i<names.length; i++) {
+      var index = names[i].indexOf(name);
+      if (index > -1) {
+	delete names[i][index];
+	delete values[i][index];
+	return;
+      }
+    }
+    throw "Global lookup of \""+name+"\" failed.";
+  }
+}
 
 function interpret(progName, debugEnabled) {
   if (debugEnabled)
     debug = true;
   if (typeof(pejs_library) != typeof(undefined)) {
-    libraryValues = globals = pejs_library.co_locals;
-    libraryNames = globalNames = pejs_library.co_varnames;
+    globals.add(pejs_library.co_varnames, pejs_library.co_locals);
     printfDebug("blue","Execution trace of PEJS Library");
     execute(pejs_library);
   } else {
@@ -146,8 +193,7 @@ function interpret(progName, debugEnabled) {
   stack = new Stack();
   blockStack = new Stack();
   var code_object = eval(progName);
-  globals = code_object.co_locals;
-  globalNames = code_object.co_varnames;
+  globals.add(code_object.co_varnames, code_object.co_locals);
   printfDebug("blue","Execution trace of "+progName);
   execute(code_object);
 }
@@ -392,7 +438,17 @@ function execute(code_object) {
           throw "IMPORT_STAR is not implemented yet!";
           break;
       case 85: //EXEC_STMT
-          throw "EXEC_STMT is not implemented yet!";
+	  //Implements exec TOS2,TOS1,TOS. The compiler fills missing optional parameters with None.
+	  var expr1 = stack.pop(); //Currently ignored
+	  var expr2 = stack.pop(); //Currently ignored
+	  var stmt = stack.pop();
+	  if (stmt.charAt(0) == '$') {
+	    stmt = stmt.substring(1,stmt.length);
+	    eval(stmt);
+	  } else {
+	    printfDebug("blue", "Could not execute \""+stmt+"\"");
+	    throw "EXEC_STMT is not implemented for Python statements yet!";
+	  }
           break;
       case 86: //YIELD_VALUE
           throw "YIELD_VALUE is not implemented yet!";
@@ -423,16 +479,13 @@ function execute(code_object) {
           var name = code_object.co_names[argument];
           if (contains(code_object.co_varnames, name)) {
             code_object.co_locals[code_object.co_varnames.indexOf(name)] = stack.pop();
-printfDebug("red","Stored as local");
-          } else if(contains(globalNames, name)) {
-            globals[globalNames.indexOf(name)] = stack.pop();
-printfDebug("red","Stored as global");
+          } else if(globals.contains(name)) {
+            globals.store(name, stack.pop());
           } else {
             //new variable
             var index = code_object.co_varnames.length;
             code_object.co_varnames[index] = name;
             code_object.co_locals[index] = stack.pop();
-printfDebug("red","Stored as new local");
           }
           break;
       case 91: //DELETE_NAME
@@ -486,21 +539,13 @@ printfDebug("red","Stored as new local");
           throw "DELETE_ATTR is not implemented yet!";
           break;
       case 97: //STORE_GLOBAL
-          var name = code_object.co_names[argument];
-          if (contains(globalNames, name)) {
-            globals[globalNames.indexOf(name)] = stack.pop();
-          } else {
-            var index = globalNames.length;
-            globalNames[index] = name;
-            globals[index] = stack.pop();
-          }
+          globals.store(code_object.co_names[argument], stack.pop());
           break;
       case 98: //DELETE_GLOBAL
           var name = code_object.co_names[argument];
           delete code_object.co_names[argument];
-          if (contains(globalNames, name)) {
-            delete globals[globalNames.indexOf(name)];
-            delete globalNames[globalNames.indexOf(name)];
+          if (globals.contains(name)) {
+            globals.delete(name);
           }
           break;
       case 99: //DUP_TOPX
@@ -521,10 +566,8 @@ printfDebug("red","Stored as new local");
           var name = code_object.co_names[argument];
           if(contains(code_object.co_varnames, name)){
              stack.push(code_object.co_locals[code_object.co_varnames.indexOf(name)]);
-          } else if (contains(globalNames, name)) {
-             stack.push(globals[globalNames.indexOf(name)]);
-          } else if (contains(libraryNames, name)) {
-             stack.push(libraryValues[libraryNames.indexOf(name)]);
+          } else if (globals.contains(name)) {
+             stack.push(globals.lookup(name));
           } else {
             throw "LOAD_NAME attempted to load nonexisting name \""+name+"\"";
           }
@@ -578,14 +621,20 @@ printfDebug("red","Stored as new local");
 	  var module = code_object.co_names[argument];
 	  //document.write("<script language=\"text/javascript\" src=\""+ module +".js\"></scr"+"ipt>");
 	  var codeObj = eval(module);
-	  for (i=0; i<codeObj.co_locals.length; i++) {
-	    var index = globalNames.length;
-	    globalNames[index] = codeObj.co_varnames[i];
-	    globals[index] = codeObj.co_locals[i];
-	  }
+	  globals.add(codeObj.co_varnames, codeObj.co_locals);
 	  execute(codeObj);
-throw "I'm here now!"
-          stack.push(new PyClass(module, [], codeObj));
+	  var class = new PyClass(module, [], codeObj);
+	  var newObj = new PyObject(class);
+
+	  for (var j=0; j<codeObj.co_locals.length; j++) {
+	    if (typeof(codeObj.co_locals[j].getCodeObject) == typeof(function() {}))
+	      continue;
+	    if (/__\w+__/.test(codeObj.co_varnames[j]))
+	      continue;
+	    newObj.fieldNames.push(codeObj.co_varnames[j]);
+	    newObj.fieldValues.push(codeObj.co_locals[j]);
+	  }
+	  stack.push(newObj);
           break;
       case 108: //IMPORT_FROM
           throw "IMPORT_FROM is not implemented yet!";
@@ -655,8 +704,7 @@ throw "I'm here now!"
           if (name == "__name__") {
             stack.push(code_object.co_name);
           } else {
-printfDebug("green", "Global names: ["+globalNames+"]");
-            stack.push(globals[globalNames.indexOf(name)]);
+            stack.push(globals.lookup(name));
           }
           break;
       case 119: //CONTINUE_LOOP
@@ -824,11 +872,11 @@ function PyObject(clss) {
 }
 
 function printObject(object) {
-  printDebug("-------Object------<br/>");
-  for(prop in object) {
-    printDebug(prop +": "+ object[prop] +"<br/>");
+  var res = "Object print:<br/>";
+  for (prop in object) {
+    res += "&nbsp;&nbsp;&nbsp;"+ prop +": "+ object[prop] +"<br/>";
   }
-  printDebug("---End Of Object---<br/>");
+  printfDebug("green",res);
 }
 
 var debug = false;
