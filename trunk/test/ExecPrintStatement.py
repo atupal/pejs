@@ -1,0 +1,1 @@
+exec("$document.write(42);") 
