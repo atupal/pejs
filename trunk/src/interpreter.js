@@ -425,7 +425,8 @@ function execute(code_object) {
       case 82: //LOAD_LOCALS
           //Pushes a reference to the locals of the
           //current scope on the stack.
-          //This is used in the code for a class definition: After the class body is evaluated,
+          //This is used in the code for a class definition:
+	  // After the class body is evaluated,
           //the locals are passed to the class definition. 
           //document.write("Locals: "+code_object.co_locals);
           //stack.push([code_object.co_varnames, code_object.co_locals]);
@@ -438,7 +439,8 @@ function execute(code_object) {
           throw "IMPORT_STAR is not implemented yet!";
           break;
       case 85: //EXEC_STMT
-	  //Implements exec TOS2,TOS1,TOS. The compiler fills missing optional parameters with None.
+	  //Implements exec TOS2,TOS1,TOS. The compiler fills
+	  //missing optional parameters with None.
 	  var expr1 = stack.pop(); //Currently ignored
 	  var expr2 = stack.pop(); //Currently ignored
 	  var stmt = stack.pop();
