@@ -1,11 +1,15 @@
 if True:
-  a = 7
-  b = 35
+  a = 3
+  b = 30
+else:
+  a = 200
+  b = 123
 
 if False:
-  a = 0
-
-if a > 0:
-  print a+b
+  a = 100
+  b = 234
 else:
-  print b
+  a = a + 4
+  b = b + 5
+
+print a+b
