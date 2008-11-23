@@ -12,6 +12,8 @@
     delayTest(progName);
 
     function delayTest(name) {
+      if (name == "ImportExisting")
+	document.write("<script type=\"text/javascript\" src=\"Functions.js\"></scr"+"ipt>");
       document.write("<script type=\"text/javascript\" src=\""+name+".js\"></scr"+"ipt>");
     }
     document.write("<title>Test Page for PEJS: Single test of "+ progName +"</title>");

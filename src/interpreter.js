@@ -12,14 +12,20 @@ function Stack() {
     return array[sp--];
   }
 
-  this.newFrame = function() {
+  this.newFrame = function(localVars) {
     this.push(bp);
     bp = sp;
     this.rotate2();
+    for (var i=0;i<localVars.length;i++) {
+      this.push(localVars[i]);
+    }
   }
 
-  this.removeFrame = function() {
+  this.removeFrame = function(argcount, localVars) {
     var returnVal = array[sp];
+    for (var i=1; i<=argcount; i++) {
+      localVars[i] = array[bp+i];
+    }
     sp = bp-1;
     bp = array[sp];
     if (sp < 1) {
@@ -34,11 +40,15 @@ function Stack() {
   }
 
   this.peek = function(val) {
-    return array[bp + val];
+    return array[sp];
   }
 
-  this.peekTop = function() {
-    return array[sp];
+  this.read = function(varNum) {
+    return array[bp + 1 + varNum];
+  }
+
+  this.write = function(varNum, value) {
+    array[bp + 1 + varNum] = value;
   }
 
   this.rotate2 = function() {
@@ -78,7 +88,7 @@ function Stack() {
     }
   }
 
-  this.printLine = function(desc) {
+  this.print = function() {
     var res = "";
     for (var i = 0; i <= sp; i++) {
       res += array[i];
@@ -177,9 +187,21 @@ function Globals() {
     }
     throw "Global lookup of \""+name+"\" failed.";
   }
+
+  this.print = function() {
+    var res = "Globals: <br/>";
+    for(var i=0; i<names.length; i++) {
+      for(var j=0; j<names[i].length; j++) {
+	res += "&nbsp;&nbsp;["+i+"]["+j+"]"+ 
+	       names[i][j] +": "+ values[i][j] +"<br/>";
+      }
+    }
+    printfDebug("red", res);
+  }
 }
 
 function interpret(progName, debugEnabled) {
+  globals = new Globals();
   if (debugEnabled)
     debug = true;
   if (typeof(pejs_library) != typeof(undefined)) {
@@ -433,7 +455,7 @@ function execute(code_object) {
           stack.push(code_object);
           break;
       case 83: //RETURN_VALUE
-          stack.removeFrame();
+          stack.removeFrame(code_object.argcount, code_object.co_locals);
           return;
       case 84: //IMPORT_STAR
           throw "IMPORT_STAR is not implemented yet!";
@@ -473,13 +495,18 @@ function execute(code_object) {
           //document.write("Methods: " + methods);
           stack.push(new PyClass(className, base, codeObj));
           break;
-      case 90: //STORE_NAME ------------------ HAVE_ARGUMENT ------------------
+      case 90: //STORE_NAME --------------- HAVE_ARGUMENT ---------------
           //Implements name = TOS. namei is the index of name in the attribute
           //co_names of the code object.
           //The compiler tries to use STORE_LOCAL or STORE_GLOBAL if possible
           var name = code_object.co_names[argument];
           if (contains(code_object.co_varnames, name)) {
-            code_object.co_locals[code_object.co_varnames.indexOf(name)] = stack.pop();
+	    var value = stack.pop();
+	    var index = code_object.co_varnames.indexOf(name);
+	    if (index < code_object.co_argcount) {
+	      stack.write(index, value);
+	    }
+	    code_object.co_locals[index] = value;
           } else if(globals.contains(name)) {
             globals.store(name, stack.pop());
           } else {
@@ -487,6 +514,11 @@ function execute(code_object) {
             var index = code_object.co_varnames.length;
             code_object.co_varnames[index] = name;
             code_object.co_locals[index] = stack.pop();
+	    if (globals.contains(name)) {
+	      printfDebug("green", "Stored \""+name+"\" as local variable. Can be found in globals.");
+	    } else {
+	      printfDebug("green", "Stored \""+name+"\" as local variable.");
+	    }
           }
           break;
       case 91: //DELETE_NAME
@@ -500,8 +532,8 @@ function execute(code_object) {
           //push it on the stack (leaving the iterator below it). If the iterator
           //indicates it is exhausted TOS is popped, and the byte code counter is
           //incremented by delta.
-          var pair = stack.peekTop();
-          if (pair[0] <= pair[1]) {
+          var pair = stack.peek();
+          if (pair[0] < pair[1]) {
             stack.push(pair[0]++);
           } else {
             stack.pop();
@@ -563,12 +595,17 @@ function execute(code_object) {
           break;
       case 101: //LOAD_NAME
           //Pushes the value associated with "co_names[namei]" onto the stack.
-          // First we try to find the value in locals then in globals.
+          //First we try to find the value in locals then in globals.
           var name = code_object.co_names[argument];
-          if(contains(code_object.co_varnames, name)){
-             stack.push(code_object.co_locals[code_object.co_varnames.indexOf(name)]);
+          if (contains(code_object.co_varnames, name)) {
+	    var index = code_object.co_varnames.indexOf(name);
+	    if (index < code_object.argcount) {
+	      stack.push(stack.read(index));
+	    } else {
+              stack.push(code_object.co_locals[index]);
+	    }
           } else if (globals.contains(name)) {
-             stack.push(globals.lookup(name));
+            stack.push(globals.lookup(name));
           } else {
             throw "LOAD_NAME attempted to load nonexisting name \""+name+"\"";
           }
@@ -628,13 +665,18 @@ function execute(code_object) {
 	  var newObj = new PyObject(class);
 
 	  for (var j=0; j<codeObj.co_locals.length; j++) {
-	    if (typeof(codeObj.co_locals[j].getCodeObject) == typeof(function() {}))
+	    var name = codeObj.co_varnames[j];
+	    var value = codeObj.co_locals[j];
+	    if (/__\w+__/.test(name)) {
 	      continue;
-	    if (/__\w+__/.test(codeObj.co_varnames[j]))
+	    }
+	    if (typeof(value.getCodeObject) == typeof(function() {})) {
 	      continue;
-	    newObj.fieldNames.push(codeObj.co_varnames[j]);
-	    newObj.fieldValues.push(codeObj.co_locals[j]);
+	    }
+	    newObj.fieldNames.push(name);
+	    newObj.fieldValues.push(value);
 	  }
+	  stack.pop() //Remove return value from the executed codeObject
 	  stack.push(newObj);
           break;
       case 108: //IMPORT_FROM
@@ -652,7 +694,7 @@ function execute(code_object) {
       case 111: //JUMP_IF_FALSE
           //If TOS is false, increment the byte code counter by delta.
           //TOS is not changed.
-          if(!stack.peekTop()) {
+          if(!stack.peek()) {
             // current_offset + jump + bytecode + argument
             var targetOffset = offset + argument + 1 + 2;
             if (argument > 0) {
@@ -673,7 +715,7 @@ function execute(code_object) {
       case 112: //JUMP_IF_TRUE
           //If TOS is true, increment the byte code counter by delta.
           //TOS is left on the stack
-          if(stack.peekTop()) {
+          if(stack.peek()) {
             // current_offset + jump + bytecode + argument
             var targetOffset = offset + argument + 1 + 2;
             if (argument > 0) {
@@ -729,13 +771,16 @@ function execute(code_object) {
           break;
       case 124: //LOAD_FAST
           // Pushes a reference to the local co_varnames[var_num] onto the stack.
-          stack.push(code_object.co_locals[argument]);
+          stack.push(stack.read(argument));
           break;
       case 125: //STORE_FAST
           // Stores TOS into the local co_varnames[var_num].
-          code_object.co_locals[argument] = stack.pop();
+	  var value = stack.pop();
+          stack.write(argument, value);
+	  code_object.co_locals[argument] = value;
           break;
       case 126: //DELETE_FAST
+          stack.write(argument, undefined);
           delete code_object.co_locals[argument];
           delete code_object.co_varnames[argument];
           break;
@@ -762,16 +807,18 @@ function execute(code_object) {
           for (var j = argument; j > 0; j--){
             localVars[j] = stack.pop();
           }
-	  printfDebug("blue", "Local vars: ["+localVars+"]");
-	  if (typeof(stack.peekTop().__name__) == typeof("")) {
+	  if (typeof(stack.peek().__name__) == typeof("")) {
+	    //Creation of new object
             var newObj = new PyObject(stack.pop());
             var classCodeObject = newObj.class.getCodeObject();
             var index = classCodeObject.co_varnames.indexOf("__init__");
             if (index > -1) {
               var initCodeObject = classCodeObject.co_locals[index].getCodeObject();
               localVars[0] = newObj;
-              initCodeObject.co_locals = localVars;
-              stack.newFrame();
+	      for (var j=0;j<localVars.length;j++) {
+		initCodeObject.co_locals[j] = localVars[j];
+	      }
+              stack.newFrame(localVars);
               execute(initCodeObject);
             }
             for (var j=0; j<classCodeObject.co_locals.length; j++) {
@@ -784,8 +831,7 @@ function execute(code_object) {
             }
             stack.push(newObj);
           } else {
-            stack.newFrame();
-            var codeObject = stack.peekTop().getCodeObject();
+            var codeObject = stack.peek().getCodeObject();
             if (contains(codeObject.co_varnames, "self")) {
               //insert self reference
               localVars[0] = codeObject.co_locals[0];
@@ -799,15 +845,19 @@ function execute(code_object) {
             //insert default parameters if necessary                        
             var totalArgc = codeObject.co_argcount;
             var actualArgc = argument;
-            var defArgc = stack.peekTop().getArgc();
-            var defArgs = stack.peekTop().getArgs();
+            var defArgc = stack.peek().getArgc();
+            var defArgs = stack.peek().getArgs();
             var overlap = (actualArgc + defArgc) - totalArgc;            
             var index = localVars.length;
             while (index < totalArgc) {
               localVars[index] = defArgs[index - actualArgc + overlap];
               index = localVars.length;
             }
-            codeObject.co_locals = localVars;
+            //codeObject.co_locals = localVars;
+	    for (var j=0;j<localVars.length;j++) {
+	      codeObject.co_locals[j] = localVars[j];
+	    }
+            stack.newFrame(localVars);
             execute(codeObject);
           }
           break;
@@ -891,6 +941,15 @@ function printfDebug(color, str) {
   printDebug("<tr><td colspan=\"7\" class=\""+color+"\">"+str+"</td></tr>");
 }
 
+function printPairs(names, values, title) {
+  res = title +":<br/>";
+  for (var i=0;i<names.length;i++) {
+    res += "&nbsp;&nbsp;"+ names[i]
+	   ": "+values[i] +"<br/>";
+  }
+  printfDebug("green",res);
+}
+
 function printInstruction(inst) {
   var res = "<tr>";
   if (inst.length == 3) {
@@ -908,7 +967,7 @@ function printInstruction(inst) {
 	   "<td class=\"code\">"+inst[0]+"</td>"+
 	   "<td class=\"arg\">"+inst[2]+"</td>";
   }
-  res += "<td class=\"stack\">"+stack.printLine()+"</td>";
+  res += "<td class=\"stack\">"+stack.print()+"</td>";
   printDebug(res +"</tr>");
 }
 
