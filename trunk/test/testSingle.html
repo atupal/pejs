@@ -1,20 +1,22 @@
 <html>
  <head>
   <script type="text/javascript" src="../src/interpreter.js"></script>
-  <script type="text/javascript" src="../src/pejs_library.js"></script>
+  <script type="text/javascript" src="../src/lib/lib.js"></script>
+  <script type="text/javascript" src="test.js"></script>
   <script type="text/javascript">
+    importJS("../src/lib/",libArray);
+    importJS("",testArray);
+    
     var progName;
     var strHref = window.location.href;
     if (strHref.indexOf("?") > -1) {
       progName = strHref.substr(strHref.indexOf("?")+1);
     }
 
-    delayTest(progName);
-
-    function delayTest(name) {
-      if (name == "ImportExisting")
-	document.write("<script type=\"text/javascript\" src=\"Functions.js\"></scr"+"ipt>");
-      document.write("<script type=\"text/javascript\" src=\""+name+".js\"></scr"+"ipt>");
+    function importJS(prefix, nameArray) {
+      for (var i=0; i<nameArray.length; i++) {
+        document.write("<script type=\"text/javascript\" src=\""+prefix+nameArray[i]+".js\"></scr"+"ipt>");
+      }
     }
     document.write("<title>Test Page for PEJS: Single test of "+ progName +"</title>");
   </script>
