@@ -173,6 +173,12 @@ def print_consts(consts, indent, varname):
     elif type(const) == type(code_object):
       result = result + indent + "\"CODEOBJ: " + varname +"_"+const.co_name + "\", "
       queue.append((const, varname +"_"+const.co_name))
+    elif type(const) == type(()):
+      #print "CONST: "+str(const)
+      result = result + print_consts(const, indent, varname) + ", "
+      #result = result + "["
+      #for i in const:
+       # print_consts
     else:
       result = result + indent + str(const) + ", "
     i = i + 1

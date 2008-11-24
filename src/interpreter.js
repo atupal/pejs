@@ -12,19 +12,19 @@ function Stack() {
     return array[sp--];
   }
 
-  this.newFrame = function(localVars) {
+  this.newFrame = function(argcount, localVars) {
     this.push(bp);
     bp = sp;
     this.rotate2();
-    for (var i=0;i<localVars.length;i++) {
+    for (var i=0;i<argcount;i++) {
       this.push(localVars[i]);
     }
   }
 
-  this.removeFrame = function(argcount, localVars) {
+  this.removeFrame = function(argcount, co_locals) {
     var returnVal = array[sp];
     for (var i=1; i<=argcount; i++) {
-      localVars[i] = array[bp+i];
+      co_locals[i] = array[bp+i];
     }
     sp = bp-1;
     bp = array[sp];
@@ -185,7 +185,7 @@ function Globals() {
 	return;
       }
     }
-    throw "Global lookup of \""+name+"\" failed.";
+    throw "Global delete of \""+name+"\" failed.";
   }
 
   this.print = function() {
@@ -204,12 +204,12 @@ function interpret(progName, debugEnabled) {
   globals = new Globals();
   if (debugEnabled)
     debug = true;
-  if (typeof(pejs_library) != typeof(undefined)) {
-    globals.add(pejs_library.co_varnames, pejs_library.co_locals);
+  if (typeof(stdlib) != typeof(undefined)) {
+    globals.add(stdlib.co_varnames, stdlib.co_locals);
     printfDebug("blue","Execution trace of PEJS Library");
-    execute(pejs_library);
+    execute(stdlib);
   } else {
-    throw "pejs_library not found";
+    throw "PEJS standard library not found";
   }
 
   stack = new Stack();
@@ -455,7 +455,7 @@ function execute(code_object) {
           stack.push(code_object);
           break;
       case 83: //RETURN_VALUE
-          stack.removeFrame(code_object.argcount, code_object.co_locals);
+          stack.removeFrame(code_object.co_nlocals, code_object.co_locals);
           return;
       case 84: //IMPORT_STAR
           throw "IMPORT_STAR is not implemented yet!";
@@ -463,11 +463,32 @@ function execute(code_object) {
       case 85: //EXEC_STMT
 	  //Implements exec TOS2,TOS1,TOS. The compiler fills
 	  //missing optional parameters with None.
-	  var expr1 = stack.pop();
-	  var expr2 = stack.pop();
+	  var varname = stack.pop();
+	  var lang = stack.pop();
 	  var stmt = stack.pop();
-	  if (expr2 == "JavaScript") {
-	    eval(stmt);
+          printPairs(code_object.co_varnames, code_object.co_locals, "Local vars");
+          if (lang == "JavaScript") {
+	    var value = eval(stmt);
+            printfDebug("green", value);
+            if (varname != "None") {
+              if (contains(code_object.co_varnames, varname)) {
+                printfDebug("green","1");
+                var index = code_object.co_varnames.indexOf(varname);
+                if (index < code_object.co_nlocals) {
+                  stack.write(index, value);
+                }
+                code_object.co_locals[index] = value;
+              } else if(globals.contains(varname)) {
+                printfDebug("green","2");
+                globals.store(varname, value);
+              } else {
+                printfDebug("green","3");
+                //new variable
+                var index = code_object.co_varnames.length;
+                code_object.co_varnames[index] = varname;
+                code_object.co_locals[index] = value;
+              }
+            }
 	  } else {
 	    printfDebug("blue", "Could not execute \""+stmt+"\"");
 	    throw "EXEC_STMT is not implemented for Python statements yet!";
@@ -503,7 +524,7 @@ function execute(code_object) {
           if (contains(code_object.co_varnames, name)) {
 	    var value = stack.pop();
 	    var index = code_object.co_varnames.indexOf(name);
-	    if (index < code_object.co_argcount) {
+	    if (index < code_object.co_nlocals) {
 	      stack.write(index, value);
 	    }
 	    code_object.co_locals[index] = value;
@@ -525,7 +546,11 @@ function execute(code_object) {
           throw "DELETE_NAME is not implemented yet!";
           break;
       case 92: //UNPACK_SEQUENCE
-          throw "UNPACK_SEQUENCE is not implemented yet!";
+          //Unpacks TOS into count individual values, which are put onto the stack right-to-left. 
+          var seq = stack.pop();
+          for (var i = 0; i < seq.length; i++) {
+            stack.push(seq[i]);
+          }
           break;
       case 93: //FOR_ITER
           //TOS is an iterator. Call its next() method. If this yields a new value,
@@ -599,7 +624,7 @@ function execute(code_object) {
           var name = code_object.co_names[argument];
           if (contains(code_object.co_varnames, name)) {
 	    var index = code_object.co_varnames.indexOf(name);
-	    if (index < code_object.argcount) {
+	    if (index < code_object.nlocals) {
 	      stack.push(stack.read(index));
 	    } else {
               stack.push(code_object.co_locals[index]);
@@ -637,6 +662,7 @@ function execute(code_object) {
           } else {
             var index = object.class.getCodeObject().co_varnames.indexOf(name);
             var attrObject = object.class.getCodeObject().co_locals[index];
+printPairs(attrObject.getCodeObject().co_varnames, attrObject.getCodeObject().co_locals, "Local vars");
             if (typeof(attrObject.getCodeObject) == typeof(function() {})) {
               attrObject.getCodeObject().co_varnames[0] = "self";
               attrObject.getCodeObject().co_locals[0] = object;
@@ -680,7 +706,13 @@ function execute(code_object) {
 	  stack.push(newObj);
           break;
       case 108: //IMPORT_FROM
-          throw "IMPORT_FROM is not implemented yet!";
+          //Loads the attribute co_names[namei] from the module found in TOS. 
+          //The resulting object is pushed onto the stack, to be subsequently 
+          //stored by a STORE_FAST instruction.
+          var codeObject = stack.pop().class.getCodeObject(); 
+          var attrname = code_object.co_names[argument];           
+          var attr = codeObject.co_locals[codeObject.co_varnames.indexOf(attrname)];
+          stack.push(attr);
           break;
       case 110: //JUMP_FORWARD
           // current_offset + jump + bytecode + argument
@@ -818,7 +850,7 @@ function execute(code_object) {
 	      for (var j=0;j<localVars.length;j++) {
 		initCodeObject.co_locals[j] = localVars[j];
 	      }
-              stack.newFrame(localVars);
+              stack.newFrame(initCodeObject.co_nlocals, localVars);
               execute(initCodeObject);
             }
             for (var j=0; j<classCodeObject.co_locals.length; j++) {
@@ -857,7 +889,7 @@ function execute(code_object) {
 	    for (var j=0;j<localVars.length;j++) {
 	      codeObject.co_locals[j] = localVars[j];
 	    }
-            stack.newFrame(localVars);
+            stack.newFrame(codeObject.co_nlocals, localVars);
             execute(codeObject);
           }
           break;
@@ -944,7 +976,7 @@ function printfDebug(color, str) {
 function printPairs(names, values, title) {
   res = title +":<br/>";
   for (var i=0;i<names.length;i++) {
-    res += "&nbsp;&nbsp;"+ names[i]
+    res += "&nbsp;&nbsp;"+ names[i] +
 	   ": "+values[i] +"<br/>";
   }
   printfDebug("green",res);
