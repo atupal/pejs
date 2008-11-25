@@ -2,7 +2,7 @@ class ForLoops:
 
     version = 2.0
     operations = 5 * 5
-    rounds = 100#00
+    rounds = 1000#0
 
     def test(self):
 

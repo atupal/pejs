@@ -2,7 +2,7 @@ class IfThenElse:
 
     version = 2.0
     operations = 30*3 # hard to say...
-    rounds = 15#000
+    rounds = 150#00
 
     def test(self):
 

@@ -2,7 +2,7 @@ class NestedForLoops:
 
     version = 2.0
     operations = 1000*10*5
-    rounds = 3#00
+    rounds = 300
 
     def test(self):
 
