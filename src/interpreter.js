@@ -176,7 +176,7 @@ function Globals() {
     return false;
   }
 
-  this.delete = function(name) {
+  this.remove = function(name) {
     for(var i=0; i<names.length; i++) {
       var index = names[i].indexOf(name);
       if (index > -1) {
@@ -206,7 +206,7 @@ function interpret(progName, debugEnabled) {
     debug = true;
   if (typeof(stdlib) != typeof(undefined)) {
     globals.add(stdlib.co_varnames, stdlib.co_locals);
-    printfDebug("blue","Execution trace of PEJS Library");
+    if (debug) printfDebug("blue","Execution trace of PEJS Library");
     execute(stdlib);
   } else {
     throw "PEJS standard library not found";
@@ -216,12 +216,12 @@ function interpret(progName, debugEnabled) {
   blockStack = new Stack();
   var code_object = eval(progName);
   globals.add(code_object.co_varnames, code_object.co_locals);
-  printfDebug("blue","Execution trace of "+progName);
+  if (debug) printfDebug("blue","Execution trace of "+progName);
   execute(code_object);
 }
 
 function execute(code_object) {
-  printfDebug("blue","Execution trace of "+code_object.co_name);
+  if (debug) printfDebug("blue","Execution trace of "+code_object.co_name);
   var bytecode, offset, argument;
   var prog = code_object.co_code;
   for (var pc=0; pc<prog.length; pc++) {
@@ -229,7 +229,7 @@ function execute(code_object) {
     offset = prog[pc][1];
     argument = prog[pc][2]; //Unknown contents if no argument
     
-    printInstruction(prog[pc]);
+    if (debug) printInstruction(prog[pc]);
     
     switch(bytecode) {
       case 0: //STOP_CODE
@@ -450,8 +450,6 @@ function execute(code_object) {
           //This is used in the code for a class definition:
 	  // After the class body is evaluated,
           //the locals are passed to the class definition. 
-          //document.write("Locals: "+code_object.co_locals);
-          //stack.push([code_object.co_varnames, code_object.co_locals]);
           stack.push(code_object);
           break;
       case 83: //RETURN_VALUE
@@ -466,23 +464,18 @@ function execute(code_object) {
 	  var varname = stack.pop();
 	  var lang = stack.pop();
 	  var stmt = stack.pop();
-          printPairs(code_object.co_varnames, code_object.co_locals, "Local vars");
           if (lang == "JavaScript") {
 	    var value = eval(stmt);
-            printfDebug("green", value);
             if (varname != "None") {
               if (contains(code_object.co_varnames, varname)) {
-                printfDebug("green","1");
                 var index = code_object.co_varnames.indexOf(varname);
                 if (index < code_object.co_nlocals) {
                   stack.write(index, value);
                 }
                 code_object.co_locals[index] = value;
               } else if(globals.contains(varname)) {
-                printfDebug("green","2");
                 globals.store(varname, value);
               } else {
-                printfDebug("green","3");
                 //new variable
                 var index = code_object.co_varnames.length;
                 code_object.co_varnames[index] = varname;
@@ -490,7 +483,6 @@ function execute(code_object) {
               }
             }
 	  } else {
-	    printfDebug("blue", "Could not execute \""+stmt+"\"");
 	    throw "EXEC_STMT is not implemented for Python statements yet!";
 	  }
           break;
@@ -513,7 +505,6 @@ function execute(code_object) {
           var codeObj = stack.pop();
           var base = stack.pop();
           var className = stack.pop();
-          //document.write("Methods: " + methods);
           stack.push(new PyClass(className, base, codeObj));
           break;
       case 90: //STORE_NAME --------------- HAVE_ARGUMENT ---------------
@@ -535,11 +526,6 @@ function execute(code_object) {
             var index = code_object.co_varnames.length;
             code_object.co_varnames[index] = name;
             code_object.co_locals[index] = stack.pop();
-	    if (globals.contains(name)) {
-	      printfDebug("green", "Stored \""+name+"\" as local variable. Can be found in globals.");
-	    } else {
-	      printfDebug("green", "Stored \""+name+"\" as local variable.");
-	    }
           }
           break;
       case 91: //DELETE_NAME
@@ -603,7 +589,7 @@ function execute(code_object) {
           var name = code_object.co_names[argument];
           delete code_object.co_names[argument];
           if (globals.contains(name)) {
-            globals.delete(name);
+            globals.remove(name);
           }
           break;
       case 99: //DUP_TOPX
@@ -631,7 +617,9 @@ function execute(code_object) {
 	    }
           } else if (globals.contains(name)) {
             stack.push(globals.lookup(name));
-          } else {
+          } else if (name == "__name__") {
+	    stack.push(stack.peek().getCodeObject().co_name);
+	  } else {
             throw "LOAD_NAME attempted to load nonexisting name \""+name+"\"";
           }
           break;
@@ -660,9 +648,8 @@ function execute(code_object) {
           if (index > -1) {
             stack.push(object.fieldValues[index]);
           } else {
-            var index = object.class.getCodeObject().co_varnames.indexOf(name);
+            index = object.class.getCodeObject().co_varnames.indexOf(name);
             var attrObject = object.class.getCodeObject().co_locals[index];
-printPairs(attrObject.getCodeObject().co_varnames, attrObject.getCodeObject().co_locals, "Local vars");
             if (typeof(attrObject.getCodeObject) == typeof(function() {})) {
               attrObject.getCodeObject().co_varnames[0] = "self";
               attrObject.getCodeObject().co_locals[0] = object;
@@ -683,7 +670,6 @@ printPairs(attrObject.getCodeObject().co_varnames, attrObject.getCodeObject().co
 	  //proper import statement, a subsequent STORE_FAST instruction
 	  //modifies the namespace.
 	  var module = code_object.co_names[argument];
-	  //document.write("<script language=\"text/javascript\" src=\""+ module +".js\"></scr"+"ipt>");
 	  var codeObj = eval(module);
 	  globals.add(codeObj.co_varnames, codeObj.co_locals);
 	  execute(codeObj);
@@ -1009,11 +995,8 @@ function printOut(str) {
     case "browser":
       document.write(str);
       break;
-    case "v8":
+    case "standalone":
       print(str);
-      break;
-    case "JSUnit":
-      printResult += str;
       break;
   }
 }
@@ -1023,10 +1006,8 @@ function printNewline() {
     case "browser":
       document.write("<br/>");
       break;
-    case "v8":
-      print("\n");
-      break;
-    case "JSUnit":
+    case "standalone":
+      //No need to print a newline
       break;
   }
 }
@@ -1034,10 +1015,9 @@ function printNewline() {
 var env;
 function setEnv() {
   if(typeof(alert) == "undefined") {
-    env = "v8";
+    env = "standalone";
   } else {
     env = "browser";
   }
 }
-
 setEnv();

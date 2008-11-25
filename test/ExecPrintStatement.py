@@ -1,1 +1,1 @@
-exec "document.write(42);" in "JavaScript"
+exec "printOut(42);" in "JavaScript"
