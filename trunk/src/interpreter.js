@@ -280,7 +280,6 @@ function execute(code_object) {
       case 21: //BINARY_DIVIDE
           var temp = stack.pop();
           stack.push(stack.pop() / temp);
-          throw "BINARY_DIVIDE is not implemented yet!";
           break;
       case 22: //BINARY_MODULO
           var temp = stack.pop();
@@ -996,7 +995,10 @@ function printOut(str) {
       document.write(str);
       break;
     case "standalone":
-      print(str);
+      if (str == "42") {
+        success++;
+      }
+      //print(str);
       break;
   }
 }
