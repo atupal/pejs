@@ -1,5 +1,5 @@
 testArray.sort();
- 
+
 var exceptions = new Array();
 var success = 0;
 var total = 0;
@@ -17,7 +17,7 @@ function runTest(delayArr, withExceptions) {
     var result = "";
     var timeSpent;
     var progName = delayArr[i];
-    result += indent(""+i+1,4);
+    result += indent(""+(i+1),4);
     result += indent(progName,35);
     total++;
     if (withExceptions) {
