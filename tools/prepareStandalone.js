@@ -18,7 +18,7 @@ function runTest(delayArr, withExceptions) {
     var timeSpent;
     var progName = delayArr[i];
     result += indent(""+(i+1),4);
-    result += indent(progName,35);
+    result += indent(progName,45);
     total++;
     if (withExceptions) {
       interpret(progName);
@@ -30,11 +30,11 @@ function runTest(delayArr, withExceptions) {
 	timeSpent = endTime - startTime;
 	totalTime += timeSpent;
       } catch (exception) {
-	result += indent("FAIL",8);
+	result += indent("FAIL",5);
 	exceptions.push(progName+": "+exception);
       }
     }
-    result += indent(""+timeSpent,8);
+    result += indent(""+timeSpent,0);
     print(result);
   }
 }
