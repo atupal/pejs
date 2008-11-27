@@ -2,7 +2,7 @@ class ListSlicing:
 
     version = 2.0
     operations = 25*(3+1+2+1)
-    rounds = 800
+    rounds = 8#00
 
     def test(self):
 
