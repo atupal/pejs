@@ -1,7 +1,7 @@
 #!/bin/bash
 tools/createTest.py
-touch standalone.js
-cat src/interpreter.js > standalone.js
-cat src/lib/*.js >> standalone.js
-cat test/*.js >> standalone.js
-cat tools/prepareStandalone.js >> standalone.js
+touch test/standalone.js
+cat src/interpreter.js > test/standalone.js
+cat src/lib/*.js >> test/standalone.js
+cat test/*.js >> test/standalone.js
+cat tools/prepareStandalone.js >> test/standalone.js
