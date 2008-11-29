@@ -369,7 +369,9 @@ function execute(code_object) {
           stack.pop()[temp] = stack.pop();
           break;
       case 61: //DELETE_SUBSCR
-          throw "DELETE_SUBSCR is not implemented yet!";
+          //Implements del TOS1[TOS].
+          var temp = stack.pop();
+          delete stack.pop()[temp];
           break;
       case 62: //BINARY_LSHIFT
           var temp = stack.pop();
@@ -626,18 +628,23 @@ function execute(code_object) {
           // Creates a tuple consuming count items from the stack,
           // and pushes the resulting tuple onto the stack.
           var tuple = [];
-          var j = argument - 1;
-          while(j >= 0){
+          for(var j=argument-1; j>=0; j--) {
             tuple[j] = stack.pop();
-            j--;
           }
           stack.push(tuple);
           break;
       case 103: //BUILD_LIST
-          throw "BUILD_LIST is not implemented yet!";
+          //Works as BUILD_TUPLE, but creates a list.
+          var list = [];
+          for(var j=argument-1; j>=0; j--) {
+            list[j] = stack.pop();
+          }
+          stack.push(list);
           break;
       case 104: //BUILD_MAP
-          throw "BUILD_MAP is not implemented yet!";
+          //Pushes a new empty dictionary object onto the stack.
+          //The argument is ignored and set to zero by the compiler.
+          stack.push(new PyDictionary());
           break;
       case 105: //LOAD_ATTR
           //Replaces TOS with getattr(TOS, co_names[namei])
@@ -938,6 +945,18 @@ function PyObject(clss) {
   this.fieldNames = [];
   this.fieldValues = [];
 }
+
+function PyList() {
+  this.list = [];
+  this.fieldNames = ["append"];
+  this.fieldValues = [new FunctionObject(1,eval("stdlib_append"))];
+}
+
+function PyDictionary() {
+  this.fieldNames = ["has_key"];
+  this.fieldValues = [new FunctionObject(1,eval("stdlib_has_key"))];
+}
+
 
 function printObject(object) {
   var res = "Object print:<br/>";
