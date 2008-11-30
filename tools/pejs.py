@@ -3,11 +3,6 @@
 # containing the instructions, constants, local varialbles(initialy empty)
 # and symboltable will be created.
 # The array is named the same as the python file.
-# The array we call the code object has the following structure:
-# codeObject[0] = instructions
-# codeObject[1] = consts
-# codeObject[2] = localVars
-# codeObject[3] = symTable
 # An instruction consists of an array with the following:
 # [0] Opcode
 # [1] Offset
@@ -15,8 +10,6 @@
 # [3] Argument Type   (Optional)
 # [4] Argument Value  (Optional)
 # [5] Opcode name
-# Overall the structure of the code object is:
-# [ [[opcode]+], [const*], [], [Symbols*] ]
 
 import sys, py_compile, marshal, opcode, os
 
@@ -124,28 +117,22 @@ def js_file_print(code_object, filename):
 # to collect all the information.
 def print_code(code_object, indent, varname):
   instructions = decompile(code_object)
-  # codeObject[0] = opcodes
-  # codeObject[1] = consts
-  # codeObject[2] = localVars
-  # codeObject[3] = symTable  
-  
-  result = "var "+ varname + " = new Object();\n"
-  result = result + "    " + varname + ".co_name = \"" + code_object.co_name + "\";\n"
-  result = result + "    " + varname + ".co_argcount = " + str(code_object.co_argcount) + ";\n"
-  result = result + "    " + varname + ".co_nlocals = " + str(code_object.co_nlocals) + ";\n"
-  result = result + "    " + varname + ".co_varnames = " + print_names(code_object.co_varnames, "") + ";\n"
-  result = result + "    " + varname + ".co_cellvars = " + print_names(code_object.co_cellvars, "") + ";\n"
-  result = result + "    " + varname + ".co_freevars = " + print_names(code_object.co_freevars, "") + ";\n"
-  result = result + "    " + varname + ".co_code = " + print_instructions(instructions, indent + "    ")+";\n"    #opcodes
-  result = result + "    " + varname + ".co_consts = " + print_consts(code_object.co_consts, "", varname) + ";\n"
-  result = result + "    " + varname + ".co_names = " + print_names(code_object.co_names, "")  + ";\n"
-  result = result + "    " + varname + ".co_filename = " + code_object.co_filename + ";\n"
-  result = result + "    " + varname + ".co_firstlineno = " + str(code_object.co_firstlineno) + ";\n"
-  #result = result + "    " + varname + ".co_lnotab = " + code_object.co_lnotab + ";\n"
-  result = result + "    " + varname + ".co_stacksize = " + str(code_object.co_stacksize) + ";\n"
-  result = result + "    " + varname + ".co_flags = " + str(code_object.co_flags) + ";\n"
-  result = result + "    " + varname + ".co_locals = [];\n\n"
-  
+  result = "var "+ varname + " = {\n"
+  result = result + "co_name: \"" + code_object.co_name + "\",\n"
+  result = result + "co_argcount: " + str(code_object.co_argcount) + ",\n"
+  result = result + "co_nlocals: " + str(code_object.co_nlocals) + ",\n"
+  result = result + "co_varnames: " + print_names(code_object.co_varnames, "") + ",\n"
+  #result = result + "co_cellvars: " + print_names(code_object.co_cellvars, "") + ",\n"
+  #result = result + "co_freevars: " + print_names(code_object.co_freevars, "") + ",\n"
+  result = result + "co_code: " + print_instructions(instructions, indent + "    ")+",\n"
+  result = result + "co_consts: " + print_consts(code_object.co_consts, "", varname) + ",\n"
+  result = result + "co_names: " + print_names(code_object.co_names, "")  + ",\n"
+  #result = result + "co_filename: \"" + code_object.co_filename + "\",\n"
+  #result = result + "co_firstlineno: " + str(code_object.co_firstlineno) + ",\n"
+  #result = result + "co_lnotab: " + code_object.co_lnotab + ",\n"
+  result = result + "co_stacksize: " + str(code_object.co_stacksize) + ",\n"
+  #result = result + "co_flags: " + str(code_object.co_flags) + ",\n"
+  result = result + "co_locals: [] };\n\n"
   return result
 
 # Helper for print_code, prints names
@@ -196,7 +183,7 @@ def print_instructions(instructions, indent):
     if (op >= opcode.HAVE_ARGUMENT):
       result = result +","+ str(argument)           # Argument
       result = result +",\""+ str(argtype) +"\""    # Argument Type
-      if type(argvalue) == type("v8 sucks!"):
+      if type(argvalue) == type(""):
         argvalue = argvalue.replace("\"","\\\"")
       result = result +",\""+ str(argvalue) +"\""   # Argument Value
     result = result +",\""+ str(name) +"\""+ "],\n" # Name

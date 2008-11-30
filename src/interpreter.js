@@ -10,7 +10,7 @@ function Stack() {
 
   this.pop = function() {
     return array[sp--];
-  }
+  };
 
   this.newFrame = function(argcount, localVars) {
     this.push(bp);
@@ -19,7 +19,7 @@ function Stack() {
     for (var i=0;i<argcount;i++) {
       this.push(localVars[i]);
     }
-  }
+  };
 
   this.removeFrame = function(argcount, co_locals) {
     var returnVal = array[sp];
@@ -33,36 +33,36 @@ function Stack() {
       bp = -1; 
     }
     array[sp] = returnVal;
-  }
+  };
 
   this.push = function(val) {
     array[++sp] = val;
-  }
+  };
 
   this.peek = function(val) {
     return array[sp];
-  }
+  };
 
   this.read = function(varNum) {
     return array[bp + 1 + varNum];
-  }
+  };
 
   this.write = function(varNum, value) {
     array[bp + 1 + varNum] = value;
-  }
+  };
 
   this.rotate2 = function() {
     var temp = array[sp];
     array[sp] = array[sp-1];
     array[sp-1] = temp;
-  }
+  };
 
   this.rotate3 = function() {
     var temp = array[sp];
     array[sp] = array[sp-1];
     array[sp-1] = array[sp-2];
     array[sp-2] = temp;
-  }
+  };
 
   this.rotate4 = function() {
     var temp = array[sp];
@@ -70,34 +70,34 @@ function Stack() {
     array[sp-1] = array[sp-2];
     array[sp-2] = array[sp-3];
     array[sp-3] = temp;
-  }
+  };
 
   this.duplicateTop = function() {
     this.push(array[sp]);
-  }
+  };
 
   this.printStack = function(desc) {
-    printDebug("<tr><td colspan=\"6\" class=\"stackHeader\">Stack print: "+desc+"</td></tr>")
+    printDebug("<tr><td colspan=\"6\" class=\"stackHeader\">Stack print: "+desc+"</td></tr>");
     for (var i = array.length-1; i >= 0; i--) {
       printDebug("<tr><td colspan=\"3\" class=\"stackContent\">");
       printDebug(array[i]);
       printDebug("</td><td colspan=\"3\" class=\"stackPointer\">");
-      if (i == sp) printDebug(" &lt;-- sp");
-      if (i == bp) printDebug(" &lt;-- bp");
+      if (i == sp) { printDebug(" &lt;-- sp"); }
+      if (i == bp) { printDebug(" &lt;-- bp"); }
       printDebug("</td><td></td></tr>");
     }
-  }
+  };
 
   this.print = function() {
     var res = "";
     for (var i = 0; i <= sp; i++) {
       res += array[i];
-      if (i == bp) res += " (bp)";
-      if (i == sp) res += " (sp)";
+      if (i == bp) { res += " (bp)"; }
+      if (i == sp) { res += " (sp)"; }
       res += ", ";
     }
     return res;
-  }
+  };
 }
 
 var stack = new Stack();
@@ -105,7 +105,7 @@ var blockStack = new Stack();
 
 function contains(array, elm) {
   for (var i = 0; i<array.length; i++) {
-    if (array[i] == elm) return true;
+    if (array[i] == elm) { return true; }
   }
   return false;
 }
@@ -113,30 +113,29 @@ function contains(array, elm) {
 function FunctionObject(defaultArgc, codeObj) {
   this.defArgc = defaultArgc;
   this.codeObject = codeObj;
-  this.defArgs = new Array();
+  this.defArgs = [];
 
   this.getArgs = function() {
     return this.defArgs;
-  }
+  };
 
   this.addArg = function(index, val) {
     this.defArgs[index] = val;
-  }
+  };
 
   this.getArgc = function() {
     return this.defArgc;
-  }
+  };
 
   this.getArgs = function() {
     return this.defArgs;
-  }
+  };
 
   this.getCodeObject = function() {
     return this.codeObject;
-  }
+  };
 }
 
-var globals = new Globals();
 function Globals() {
   var values = [[]]; //Initialized with a special array for new globals
   var names = [[]];
@@ -144,7 +143,7 @@ function Globals() {
   this.add = function(nameArray, valueArray) {
     names[names.length] = nameArray;
     values[values.length] = valueArray;
-  }
+  };
 
   this.store = function(name, value) {
     for(var i=0; i<names.length; i++) {
@@ -158,7 +157,7 @@ function Globals() {
     var index = names[0].length;
     names[0][index] = name;
     values[0][index] = value;
-  }
+  };
 
   this.lookup = function(name) {
     for(var i=0; i<names.length; i++) {
@@ -166,7 +165,7 @@ function Globals() {
       if (index > -1) return values[i][index];
     }
     throw "Global lookup of \""+name+"\" failed.";
-  }
+  };
 
   this.contains = function(name) {
     for(var i=0; i<names.length; i++) {
@@ -174,7 +173,7 @@ function Globals() {
       if (index > -1) return true;
     }
     return false;
-  }
+  };
 
   this.remove = function(name) {
     for(var i=0; i<names.length; i++) {
@@ -186,7 +185,7 @@ function Globals() {
       }
     }
     throw "Global delete of \""+name+"\" failed.";
-  }
+  };
 
   this.print = function() {
     var res = "Globals: <br/>";
@@ -197,8 +196,9 @@ function Globals() {
       }
     }
     printfDebug("red", res);
-  }
+  };
 }
+var globals = new Globals();
 
 function interpret(progName, debugEnabled) {
   globals = new Globals();
@@ -644,28 +644,36 @@ function execute(code_object) {
       case 104: //BUILD_MAP
           //Pushes a new empty dictionary object onto the stack.
           //The argument is ignored and set to zero by the compiler.
-          stack.push(new PyDictionary());
+          stack.push(new PyDict());
           break;
       case 105: //LOAD_ATTR
           //Replaces TOS with getattr(TOS, co_names[namei])
           var object = stack.pop();
           var name = code_object.co_names[argument];
-          var index = object.fieldNames.indexOf(name);
-          if (index > -1) {
-            stack.push(object.fieldValues[index]);
-          } else {
-            index = object.class.getCodeObject().co_varnames.indexOf(name);
-            var attrObject = object.class.getCodeObject().co_locals[index];
-            if (typeof(attrObject.getCodeObject) == typeof(function() {})) {
-              attrObject.getCodeObject().co_varnames[0] = "self";
-              attrObject.getCodeObject().co_locals[0] = object;
-            } else {
-              throw "LOAD_ATTR tried to load non-function "+ name +
-                    " from class "+ object.class.__name__;
-            }
-            stack.push(attrObject);
-          }
-          break;
+	  if (object instanceof Array) { //List
+	    stack.push(listMethods[name](object));
+	  } else if (object instanceof PyDict) {
+	    stack.push(dictMethods[name](object));
+	  } else if (object instanceof PyObject) {
+	    var index = object.fieldNames.indexOf(name);
+	    if (index > -1) {
+	      stack.push(object.fieldValues[index]);
+	    } else {
+	      index = object.class.getCodeObject().co_varnames.indexOf(name);
+	      var attrObject = object.class.getCodeObject().co_locals[index];
+	      if (typeof(attrObject.getCodeObject) == typeof(function() {})) {
+		attrObject.getCodeObject().co_varnames[0] = "self";
+		attrObject.getCodeObject().co_locals[0] = object;
+	      } else {
+		throw "LOAD_ATTR tried to load non-function "+ name +
+		      " from class "+ object.class.__name__;
+	      }
+	      stack.push(attrObject);
+	    }
+	  } else {
+	    throw "LOAD_ATTR tried to load "+ name +" from "+ typeof(object);
+	  }
+	  break;
       case 106: //COMPARE_OP
           var temp = stack.pop();
           stack.push(eval(stack.pop() + compareOps[argument] + temp));
@@ -828,43 +836,14 @@ function execute(code_object) {
           break;
       case 131: //CALL_FUNCTION
           var localVars = [];
-          for (var j = argument; j > 0; j--){
+          for (var j = argument-1; j >= 0; j--){
             localVars[j] = stack.pop();
           }
-	  if (typeof(stack.peek().__name__) == typeof("")) {
-	    //Creation of new object
-            var newObj = new PyObject(stack.pop());
-            var classCodeObject = newObj.class.getCodeObject();
-            var index = classCodeObject.co_varnames.indexOf("__init__");
-            if (index > -1) {
-              var initCodeObject = classCodeObject.co_locals[index].getCodeObject();
-              localVars[0] = newObj;
-	      for (var j=0;j<localVars.length;j++) {
-		initCodeObject.co_locals[j] = localVars[j];
-	      }
-              stack.newFrame(initCodeObject.co_nlocals, localVars);
-              execute(initCodeObject);
-            }
-            for (var j=0; j<classCodeObject.co_locals.length; j++) {
-              if (typeof(classCodeObject.co_locals[j].getCodeObject) == typeof(function() {}))
-                continue;
-              if (/__\w+__/.test(classCodeObject.co_varnames[j]))
-                continue;
-              newObj.fieldNames.push(classCodeObject.co_varnames[j]);
-              newObj.fieldValues.push(classCodeObject.co_locals[j]);
-            }
-            stack.push(newObj);
-          } else {
+	  if (stack.peek() instanceof FunctionObject) {
             var codeObject = stack.peek().getCodeObject();
             if (contains(codeObject.co_varnames, "self")) {
               //insert self reference
-              localVars[0] = codeObject.co_locals[0];
-            } else {
-              //no self reference, move all parameters down 
-              for (var j=0; j<localVars.length;) {
-                localVars[j] = localVars[++j];
-              }
-              localVars.pop();
+              localVars.splice(0,0,codeObject.co_locals[0]);
             }            
             //insert default parameters if necessary                        
             var totalArgc = codeObject.co_argcount;
@@ -883,7 +862,36 @@ function execute(code_object) {
 	    }
             stack.newFrame(codeObject.co_nlocals, localVars);
             execute(codeObject);
-          }
+	  } else if (stack.peek() instanceof PyClass) {
+	    //Creation of new object
+            var newObj = new PyObject(stack.pop());
+            var classCodeObject = newObj.class.getCodeObject();
+            var index = classCodeObject.co_varnames.indexOf("__init__");
+            if (index > -1) {
+              var initCodeObject = classCodeObject.co_locals[index].getCodeObject();
+              localVars.splice(0,0,newObj);
+	      for (var j=0;j<localVars.length;j++) {
+		initCodeObject.co_locals[j] = localVars[j];
+	      }
+              stack.newFrame(initCodeObject.co_nlocals, localVars);
+              execute(initCodeObject);
+            }
+            for (var j=0; j<classCodeObject.co_locals.length; j++) {
+              if (typeof(classCodeObject.co_locals[j].getCodeObject) == typeof(function() {}))
+                continue;
+              if (/__\w+__/.test(classCodeObject.co_varnames[j]))
+                continue;
+              newObj.fieldNames.push(classCodeObject.co_varnames[j]);
+              newObj.fieldValues.push(classCodeObject.co_locals[j]);
+            }
+            stack.push(newObj);
+	  } else if (stack.peek() instanceof Function) {
+	    stack.push(stack.pop()(localVars));
+	  } else if (stack.peek() instanceof Object) {
+printfDebug("green","<font size=\"50\">Object</font>");
+	  } else {
+printfDebug("green","<font size=\"50\">SOMETHING ELSE!!!</font>");
+	  }
           break;
       case 132: //MAKE_FUNCTION
           //Pushes a new function object on the stack. TOS is the code
@@ -946,16 +954,141 @@ function PyObject(clss) {
   this.fieldValues = [];
 }
 
-function PyList() {
-  this.list = [];
-  this.fieldNames = ["append"];
-  this.fieldValues = [new FunctionObject(1,eval("stdlib_append"))];
+function PyListMethods() {
+  this.len = function(list) {
+    return function(vars) { return list.length; }; };
+  //Add an item to the end of the list; equivalent to a[len(a):] = [x]. 
+  this.append = function(list) {
+    return function(vars) { list.push(vars[0]); }; };
+  //Extend the list by appending all the items in the given list;
+  //equivalent to a[len(a):] = L. 
+  this.extend = function(list) {
+    return function(vars) { list.concat(vars[0]); }; };
+  //Insert an item at a given position. The first argument is the
+  //index of the element before which to insert, so a.insert(0, x)
+  //inserts at the front of the list, and a.insert(len(a), x) is
+  //equivalent to a.append(x). 
+  this.insert = function(list) {
+    return function(vars) { list.splice(vars[0],0,vars[1]); }; };
+  //Remove the first item from the list whose value is x. It is an
+  //error if there is no such item. 
+  this.remove = function(list) {
+    return function(vars) { 
+      var i = list.indexOf(vars[0]);
+      if (i > -1) { list.splice(i, 1); }
+      else { throw "PEJS Error: "+vars[0]+" does not exist in list"; }
+    }; };
+  //Remove the item at the given position in the list, and return it.
+  //If no index is specified, a.pop() removes and returns the last
+  //item in the list.
+  this.pop = function(list) {
+    return function(vars) {
+      if (vars[0]) {
+	var result = list[vars[0]];
+	list.splice(vars[0],1);
+      } else { return list.pop(); }
+    }; };
+  //Return the index in the list of the first item whose value is x.
+  //It is an error if there is no such item. 
+  this.index = function(list) {
+    return function(vars) { return list[vars[0]]; }; };
+  //Return the number of times x appears in the list. 
+  this.count = function(list) {
+    return function(vars) { 
+      var result = 0;
+      for (i in list) { result += list[i] === vars[0] ? 1 : 0; }
+      return result;
+    }; };
+  //Sort the items of the list, in place. 
+  this.sort = function(list) {
+    return function(vars) { list.sort() }; };
+  //Reverse the elements of the list, in place. 
+  this.reverse = function(list) {
+    return function(vars) { list.reverse(); }; };
 }
+listMethods = new PyListMethods();
 
-function PyDictionary() {
-  this.fieldNames = ["has_key"];
-  this.fieldValues = [new FunctionObject(1,eval("stdlib_has_key"))];
+function PyDictMethods() {
+  //remove all items from a
+  this.clear = function(dict) {
+    return function(vars) { for (i in dict) { delete dict[i]; } }; };
+  //a (shallow) copy of a
+  this.copy = function(dict) {
+    return function(vars) {
+      var result = new PyDict();
+      for (i in dict) { result[i] = dict[i]; }
+      return result;
+    }; };
+  //Equivalent to k in a, use that form in new code
+  this.has_key = function(dict) {
+    return function(vars) { return (dict[vars[0]] ? true : false); }; };
+  //a copy of a's list of (key, value) pairs
+  this.items = function(dict) {
+    return function(vars) { 
+      var result = [];
+      for (i in dict) { result.push([i, dict[i]]); }
+      return result;
+    }; };
+  //a copy of a's list of keys
+  this.keys = function(dict) {
+    return function(vars) { 
+      var result = [];
+      for (i in dict) { result.push(i); }
+      return result;
+    }; };
+  //updates a with key/value pairs from b, overwriting existing keys,
+  //returns None
+  this.update = function(dict) {
+    return function(vars) { 
+      for (i in vars[0]) { dict[i] = vars[0][i]; }
+      return "None";
+    }; };
+  //Creates a new dictionary with keys from seq and values set to value
+  this.fromkeys = function(dict) {
+    return function(vars) {  }; };
+  //a copy of a's list of values
+  this.values = function(dict) {
+    return function(vars) { 
+      var result = [];
+      for (i in dict) { result.push(dict[i]); }
+      return result;
+    }; };
+  //a[k] if k in a, else x
+  this.get = function(dict) {
+    return function(vars) { 
+      if (dict[vars[0]]) { return dict[vars[0]]; }
+      else { return vars[1]; }
+    }; };
+  //a[k] if k in a, else x (also setting it)
+  this.setdefault = function(dict) {
+    return function(vars) { 
+      if (dict[vars[0]]) { return dict[vars[0]]; }
+      else { dict[vars[0]] = vars[1]; return vars[1]; }
+    }; };
+  //a[k] if k in a, else x (and remove k)
+  this.pop = function(dict) {
+    return function(vars) { 
+      if (dict[vars[0]]) {
+	var result = dict[vars[0]]; delete dict[vars[0]]; return result;
+      } else { return vars[1]; }
+    }; };
+  //remove and return an arbitrary (key, value) pair
+  this.popitem = function(dict) {
+    return function(vars) { for (i in dict) { return [i, dict[i]]; } }; };
+  //return an iterator over (key, value) pairs
+  this.iteritems = function(dict) {
+    return function(vars) { throw "iteritems is not implemented yet."; }; };
+  //return an iterator over the mapping's keys
+  this.iterkeys = function(dict) {
+    return function(vars) { throw "iterkeys is not implemented yet."; }; };
+  //return an iterator over the mapping's values
+  this.itervalues = function(dict) {
+    return function(vars) { throw "itervalues is not implemented yet."; }; };
 }
+dictMethods = new PyDictMethods();
+
+function PyDict() {}
+PyDict.prototype = new Object;
 
 
 function printObject(object) {

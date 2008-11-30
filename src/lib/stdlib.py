@@ -40,22 +40,8 @@ def globals():
 def cmp (x, y):
   return x - y
 
+def len (list):
+  return list.len()
+
 #class Exception:
 #  message = "42"
-
-######################################################################
-#                                                                    #
-#          Implementation of methods for built-in datatypes          #
-#                                                                    #
-######################################################################
-
-#method for dictionaries
-def has_key(key):
-  result = False
-  exec ";this["+key+"] != undefined;" in "JavaScript", "result"
-  return result
-
-#method for lists
-def append(item):
-  exec ";this.list.push("+item+");" in "JavaScript"
-
