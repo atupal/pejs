@@ -1,3 +1,5 @@
+from string import join
+
 class CompareInternedStrings:
 
     version = 2.0
