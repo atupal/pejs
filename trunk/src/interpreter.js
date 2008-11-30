@@ -146,15 +146,16 @@ function Globals() {
   };
 
   this.store = function(name, value) {
+    var index;
     for(var i=0; i<names.length; i++) {
-      var index = names[i].indexOf(name);
+      index = names[i].indexOf(name);
       if (index > -1) {
 	values[i][index] = value;
 	return;
       }
     }
     //new global variable - added to a special array
-    var index = names[0].length;
+    index = names[0].length;
     names[0][index] = name;
     values[0][index] = value;
   };
@@ -162,7 +163,7 @@ function Globals() {
   this.lookup = function(name) {
     for(var i=0; i<names.length; i++) {
       var index = names[i].indexOf(name);
-      if (index > -1) return values[i][index];
+      if (index > -1) { return values[i][index]; }
     }
     throw "Global lookup of \""+name+"\" failed.";
   };
@@ -170,7 +171,7 @@ function Globals() {
   this.contains = function(name) {
     for(var i=0; i<names.length; i++) {
       var index = names[i].indexOf(name);
-      if (index > -1) return true;
+      if (index > -1) { return true; }
     }
     return false;
   };
@@ -202,11 +203,10 @@ var globals = new Globals();
 
 function interpret(progName, debugEnabled) {
   globals = new Globals();
-  if (debugEnabled)
-    debug = true;
+  if (debugEnabled) { debug = true; }
   if (typeof(stdlib) != typeof(undefined)) {
     globals.add(stdlib.co_varnames, stdlib.co_locals);
-    if (debug) printfDebug("blue","Execution trace of PEJS Library");
+    if (debug) { printfDebug("blue","Execution trace of PEJS Library"); }
     execute(stdlib);
   } else {
     throw "PEJS standard library not found";
@@ -216,12 +216,12 @@ function interpret(progName, debugEnabled) {
   blockStack = new Stack();
   var code_object = eval(progName);
   globals.add(code_object.co_varnames, code_object.co_locals);
-  if (debug) printfDebug("blue","Execution trace of "+progName);
+  if (debug) { printfDebug("blue","Execution trace of "+progName); }
   execute(code_object);
 }
 
 function execute(code_object) {
-  if (debug) printfDebug("blue","Execution trace of "+code_object.co_name);
+  if (debug) { printfDebug("blue","Execution trace of "+code_object.co_name); }
   var bytecode, offset, argument;
   var prog = code_object.co_code;
   for (var pc=0; pc<prog.length; pc++) {
@@ -229,46 +229,35 @@ function execute(code_object) {
     offset = prog[pc][1];
     argument = prog[pc][2]; //Unknown contents if no argument
     
-    if (debug) printInstruction(prog[pc]);
+    if (debug) { printInstruction(prog[pc]); }
     
     switch(bytecode) {
       case 0: //STOP_CODE
           break;
       case 1: //POP_TOP
-          stack.pop();
-          break;
+          stack.pop(); break;
       case 2: //ROT_TWO
-          stack.rotate2();
-          break;
+          stack.rotate2(); break;
       case 3: //ROT_THREE
-          stack.rotate3();
-          break;
+          stack.rotate3(); break;
       case 4: //DUP_TOP
-          stack.duplicateTop();
-          break;
+          stack.duplicateTop(); break;
       case 5: //ROT_FOUR
-          stack.rotate4();
-          break;
+          stack.rotate4(); break;
       case 9: //NOP
           break;
       case 10: //UNARY_POSITIVE
-          stack.push(+stack.pop());
-          break;
+          stack.push(+stack.pop()); break;
       case 11: //UNARY_NEGATIVE
-          stack.push(-stack.pop());
-          break;
+          stack.push(-stack.pop()); break;
       case 12: //UNARY_NOT
-          stack.push(!stack.pop());
-          break;
+          stack.push(!stack.pop()); break;
       case 13: //UNARY_CONVERT
-          throw "UNARY_CONVERT is not implemented yet!";
-          break;
+          throw "UNARY_CONVERT is not implemented yet!"; break;
       case 15: //UNARY_INVERT
-          stack.push(~stack.pop());
-          break;
+          stack.push(~stack.pop()); break;
       case 18: //LIST_APPEND
-          throw "LIST_APPEND is not implemented yet!";
-          break;
+          throw "LIST_APPEND is not implemented yet!"; break;
       case 19: //BINARY_POWER
           var temp = stack.pop();
           stack.push(Math.pow(stack.pop(), temp));
@@ -310,41 +299,53 @@ function execute(code_object) {
           throw "INPLACE_TRUE_DIVIDE is not implemented yet!";
           break;
       case 30: //SLICE+0
-          throw "SLICE+0 is not implemented yet!";
-          break;
+	  stack.push(stack.pop().slice(0)); break;
       case 31: //SLICE+1
-          throw "SLICE+1 is not implemented yet!";
-          break;
+	  var start = stack.pop();
+	  stack.push(stack.pop().slice(start)); break;
       case 32: //SLICE+2
-          throw "SLICE+2 is not implemented yet!";
-          break;
+	  var end = stack.pop();
+	  stack.push(stack.pop().slice(0,end)); break;
       case 33: //SLICE+3
-          throw "SLICE+3 is not implemented yet!";
-          break;
+	  var end = stack.pop();
+	  var start = stack.pop();
+	  stack.push(stack.pop().slice(start,end)); break;
       case 40: //STORE_SLICE+0
-          throw "STORE_SLICE+0 is not implemented yet!";
-          break;
+	  var list = stack.pop();
+	  var args = [0,list.length].concat(stack.pop());
+	  Array.prototype.splice.apply(list,args); break;
       case 41: //STORE_SLICE+1
-          throw "STORE_SLICE+1 is not implemented yet!";
-          break;
+	  var start = stack.pop();
+	  var list = stack.pop();
+	  var args = [start,list.length].concat(stack.pop());
+	  Array.prototype.splice.apply(list,args); break;
       case 42: //STORE_SLICE+2
-          throw "STORE_SLICE+2 is not implemented yet!";
-          break;
+	  var end = stack.pop();
+	  var list = stack.pop();
+	  var args = [0,end].concat(stack.pop());
+	  Array.prototype.splice.apply(list,args); break;
       case 43: //STORE_SLICE+3
-          throw "STORE_SLICE+3 is not implemented yet!";
-          break;
+	  var end = stack.pop();
+	  var start = stack.pop();
+	  var list = stack.pop();
+	  var args = [start,end-start].concat(stack.pop());
+	  Array.prototype.splice.apply(list,args); break;
       case 50: //DELETE_SLICE+0
-          throw "DELETE_SLICE+0 is not implemented yet!";
-          break;
+	  var list = stack.pop();
+	  list.splice(0,list.length); break;
       case 51: //DELETE_SLICE+1
-          throw "DELETE_SLICE+1 is not implemented yet!";
-          break;
+	  var start = stack.pop();
+	  var list = stack.pop();
+	  list.splice(start,list.length-start); break;
       case 52: //DELETE_SLICE+2
-          throw "DELETE_SLICE+2 is not implemented yet!";
-          break;
+	  var end = stack.pop();
+	  var list = stack.pop();
+	  list.splice(0,end); break;
       case 53: //DELETE_SLICE+3
-          throw "DELETE_SLICE+3 is not implemented yet!";
-          break;
+	  var end = stack.pop();
+	  var start = stack.pop();
+	  var list = stack.pop();
+	  list.splice(start,end-start); break;
       case 55: //INPLACE_ADD
           var temp = stack.pop();
           stack.push(stack.pop() + temp);
