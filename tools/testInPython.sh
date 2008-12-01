@@ -1,9 +1,11 @@
 #!/bin/bash
 
+tools/createTest.py
+
 cd test
 
 total=0
-for file in `dir -d *.py` ; do
+for file in `dir -d *.pyc` ; do
   prefix=$(echo "$file" | grep "Pejs")
   if [ -z "$prefix" ];
   then

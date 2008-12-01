@@ -400,6 +400,7 @@ function execute(code_object) {
           break;
       case 68: //GET_ITER
           //Implements TOS = iter(TOS).
+          stack.push(new PyIterator(stack.pop()));
           break;
       case 70: //PRINT_EXPR
           throw "PRINT_EXPR is not implemented yet!";
@@ -545,10 +546,10 @@ function execute(code_object) {
           //push it on the stack (leaving the iterator below it). If the iterator
           //indicates it is exhausted TOS is popped, and the byte code counter is
           //incremented by delta.
-          var pair = stack.peek();
-          if (pair[0] < pair[1]) {
-            stack.push(pair[0]++);
-          } else {
+          var iterator = stack.peek();
+          try {
+            stack.push(iterator.next());
+          } catch(e) {
             stack.pop();
 
             var targetOffset = offset + argument + 1 + 2;
@@ -628,11 +629,11 @@ function execute(code_object) {
       case 102: //BUILD_TUPLE
           // Creates a tuple consuming count items from the stack,
           // and pushes the resulting tuple onto the stack.
-          var tuple = [];
+          var tuple = new Array();
           for(var j=argument-1; j>=0; j--) {
             tuple[j] = stack.pop();
           }
-          stack.push(tuple);
+          stack.push(new PyTuple(tuple));
           break;
       case 103: //BUILD_LIST
           //Works as BUILD_TUPLE, but creates a list.
@@ -653,9 +654,11 @@ function execute(code_object) {
           var name = code_object.co_names[argument];
 	  if (object instanceof Array) { //List
 	    stack.push(listMethods[name](object));
-	  } else if (object instanceof PyDict) {
-	    stack.push(dictMethods[name](object));
-	  } else if (object instanceof PyObject) {
+          } else if (object instanceof PyDict) {
+            stack.push(dictMethods[name](object));
+          } else if (object instanceof PyIterator) {
+            stack.push(object[name]);
+          } else if (object instanceof PyObject) {
 	    var index = object.fieldNames.indexOf(name);
 	    if (index > -1) {
 	      stack.push(object.fieldValues[index]);
@@ -672,7 +675,7 @@ function execute(code_object) {
 	      stack.push(attrObject);
 	    }
 	  } else {
-	    throw "LOAD_ATTR tried to load "+ name +" from "+ typeof(object);
+            throw "LOAD_ATTR tried to load "+ name +" from "+ typeof(object) +" "+ object;
 	  }
 	  break;
       case 106: //COMPARE_OP
@@ -955,8 +958,49 @@ function PyObject(clss) {
   this.fieldValues = [];
 }
 
+function PyIterator(iterable) {
+  if (iterable instanceof Array) {
+    this.index = 0;
+    this.next = function() {
+      if (this.index == undefined) { this.index = 0; }
+      if(iterable.length > this.index) {
+        return iterable[this.index++];
+      } else {
+        throw "Iterator empty";
+      }
+    };
+  /*} else if (iterable instanceof PyTuple) {
+    this.next = function() {
+      if(iterable[0] < iterable[1]) {
+        return iterable[0]++;
+      } else {
+        throw "Iterator empty";
+      }
+  };*/
+  } else if (iterable instanceof PyXRange) {
+    this.next = function() {
+      printObject(iterable);
+      if(iterable.index < iterable.stop) {
+        var index = iterable.index;
+        iterable.index = index + iterable.step;
+        return index;
+      } else {
+        throw "Iterator empty";
+      }
+    };
+  } else if (iterable instanceof PyDict) {
+    throw "Iterator not implemented for dictionaries yet.";
+  } else if (iterable instanceof PyObject) {
+    throw "Iterator not implemented for objects yet.";
+  } else {
+    throw "Object not iterable";
+  }
+}
+
 function PyListMethods() {
-  this.len = function(list) {
+  this.__iter__ = function(list) {
+    return function(vars) { return new PyIterator(list); }; };
+  this.__len__ = function(list) {
     return function(vars) { return list.length; }; };
   //Add an item to the end of the list; equivalent to a[len(a):] = [x]. 
   this.append = function(list) {
@@ -1090,6 +1134,21 @@ dictMethods = new PyDictMethods();
 
 function PyDict() {}
 PyDict.prototype = new Object;
+
+function PyTuple(elements) {
+  for (var i = 0; i < elements.length; i++) {
+    this[i] = elements[i];
+  }
+}
+PyTuple.prototype = new Array;
+
+function PyXRange(start, stop, step) {
+  this.start = start;
+  this.index = start;
+  this.stop = stop;
+  this.step = step;
+}
+
 
 
 function printObject(object) {
