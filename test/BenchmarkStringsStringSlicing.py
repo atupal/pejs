@@ -1,6 +1,6 @@
 from string import join
 
-class StringSlicing(Test):
+class StringSlicing:
 
     version = 2.0
     operations = 5 * 7

@@ -1,8 +1,8 @@
-class StringPredicates(Test):
+class StringPredicates:
 
     version = 2.0
     operations = 10 * 7
-    rounds = 100000
+    rounds = 10#0000
 
     def test(self):
 
