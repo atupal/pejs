@@ -2,7 +2,7 @@ class DictCreation:
 
     version = 2.0
     operations = 5*(5 + 5)
-    rounds = 80#000
+    rounds = 800#00
 
     def test(self):
 

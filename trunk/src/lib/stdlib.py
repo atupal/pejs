@@ -6,12 +6,34 @@ def str(value):
 
 def range(start, end = -1):
   if end == -1:
-    return (0, start)
-  else:
-    return (start, end)
+    end = start
+    start = 0
+  list = []
+  for i in xrange(start,end):
+    list.append(i)
+  return list
 
-def xrange(start, end = -1):
-  return range(start, end)
+def xrange(start, stop = -1, step=1):
+  result = []
+  if stop == -1:
+    exec "new PyXRange(0,"+start+","+step+");" in "JavaScript", "result"
+  else:
+    exec "new PyXRange("+start+","+stop+","+step+");" in "JavaScript", "result"
+  return result
+
+def iter(iterable):
+  return iterable.__iter__()
+
+def list(tuple):
+  list = []
+  for i in tuple:
+    list.append(i)
+  return list
+
+def tuple(list):
+  result = ()
+  exec "new PyTuple(["+list+"]);" in "JavaScript", "result"
+  return result
 
 #Apply function to every item of iterable and return a list of the results.
 #If additional iterable arguments are passed, function must take that many
@@ -41,7 +63,7 @@ def cmp (x, y):
   return x - y
 
 def len (list):
-  return list.len()
+  return list.__len__()
 
 #class Exception:
 #  message = "42"
