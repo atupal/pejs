@@ -132,7 +132,8 @@ def print_code(code_object, indent, varname):
   #result = result + "co_lnotab: " + code_object.co_lnotab + ",\n"
   result = result + "co_stacksize: " + str(code_object.co_stacksize) + ",\n"
   #result = result + "co_flags: " + str(code_object.co_flags) + ",\n"
-  result = result + "co_locals: [] };\n\n"
+  result = result + "co_locals: [],\n"
+  result = result + "toString: function() { return \"CodeObject:"+varname+"\"} };\n\n"
   return result
 
 # Helper for print_code, prints names
