@@ -4,7 +4,7 @@ False = 0
 def str(value):
   return value + ""
 
-def range(start, end = -1):
+def range(start, end=-1):
   if end == -1:
     end = start
     start = 0
@@ -13,7 +13,7 @@ def range(start, end = -1):
     list.append(i)
   return list
 
-def xrange(start, stop = -1, step=1):
+def xrange(start, stop=-1, step=1):
   result = []
   if stop == -1:
     exec "new PyXRange(0,"+start+","+step+");" in "JavaScript", "result"

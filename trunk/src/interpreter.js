@@ -194,29 +194,40 @@ function execute(code_object) {
       case 0: //STOP_CODE
           break;
       case 1: //POP_TOP
-          stack.pop(); break;
+          stack.pop();
+	  break;
       case 2: //ROT_TWO
-          stack.rotate2(); break;
+          stack.rotate2();
+	  break;
       case 3: //ROT_THREE
-          stack.rotate3(); break;
+          stack.rotate3();
+	  break;
       case 4: //DUP_TOP
-          stack.duplicateTop(); break;
+          stack.duplicateTop();
+	  break;
       case 5: //ROT_FOUR
-          stack.rotate4(); break;
+          stack.rotate4();
+	  break;
       case 9: //NOP
           break;
       case 10: //UNARY_POSITIVE
-          stack.push(+stack.pop()); break;
+          stack.push(+stack.pop());
+	  break;
       case 11: //UNARY_NEGATIVE
-          stack.push(-stack.pop()); break;
+          stack.push(-stack.pop());
+	  break;
       case 12: //UNARY_NOT
-          stack.push(!stack.pop()); break;
+          stack.push(!stack.pop());
+	  break;
       case 13: //UNARY_CONVERT
-          throw "UNARY_CONVERT is not implemented yet!"; break;
+          throw "UNARY_CONVERT is not implemented yet!";
+	  break;
       case 15: //UNARY_INVERT
-          stack.push(~stack.pop()); break;
+          stack.push(~stack.pop());
+	  break;
       case 18: //LIST_APPEND
-          throw "LIST_APPEND is not implemented yet!"; break;
+          throw "LIST_APPEND is not implemented yet!";
+	  break;
       case 19: //BINARY_POWER
           var temp = stack.pop();
           stack.push(Math.pow(stack.pop(), temp));
@@ -243,70 +254,80 @@ function execute(code_object) {
           break;
       case 25: //BINARY_SUBSCR
           var temp = stack.pop();
-printObject(stack.peek().store);
-printfDebug("green",stack.peek().store[temp]);
           stack.push(stack.pop().store[temp]);
           break;
       case 26: //BINARY_FLOOR_DIVIDE
           throw "BINARY_FLOOR_DIVIDE is not implemented yet!";
-          break;
+	  break;
       case 27: //BINARY_TRUE_DIVIDE
           throw "BINARY_TRUE_DIVIDE is not implemented yet!";
-          break;
+	  break;
       case 28: //INPLACE_FLOOR_DIVIDE
           throw "INPLACE_FLOOR_DIVIDE is not implemented yet!";
-          break;
+	  break;
       case 29: //INPLACE_TRUE_DIVIDE
           throw "INPLACE_TRUE_DIVIDE is not implemented yet!";
-          break;
+	  break;
       case 30: //SLICE+0
-	  stack.push(new PyList(stack.pop().store.slice(0))); break;
+	  stack.push(new PyList(stack.pop().store.slice(0)));
+	  break;
       case 31: //SLICE+1
 	  var start = stack.pop();
-	  stack.push(new PyList(stack.pop().store.slice(start))); break;
+	  stack.push(new PyList(stack.pop().store.slice(start)));
+	  break;
       case 32: //SLICE+2
 	  var end = stack.pop();
-	  stack.push(new PyList(stack.pop().store.slice(0,end))); break;
+	  stack.push(new PyList(stack.pop().store.slice(0,end)));
+	  break;
       case 33: //SLICE+3
 	  var end = stack.pop();
 	  var start = stack.pop();
-	  stack.push(new PyList(stack.pop().store.slice(start,end))); break;
+	  stack.push(new PyList(stack.pop().store.slice(start,end)));
+	  break;
       case 40: //STORE_SLICE+0
 	  var list = stack.pop().store;
 	  var args = [0,list.length].concat(stack.pop().store);
-	  Array.prototype.splice.apply(list,args); break;
+	  Array.prototype.splice.apply(list,args);
+	  break;
       case 41: //STORE_SLICE+1
 	  var start = stack.pop();
 	  var list = stack.pop().store;
 	  var args = [start,list.length].concat(stack.pop().store);
-	  Array.prototype.splice.apply(list,args); break;
+	  Array.prototype.splice.apply(list,args);
+	  break;
       case 42: //STORE_SLICE+2
 	  var end = stack.pop();
 	  var list = stack.pop().store;
 	  var args = [0,end].concat(stack.pop().store);
-	  Array.prototype.splice.apply(list,args); break;
+	  Array.prototype.splice.apply(list,args);
+	  break;
       case 43: //STORE_SLICE+3
 	  var end = stack.pop();
 	  var start = stack.pop();
 	  var list = stack.pop().store;
 	  var args = [start,end-start].concat(stack.pop().store);
-	  Array.prototype.splice.apply(list,args); break;
+	  Array.prototype.splice.apply(list,args);
+	  break;
       case 50: //DELETE_SLICE+0
 	  var list = stack.pop().store;
-	  list.splice(0,list.length); break;
+	  list.splice(0,list.length);
+	  break;
       case 51: //DELETE_SLICE+1
 	  var start = stack.pop();
 	  var list = stack.pop().store;
-	  list.splice(start,list.length-start); break;
+	  list.splice(start,list.length-start);
+	  break;
       case 52: //DELETE_SLICE+2
 	  var end = stack.pop();
 	  var list = stack.pop().store;
-	  list.splice(0,end); break;
+	  list.splice(0,end);
+	  break;
       case 53: //DELETE_SLICE+3
 	  var end = stack.pop();
 	  var start = stack.pop();
 	  var list = stack.pop().store;
-	  list.splice(start,end-start); break;
+	  list.splice(start,end-start);
+	  break;
       case 55: //INPLACE_ADD
           var temp = stack.pop();
           stack.push(stack.pop() + temp);
@@ -321,7 +342,7 @@ printfDebug("green",stack.peek().store[temp]);
           break;
       case 58: //INPLACE_DIVIDE
           throw "INPLACE_DIVIDE is not implemented yet!";
-          break;
+	  break;
       case 59: //INPLACE_MODULO
           var temp = stack.pop();
           stack.push(stack.pop() % temp);
@@ -365,7 +386,7 @@ printfDebug("green",stack.peek().store[temp]);
           break;
       case 70: //PRINT_EXPR
           throw "PRINT_EXPR is not implemented yet!";
-          break;
+	  break;
       case 71: //PRINT_ITEM
           printOut(stack.pop());
           break;
@@ -374,10 +395,10 @@ printfDebug("green",stack.peek().store[temp]);
           break;
       case 73: //PRINT_ITEM_TO
           throw "PRINT_ITEM_TO is not implemented yet!";
-          break;
+	  break;
       case 74: //PRINT_NEWLINE_TO
           throw "PRINT_NEWLINE_TO is not implemented yet!";
-          break;
+	  break;
       case 75: //INPLACE_LSHIFT
           var temp = stack.pop();
           stack.push(stack.pop() << temp);
@@ -421,7 +442,7 @@ printfDebug("green",stack.peek().store[temp]);
           return;
       case 84: //IMPORT_STAR
           throw "IMPORT_STAR is not implemented yet!";
-          break;
+	  break;
       case 85: //EXEC_STMT
 	  //Implements exec TOS2,TOS1,TOS. The compiler fills
 	  //missing optional parameters with None.
@@ -452,7 +473,7 @@ printfDebug("green",stack.peek().store[temp]);
           break;
       case 86: //YIELD_VALUE
           throw "YIELD_VALUE is not implemented yet!";
-          break;
+	  break;
       case 87: //POP_BLOCK
 	  blockStack.pop();
           break;
@@ -493,26 +514,35 @@ printfDebug("green",stack.peek().store[temp]);
           }
           break;
       case 91: //DELETE_NAME
-          throw "DELETE_NAME is not implemented yet!";
+          var name = code_object.co_names[argument];
+          if (contains(code_object.co_varnames, name)) {
+	    var index = code_object.co_varnames.indexOf(name);
+	    if (index < code_object.co_nlocals) {
+	      stack.remove(index, value);
+	    }
+	    delete code_object.co_locals[index];
+	    delete code_object.co_varnames[index];
+          } else if (globals.contains(name)) { globals.remove(name);
+          } else { throw "Could not find name \""+name+"\" to delete"; }
           break;
       case 92: //UNPACK_SEQUENCE
-          //Unpacks TOS into count individual values, which are put onto the stack right-to-left. 
-          var seq = stack.pop();
+          //Unpacks TOS into count individual values, which are put onto the
+	  //stack right-to-left. 
+          var seq = stack.pop().store; //Assumes tuple
           for (var i = 0; i < seq.length; i++) {
             stack.push(seq[i]);
           }
           break;
       case 93: //FOR_ITER
-          //TOS is an iterator. Call its next() method. If this yields a new value,
-          //push it on the stack (leaving the iterator below it). If the iterator
-          //indicates it is exhausted TOS is popped, and the byte code counter is
-          //incremented by delta.
+          //TOS is an iterator. Call its next() method. If this yields a new
+	  //value, push it on the stack (leaving the iterator below it). If
+	  //the iterator indicates it is exhausted TOS is popped, and the
+	  //byte code counter is incremented by delta.
           var iterator = stack.peek();
           try {
-            stack.push(iterator.next());
+            stack.push(iterator.next(iterator)());
           } catch(e) {
             stack.pop();
-
             var targetOffset = offset + argument + 1 + 2;
             if (argument > 0) {
               var j = pc;
@@ -545,7 +575,7 @@ printfDebug("green",stack.peek().store[temp]);
           break;
       case 96: //DELETE_ATTR
           throw "DELETE_ATTR is not implemented yet!";
-          break;
+	  break;
       case 97: //STORE_GLOBAL
           globals.store(code_object.co_names[argument], stack.pop());
           break;
@@ -558,7 +588,7 @@ printfDebug("green",stack.peek().store[temp]);
           break;
       case 99: //DUP_TOPX
           throw "DUP_TOPX is not implemented yet!";
-          break;
+	  break;
       case 100: //LOAD_CONST
           var temp = code_object.co_consts[argument];
           if (typeof(temp) == typeof("") && temp.match(/^CODEOBJ: \w+$/)) {
@@ -582,9 +612,9 @@ printfDebug("green",stack.peek().store[temp]);
           } else if (globals.contains(name)) {
             stack.push(globals.lookup(name));
           } else if (name == "__name__") {
-	    stack.push(stack.peek().getCodeObject().co_name);
+	    stack.push(stack.peek().codeObject.co_name);
 	  } else {
-            throw "LOAD_NAME attempted to load nonexisting name \""+name+"\"";
+            throw "LOAD_NAME attempted to load non-existing name \""+name+"\"";
           }
           break;
       case 102: //BUILD_TUPLE
@@ -618,17 +648,17 @@ printfDebug("green",stack.peek().store[temp]);
           } else if (object instanceof PyDict) {
             stack.push(dictMethods[name](object));
           } else if (object instanceof PyIterator) {
-            stack.push(object[name]);
+            stack.push(object[name](object));
           } else if (object instanceof PyObject) {
 	    var index = object.fieldNames.indexOf(name);
 	    if (index > -1) {
 	      stack.push(object.fieldValues[index]);
 	    } else {
-	      index = object.class.getCodeObject().co_varnames.indexOf(name);
-	      var attrObject = object.class.getCodeObject().co_locals[index];
+	      index = object.class.codeObject.co_varnames.indexOf(name);
+	      var attrObject = object.class.codeObject.co_locals[index];
 	      if (attrObject instanceof PyFunction) {
-		attrObject.getCodeObject().co_varnames[0] = "self";
-		attrObject.getCodeObject().co_locals[0] = object;
+		attrObject.codeObject.co_varnames[0] = "self";
+		attrObject.codeObject.co_locals[0] = object;
 	      } else {
 		throw "LOAD_ATTR tried to load non-function "+ name +
 		      " from class "+ object.class.__name__;
@@ -657,25 +687,19 @@ printfDebug("green",stack.peek().store[temp]);
 	  var newObj = new PyObject(class);
 
 	  for (var j=0; j<codeObj.co_locals.length; j++) {
-	    var name = codeObj.co_varnames[j];
-	    var value = codeObj.co_locals[j];
-	    if (/__\w+__/.test(name)) {
-	      continue;
-	    }
-	    if (typeof(value.getCodeObject) == typeof(function() {})) {
-	      continue;
-	    }
-	    newObj.fieldNames.push(name);
-	    newObj.fieldValues.push(value);
+	    if (/__\w+__/.test(codeObj.co_varnames[j])) { continue; }
+	    if (codeObj.co_locals[j] instanceof PyFunction) { continue; }
+	    newObj.fieldNames.push(codeObj.co_varnames[j]);
+	    newObj.fieldValues.push(codeObj.co_locals[j]);
 	  }
-	  stack.pop() //Remove return value from the executed codeObject
+	  stack.pop(); //Remove return value from the executed codeObject
 	  stack.push(newObj);
           break;
       case 108: //IMPORT_FROM
           //Loads the attribute co_names[namei] from the module found in TOS. 
           //The resulting object is pushed onto the stack, to be subsequently 
           //stored by a STORE_FAST instruction.
-          var codeObject = stack.pop().class.getCodeObject(); 
+          var codeObject = stack.pop().class.codeObject; 
           var attrname = code_object.co_names[argument];           
           var attr = codeObject.co_locals[codeObject.co_varnames.indexOf(attrname)];
           stack.push(attr);
@@ -750,7 +774,7 @@ printfDebug("green",stack.peek().store[temp]);
           break;
       case 119: //CONTINUE_LOOP
           throw "CONTINUE_LOOP is not implemented yet!";
-          break;
+	  break;
       case 120: //SETUP_LOOP
           // Pushes a block for a loop onto the block stack.
           // The block spans from the current instruction with
@@ -801,40 +825,50 @@ printfDebug("green",stack.peek().store[temp]);
 	  pc = j - 1;
           break;
       case 131: //CALL_FUNCTION
+	  var kwparams = argument >> 8;
+	  argument &= 255;
+	  var kwArgs = new Object();
+          for (var j = kwparams-1; j >= 0; j--) {
+	    var i = stack.pop();
+            kwArgs[stack.pop()] = i;
+          }
           var localVars = [];
-          for (var j = argument-1; j >= 0; j--){
+          for (var j = argument-1; j >= 0; j--) {
             localVars[j] = stack.pop();
           }
 	  if (stack.peek() instanceof PyFunction) {
-            var codeObject = stack.peek().getCodeObject();
+            var codeObject = stack.peek().codeObject;
             if (contains(codeObject.co_varnames, "self")) {
               //insert self reference
               localVars.splice(0,0,codeObject.co_locals[0]);
             }            
-            //insert default parameters if necessary                        
-            var totalArgc = codeObject.co_argcount;
+            //insert default parameters if necessary
+	    var totalArgc = codeObject.co_argcount;
             var actualArgc = argument;
-            var defArgc = stack.peek().getArgc();
-            var defArgs = stack.peek().getArgs();
+            var defArgc = stack.peek().defArgc;
+            var defArgs = stack.peek().defArgs;
             var overlap = (actualArgc + defArgc) - totalArgc;            
             var index = localVars.length;
             while (index < totalArgc) {
               localVars[index] = defArgs[index - actualArgc + overlap];
               index = localVars.length;
             }
-            //codeObject.co_locals = localVars;
-	    for (var j=0;j<localVars.length;j++) {
-	      codeObject.co_locals[j] = localVars[j];
+	    for (var i in kwArgs) {
+	      localVars[codeObject.co_varnames.indexOf(i)] = kwArgs[i];
 	    }
-            stack.newFrame(codeObject.co_nlocals, localVars);
+            //codeObject.co_locals = localVars;
+	    for (var i=0; i<localVars.length; i++) {
+	      codeObject.co_locals[i] = localVars[i];
+	    }
+            stack.newFrame(codeObject.co_nlocals, codeObject.co_locals);
             execute(codeObject);
 	  } else if (stack.peek() instanceof PyClass) {
 	    //Creation of new object
             var newObj = new PyObject(stack.pop());
-            var classCodeObject = newObj.class.getCodeObject();
+            var classCodeObject = newObj.class.codeObject;
             var index = classCodeObject.co_varnames.indexOf("__init__");
             if (index > -1) {
-              var initCodeObject = classCodeObject.co_locals[index].getCodeObject();
+              var initCodeObject = classCodeObject.co_locals[index].codeObject;
               localVars.splice(0,0,newObj);
 	      for (var j=0;j<localVars.length;j++) {
 		initCodeObject.co_locals[j] = localVars[j];
@@ -843,7 +877,7 @@ printfDebug("green",stack.peek().store[temp]);
               execute(initCodeObject);
             }
             for (var j=0; j<classCodeObject.co_locals.length; j++) {
-              if (typeof(classCodeObject.co_locals[j].getCodeObject) == typeof(function() {}))
+              if (classCodeObject.co_locals[j] instanceof PyFunction)
                 continue;
               if (/__\w+__/.test(classCodeObject.co_varnames[j]))
                 continue;
@@ -853,10 +887,8 @@ printfDebug("green",stack.peek().store[temp]);
             stack.push(newObj);
 	  } else if (stack.peek() instanceof Function) {
 	    stack.push(stack.pop()(localVars));
-	  } else if (stack.peek() instanceof Object) {
-	    printfDebug("green","<font size=\"50\">Object</font>");
 	  } else {
-	    printfDebug("green","<font size=\"50\">SOMETHING ELSE!!!</font>");
+	    throw "CALL_FUNCTION tried to execute non-executable: "+stack.pop();
 	  }
           break;
       case 132: //MAKE_FUNCTION
@@ -871,36 +903,40 @@ printfDebug("green",stack.peek().store[temp]);
           break;
       case 133: //BUILD_SLICE
           throw "BUILD_SLICE is not implemented yet!";
-          break;
+	  break;
       case 134: //MAKE_CLOSURE
           throw "MAKE_CLOSURE is not implemented yet!";
-          break;
+	  break;
       case 135: //LOAD_CLOSURE
           throw "LOAD_CLOSURE is not implemented yet!";
-          break;
+	  break;
       case 136: //LOAD_DEREF
           throw "LOAD_DEREF is not implemented yet!";
-          break;
+	  break;
       case 137: //STORE_DEREF
           throw "STORE_DEREF is not implemented yet!";
-          break;
+	  break;
       case 140: //CALL_FUNCTION_VAR
           throw "CALL_FUNCTION_VAR is not implemented yet!";
-          break;
+	  break;
       case 141: //CALL_FUNTION_KW
           throw "CALL_FUNTION_KW is not implemented yet!";
-          break;
+	  break;
       case 142: //CALL_FUNCTION_VAR_KW
           throw "CALL_FUNCTION_VAR_KW is not implemented yet!";
-          break;
+	  break;
       case 143: //EXTENDED_ARG
           throw "EXTENDED_ARG is not implemented yet!";
-          break;
+	  break;
       default:
           throw "Unexpected bytecode!";
-          break;
+	  break;
     }
   }
+}
+
+function PyCodeObject() {
+  this.toString = function() { return "CodeObject:"+this.co_name; };
 }
 
 function PyClass(name, base, codeObj) {
@@ -908,60 +944,54 @@ function PyClass(name, base, codeObj) {
   this.__base__ = base;
   //this.__methods__ = ;
   this.codeObject = codeObj;
-
-  this.getCodeObject = function() { return this.codeObject; };
-  this.toString = function() { return "PyClass:"+class.__name__; };
+  this.toString = function() { return "PyClass:"+this.__name__; };
 }
 
 function PyObject(clss) {
   this.class = clss;
   this.fieldNames = [];
   this.fieldValues = [];
-  this.toString = function() { return "PyObject:"+class.__name__; };
+  this.toString = function() { return "PyObject:"+this.class.__name__; };
 }
 
 function PyFunction(defaultArgc, codeObj) {
   this.defArgc = defaultArgc;
   this.codeObject = codeObj;
   this.defArgs = [];
-  this.getArgs = function() { return this.defArgs; };
   this.addArg = function(index, val) { this.defArgs[index] = val; };
-  this.getArgc = function() { return this.defArgc; };
-  this.getArgs = function() { return this.defArgs; };
-  this.getCodeObject = function() { return this.codeObject; };
   this.toString = function() { return "PyFunction:"+this.codeObject.co_name; };
 }
 
 function PyIterator(iterable) {
+  this.store = iterable;
   if (iterable instanceof Array) { //PyList and PyTuple
     this.index = 0;
-    this.next = function() {
-      if (this.index == undefined) { this.index = 0; }
-      if(iterable.store.length > this.index) {
-        return iterable.store[this.index++];
+    this.next = function(it) { return function(vars) {
+      //if (it.index == undefined) { it.index = 0; }
+      if (it.store.store.length > it.index) {
+        return it.store.store[it.index++];
       } else {
         throw "Iterator empty";
       }
-    };
+    }; };
   } else if (iterable instanceof PyXRange) {
-    this.next = function() {
-      printObject(iterable);
-      if(iterable.index < iterable.stop) {
-        var index = iterable.index;
-        iterable.index = index + iterable.step;
+    this.next = function(it) { return function(vars) {
+      if(it.store.index < it.store.stop) {
+        var index = it.store.index;
+        it.store.index = index + it.store.step;
         return index;
       } else {
         throw "Iterator empty";
       }
-    };
+    }; };
   } else if (iterable instanceof PyDict) {
-    throw "Iterator not implemented for dictionaries yet.";
+    throw "Iterator not implemented for dictionaries.";
   } else if (iterable instanceof PyObject) {
-    throw "Iterator not implemented for objects yet.";
+    throw "Iterator not implemented for objects.";
   } else {
     throw "Object not iterable";
   }
-  this.toString = function() { return "Iterator("+iterable+")"; };
+  this.toString = function() { return "Iterator("+this.store+")"; };
 }
 
 function PyListMethods() {
@@ -1130,7 +1160,9 @@ function PyXRange(start, stop, step) {
   this.index = start;
   this.stop = stop;
   this.step = step;
-  this.toString = function() {};
+  this.toString = function() {
+    return "XRange("+this.start+","+this.index+
+	   ","+this.stop+","+this.step+")";};
 }
 
 
