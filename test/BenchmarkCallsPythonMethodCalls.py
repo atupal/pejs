@@ -2,7 +2,7 @@ class PythonMethodCalls:
 
     version = 2.0
     operations = 5*(6 + 5 + 4)
-    rounds = 30#000
+    rounds = 60 #30#000
 
     def test(self):
 

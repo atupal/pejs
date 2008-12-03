@@ -488,9 +488,9 @@ function execute(code_object) {
           // TOS1 the tuple of the names of the base classes, and TOS2
           // the class name.
           var codeObj = stack.pop();
-          var base = stack.pop();
+          var bases = stack.pop();
           var className = stack.pop();
-          stack.push(new PyClass(className, base, codeObj));
+          stack.push(new PyClass(className, bases.store, codeObj));
           break;
       case 90: //STORE_NAME --------------- HAVE_ARGUMENT ---------------
           //Implements name = TOS. namei is the index of name in the attribute
@@ -562,15 +562,22 @@ function execute(code_object) {
       case 95: //STORE_ATTR
           //Implements TOS.name = TOS1, where namei is
           //the index of name in co_names.
-          var obj = stack.pop();
+          var object = stack.pop();
           var name = code_object.co_names[argument];
-          var index = obj.fieldNames.indexOf(name);
-          if (index > -1) {
-            obj.fieldValues[index] = stack.pop();
+          if (object instanceof PyClass){
+            if (contains(object.codeObject.co_varnames, name)) {
+              //Set value of existing field
+              var index = object.codeObject.co_varnames.indexOf(name);
+              object.codeObject.co_locals[index] = stack.pop();
+            } else {
+              //Inject field
+              var index = object.codeObject.co_varnames.length;
+              object.codeObject.co_varnames[index] = name;
+              object.codeObject.co_locals[index] = stack.pop();
+            }
+            
           } else {
-            index = obj.fieldNames.length;
-            obj.fieldNames[index] = name;
-            obj.fieldValues[index] = stack.pop();
+              object.fields[name] = stack.pop();
           }
           break;
       case 96: //DELETE_ATTR
@@ -650,12 +657,23 @@ function execute(code_object) {
           } else if (object instanceof PyIterator) {
             stack.push(object[name](object));
           } else if (object instanceof PyObject) {
-	    var index = object.fieldNames.indexOf(name);
-	    if (index > -1) {
-	      stack.push(object.fieldValues[index]);
+            if (object.fields[name] != undefined) {
+              stack.push(object.fields[name]);
 	    } else {
-	      index = object.class.codeObject.co_varnames.indexOf(name);
-	      var attrObject = object.class.codeObject.co_locals[index];
+              function lookup(class,name) {
+	        index = class.codeObject.co_varnames.indexOf(name);
+                if (index > -1)
+                  return class.codeObject.co_locals[index];
+                var result;
+                for (var i=0;i<class.__bases__.length;i++) {
+                  var result = lookup(class.__bases__[i],name);
+                  if (result) { return result; }
+                }
+              }
+              var attrObject = lookup(object.class,name);
+              
+	      //index = object.class.codeObject.co_varnames.indexOf(name);
+	      //var attrObject = object.class.codeObject.co_locals[index];
 	      if (attrObject instanceof PyFunction) {
 		attrObject.codeObject.co_varnames[0] = "self";
 		attrObject.codeObject.co_locals[0] = object;
@@ -665,14 +683,22 @@ function execute(code_object) {
 	      }
 	      stack.push(attrObject);
 	    }
-	  } else {
+          } else if(object instanceof PyClass) {
+            index = object.codeObject.co_varnames.indexOf(name);
+            stack.push(object.codeObject.co_locals[index]);
+          } else {
             throw "LOAD_ATTR tried to load "+ name +
 		  " from "+ typeof(object) +" "+ object;
 	  }
 	  break;
       case 106: //COMPARE_OP
-          var temp = stack.pop();
-          stack.push(eval(stack.pop() + compareOps[argument] + temp));
+          var temp1 = stack.pop();
+          var temp2 = stack.pop();          
+          if(typeof(temp1) == typeof("") || typeof(temp2) == typeof("")) {
+            temp1 = "\"" + temp1 + "\"";
+            temp2 = "\"" + temp2 + "\"";
+          }
+          stack.push(eval(temp2 + compareOps[argument] + temp1));
           break;
       case 107: //IMPORT_NAME
 	  //Imports the module co_names[namei]. The module object is pushed
@@ -684,16 +710,15 @@ function execute(code_object) {
 	  globals.add(codeObj.co_varnames, codeObj.co_locals);
 	  execute(codeObj);
 	  var class = new PyClass(module, [], codeObj);
-	  var newObj = new PyObject(class);
+	  var object = new PyObject(class);
 
 	  for (var j=0; j<codeObj.co_locals.length; j++) {
 	    if (/__\w+__/.test(codeObj.co_varnames[j])) { continue; }
 	    if (codeObj.co_locals[j] instanceof PyFunction) { continue; }
-	    newObj.fieldNames.push(codeObj.co_varnames[j]);
-	    newObj.fieldValues.push(codeObj.co_locals[j]);
+            object.fields[codeObj.co_varnames[j]] = codeObj.co_locals[j];
 	  }
 	  stack.pop(); //Remove return value from the executed codeObject
-	  stack.push(newObj);
+          stack.push(object);
           break;
       case 108: //IMPORT_FROM
           //Loads the attribute co_names[namei] from the module found in TOS. 
@@ -800,6 +825,7 @@ function execute(code_object) {
 	  var value = stack.pop();
           stack.write(argument, value);
 	  code_object.co_locals[argument] = value;
+          printObject(value);
           break;
       case 126: //DELETE_FAST
           stack.write(argument, undefined);
@@ -864,27 +890,49 @@ function execute(code_object) {
             execute(codeObject);
 	  } else if (stack.peek() instanceof PyClass) {
 	    //Creation of new object
-            var newObj = new PyObject(stack.pop());
-            var classCodeObject = newObj.class.codeObject;
+            var object = new PyObject(stack.peek());
+            //Find all fields that belong to this object
+            function injectFields(object,class) {
+              for (var i=0;i<class.__bases__.length;i++) {
+                injectFields(object, class.__bases__[i]);
+              }
+              var codeObj = class.codeObject;
+              for (var j=0; j<codeObj.co_locals.length; j++) {
+                if (codeObj.co_locals[j] instanceof PyFunction) { continue; }
+                if (/__\w+__/.test(codeObj.co_varnames[j])) { continue; }
+                object.fields[codeObj.co_varnames[j]] = codeObj.co_locals[j];
+              }
+            }
+            injectFields(object,object.class);
+            //Execute the __init__ method if it exists
+            var classCodeObject = object.class.codeObject;
             var index = classCodeObject.co_varnames.indexOf("__init__");
             if (index > -1) {
-              var initCodeObject = classCodeObject.co_locals[index].codeObject;
-              localVars.splice(0,0,newObj);
-	      for (var j=0;j<localVars.length;j++) {
+              var initFunction = classCodeObject.co_locals[index];
+              var initCodeObject = initFunction.codeObject;
+              localVars.splice(0,0,object);
+              //insert default parameters if necessary
+              var totalArgc = initCodeObject.co_argcount;
+              var actualArgc = argument;
+              var defArgc = initFunction.defArgc;
+              var defArgs = initFunction.defArgs;
+              var overlap = (actualArgc + defArgc) - totalArgc;            
+              var index = localVars.length;
+              while (index < totalArgc) {
+                localVars[index] = defArgs[index - actualArgc + overlap];
+                index = localVars.length;
+              }
+              for (var i in kwArgs) {
+                localVars[initCodeObject.co_varnames.indexOf(i)] = kwArgs[i];
+              }
+              for (var j=0;j<localVars.length;j++) {
 		initCodeObject.co_locals[j] = localVars[j];
 	      }
               stack.newFrame(initCodeObject.co_nlocals, localVars);
               execute(initCodeObject);
             }
-            for (var j=0; j<classCodeObject.co_locals.length; j++) {
-              if (classCodeObject.co_locals[j] instanceof PyFunction)
-                continue;
-              if (/__\w+__/.test(classCodeObject.co_varnames[j]))
-                continue;
-              newObj.fieldNames.push(classCodeObject.co_varnames[j]);
-              newObj.fieldValues.push(classCodeObject.co_locals[j]);
-            }
-            stack.push(newObj);
+            stack.pop();
+            stack.push(object);
 	  } else if (stack.peek() instanceof Function) {
 	    stack.push(stack.pop()(localVars));
 	  } else {
@@ -939,9 +987,9 @@ function PyCodeObject() {
   this.toString = function() { return "CodeObject:"+this.co_name; };
 }
 
-function PyClass(name, base, codeObj) {
+function PyClass(name, bases, codeObj) {
   this.__name__ = name;
-  this.__base__ = base;
+  this.__bases__ = bases;
   //this.__methods__ = ;
   this.codeObject = codeObj;
   this.toString = function() { return "PyClass:"+this.__name__; };
@@ -949,8 +997,7 @@ function PyClass(name, base, codeObj) {
 
 function PyObject(clss) {
   this.class = clss;
-  this.fieldNames = [];
-  this.fieldValues = [];
+  this.fields = new Object();
   this.toString = function() { return "PyObject:"+this.class.__name__; };
 }
 

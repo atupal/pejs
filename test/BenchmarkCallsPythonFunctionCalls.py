@@ -2,7 +2,7 @@ class PythonFunctionCalls:
 
     version = 2.0
     operations = 5*(1+4+4+2)
-    rounds = 60#000
+    rounds = 120 #60#000
 
     def test(self):
 

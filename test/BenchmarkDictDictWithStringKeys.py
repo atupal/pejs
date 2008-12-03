@@ -2,7 +2,7 @@ class DictWithStringKeys:
 
     version = 2.0
     operations = 5*(6 + 6)
-    rounds = 200#000
+    rounds = 2000#00
 
     def test(self):
 

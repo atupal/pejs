@@ -1,6 +1,12 @@
 True = 1
 False = 0
 
+class object:
+  pass
+
+def intern(str):
+  return str
+
 def str(value):
   return value + ""
 

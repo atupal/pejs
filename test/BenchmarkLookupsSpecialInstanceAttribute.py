@@ -2,7 +2,7 @@ class SpecialInstanceAttribute:
 
     version = 2.0
     operations = 5*(12 + 12)
-    rounds = 10#0000
+    rounds = 1000#00
 
     def test(self):
 

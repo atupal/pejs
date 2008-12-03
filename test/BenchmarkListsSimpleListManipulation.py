@@ -2,7 +2,7 @@ class SimpleListManipulation:
 
     version = 2.0
     operations = 5* (6 + 6 + 6)
-    rounds = 13#0000
+    rounds = 1300#00
 
     def test(self):
 
