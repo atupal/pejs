@@ -1,11 +1,9 @@
 class CreateNewInstances:
-
     version = 2.0
     operations = 3 + 7 + 4
-    rounds = 6#0000
+    rounds = 600#00
 
     def test(self):
-
         class c(object):
             pass
 

@@ -2,7 +2,7 @@ class CompareFloats:
 
     version = 2.0
     operations = 30 * 5
-    rounds = 8#0000
+    rounds = 160 #80#000
 
     def test(self):
 

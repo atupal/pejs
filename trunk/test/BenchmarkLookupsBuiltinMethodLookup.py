@@ -2,7 +2,7 @@ class BuiltinMethodLookup:
 
     version = 2.0
     operations = 5*(3*5 + 3*5)
-    rounds = 7#0000
+    rounds = 700#00
 
     def test(self):
 

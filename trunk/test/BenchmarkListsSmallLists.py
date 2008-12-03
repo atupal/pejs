@@ -2,7 +2,7 @@ class SmallLists:
 
     version = 2.0
     operations = 5*(1+ 6 + 6 + 3 + 1)
-    rounds = 80#000
+    rounds = 800#00
 
     def test(self):
 

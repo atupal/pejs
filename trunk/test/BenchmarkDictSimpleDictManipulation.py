@@ -2,7 +2,7 @@ class SimpleDictManipulation:
 
     version = 2.0
     operations = 5*(6 + 6 + 6 + 6)
-    rounds = 100#000
+    rounds = 1000#00
 
     def test(self):
 

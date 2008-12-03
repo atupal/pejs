@@ -1,16 +1,13 @@
 class NormalClassAttribute:
-
     version = 2.0
     operations = 5*(12 + 12)
-    rounds = 10#0000
+    rounds = 1000#00
 
     def test(self):
-
         class c:
             pass
 
         for i in xrange(self.rounds):
-
             c.a = 2
             c.b = 3
             c.c = 4

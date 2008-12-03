@@ -2,7 +2,7 @@ class SmallTuples:
 
     version = 2.0
     operations = 5*(1 + 3 + 6 + 2)
-    rounds = 9#0000
+    rounds = 200 #90#000
 
     def test(self):
 

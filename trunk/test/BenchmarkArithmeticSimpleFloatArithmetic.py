@@ -2,7 +2,7 @@ class SimpleFloatArithmetic:
 
     version = 2.0
     operations = 5 * (3 + 5 + 5 + 3 + 3 + 3)
-    rounds = 120#000
+    rounds = 1200#00
 
     def test(self):
 

@@ -4,7 +4,7 @@ class ConcatStrings:
 
     version = 2.0
     operations = 10 * 5
-    rounds = 10#0000
+    rounds = 1000#00
 
     def test(self):
 

@@ -2,7 +2,7 @@ class CompareIntegers:
 
     version = 2.0
     operations = 30 * 5
-    rounds = 12#0000
+    rounds = 120#000
 
     def test(self):
 

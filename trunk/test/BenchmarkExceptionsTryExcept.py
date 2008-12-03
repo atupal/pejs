@@ -2,7 +2,7 @@ class TryExcept:
 
     version = 2.0
     operations = 15 * 10
-    rounds = 15#0000
+    rounds = 1500#00
 
     def test(self):
 
