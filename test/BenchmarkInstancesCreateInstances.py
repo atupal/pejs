@@ -2,7 +2,7 @@ class CreateInstances:
 
     version = 2.0
     operations = 3 + 7 + 4
-    rounds = 8#0000
+    rounds = 800#00
 
     def test(self):
 
