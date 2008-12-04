@@ -10,25 +10,40 @@ def intern(str):
 def str(value):
   return value + ""
 
-def range(start, end=-1):
-  if end == -1:
-    end = start
+def range(start, stop=-1):
+  if stop == -1:
+    stop = start
     start = 0
   list = []
-  for i in xrange(start,end):
+  for i in xrange(start,stop):
     list.append(i)
   return list
 
 def xrange(start, stop=-1, step=1):
-  result = []
+  class XRange:
+    def __init__(self,start,stop,step):
+      self.fstart = start
+      self.fstop = stop
+      self.fstep = step
+    def next(self):
+      if self.fstart < self.fstop:
+	self.fstart = self.fstart + self.fstep
+	return self.fstart - self.fstep
+      raise StopIteration()
+    def __getitem__(self,item):
+      return self.item
+    def __iter__(self):
+      return self
   if stop == -1:
-    exec "new PyXRange(0,"+start+","+step+");" in "JavaScript", "result"
+    return XRange(0,start,step)
   else:
-    exec "new PyXRange("+start+","+stop+","+step+");" in "JavaScript", "result"
-  return result
+    return XRange(start,stop,step)
 
 def iter(iterable):
   return iterable.__iter__()
+
+def dict(**dict):
+  return dict
 
 def list(tuple):
   list = []
@@ -71,5 +86,8 @@ def cmp (x, y):
 def len (list):
   return list.__len__()
 
-#class Exception:
-#  message = "42"
+class Exception:
+  message = "42"
+
+class StopIteration(Exception):
+  pass

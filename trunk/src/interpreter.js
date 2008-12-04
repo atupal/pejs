@@ -382,7 +382,11 @@ function execute(code_object) {
           break;
       case 68: //GET_ITER
           //Implements TOS = iter(TOS).
-          stack.push(new PyIterator(stack.pop()));
+	  var iter = stack.pop();
+	  if (!(iter instanceof PyObject)) {
+	    iter = new PyIterator(iter);
+	  }
+          stack.push(iter);
           break;
       case 70: //PRINT_EXPR
           throw "PRINT_EXPR is not implemented yet!";
@@ -439,7 +443,7 @@ function execute(code_object) {
           break;
       case 83: //RETURN_VALUE
           stack.removeFrame(code_object.co_nlocals, code_object.co_locals);
-          return;
+          return true;
       case 84: //IMPORT_STAR
           throw "IMPORT_STAR is not implemented yet!";
 	  break;
@@ -539,25 +543,50 @@ function execute(code_object) {
 	  //the iterator indicates it is exhausted TOS is popped, and the
 	  //byte code counter is incremented by delta.
           var iterator = stack.peek();
-          try {
-            stack.push(iterator.next(iterator)());
-          } catch(e) {
-            stack.pop();
-            var targetOffset = offset + argument + 1 + 2;
-            if (argument > 0) {
-              var j = pc;
-              while(prog[j][1] != targetOffset) {
-                j = j + 1;
-              }
-              pc = j - 1;
-            } else {
-              var j = pc;
-              while(prog[j][1] != targetOffset) {
-                j = j - 1;
-              }
-              pc = j - 1;
-            }
-          }
+	  if (iterator instanceof PyObject) {
+	    var codeObject = iterator.class.codeObject;
+	    index = codeObject.co_varnames.indexOf("next");
+	    stack.push(codeObject.co_locals[index]);
+	    stack.newFrame(codeObject.co_nlocals+1,[iterator]);
+	    if (!execute(codeObject.co_locals[index].codeObject)) {
+	      stack.pop();
+	      stack.pop();
+	      var targetOffset = offset + argument + 1 + 2;
+	      if (argument > 0) {
+		var j = pc;
+		while(prog[j][1] != targetOffset) {
+		  j = j + 1;
+		}
+		pc = j - 1;
+	      } else {
+		var j = pc;
+		while(prog[j][1] != targetOffset) {
+		  j = j - 1;
+		}
+		pc = j - 1;
+	      }
+	    }
+	  } else {
+	    try {
+	      stack.push(iterator.next(iterator)());
+	    } catch(e) {
+	      stack.pop();
+	      var targetOffset = offset + argument + 1 + 2;
+	      if (argument > 0) {
+		var j = pc;
+		while(prog[j][1] != targetOffset) {
+		  j = j + 1;
+		}
+		pc = j - 1;
+	      } else {
+		var j = pc;
+		while(prog[j][1] != targetOffset) {
+		  j = j - 1;
+		}
+		pc = j - 1;
+	      }
+	    }
+	  }
           break;
       case 95: //STORE_ATTR
           //Implements TOS.name = TOS1, where namei is
@@ -825,7 +854,6 @@ function execute(code_object) {
 	  var value = stack.pop();
           stack.write(argument, value);
 	  code_object.co_locals[argument] = value;
-          printObject(value);
           break;
       case 126: //DELETE_FAST
           stack.write(argument, undefined);
@@ -838,11 +866,18 @@ function execute(code_object) {
 	  //find the traceback as TOS2, the parameter as TOS1, and the
 	  //exception as TOS.
 	  var parameters = [];
-	  for (var j = argument-1; j >= 0; j--){
+	  for (var j=0; j<argument; j++){
 	    parameters[j] = stack.pop();
 	  }
-	  var exceptBlock = blockStack.pop();
+
+	  if (parameters[0] instanceof PyObject) {
+	    if (parameters[0].class.__name__ == "StopIteration") {
+	      stack.removeFrame(code_object.co_nlocals, code_object.co_locals);
+	      return false;
+	    }
+	  }
 	  
+	  var exceptBlock = blockStack.pop();
 	  var targetOffset = exceptBlock[0] + exceptBlock[1] + 1 + 2;
 	  var j = pc;
 	  while(prog[j][1] != targetOffset) {
@@ -853,10 +888,10 @@ function execute(code_object) {
       case 131: //CALL_FUNCTION
 	  var kwparams = argument >> 8;
 	  argument &= 255;
-	  var kwArgs = new Object();
+	  var kwArgs = new PyDict();
           for (var j = kwparams-1; j >= 0; j--) {
 	    var i = stack.pop();
-            kwArgs[stack.pop()] = i;
+            kwArgs.store[stack.pop()] = i;
           }
           var localVars = [];
           for (var j = argument-1; j >= 0; j--) {
@@ -867,23 +902,37 @@ function execute(code_object) {
             if (contains(codeObject.co_varnames, "self")) {
               //insert self reference
               localVars.splice(0,0,codeObject.co_locals[0]);
-            }            
-            //insert default parameters if necessary
-	    var totalArgc = codeObject.co_argcount;
-            var actualArgc = argument;
-            var defArgc = stack.peek().defArgc;
-            var defArgs = stack.peek().defArgs;
-            var overlap = (actualArgc + defArgc) - totalArgc;            
-            var index = localVars.length;
-            while (index < totalArgc) {
-              localVars[index] = defArgs[index - actualArgc + overlap];
-              index = localVars.length;
             }
-	    for (var i in kwArgs) {
-	      localVars[codeObject.co_varnames.indexOf(i)] = kwArgs[i];
+
+	    if (argument < codeObject.co_argcount) {
+	      //insert default parameters if necessary
+	      var totalArgc = codeObject.co_argcount;
+	      var actualArgc = argument;
+	      var defArgc = stack.peek().defArgc;
+	      var defArgs = stack.peek().defArgs;
+	      var overlap = (actualArgc + defArgc) - totalArgc;            
+	      var index = localVars.length;
+	      while (index < totalArgc) {
+		localVars[index] = defArgs[index - actualArgc + overlap];
+		index = localVars.length;
+	      }
+	      for (var i in kwArgs.store) {
+		localVars[codeObject.co_varnames.indexOf(i)] = kwArgs.store[i];
+	      }
+	    } else if (argument > codeObject.co_argcount) {
+	      var list = [];
+	      for (var i=codeObject.co_argcount;i<localVars.length;i++) {
+		list.push(localVars[i]);
+	      }
+	      if (list.length > 0) {
+		codeObject.co_locals[codeObject.co_argcount] = new PyTuple(list);
+		codeObject.co_locals[codeObject.co_argcount+1] = kwArgs;
+	      } else {
+		codeObject.co_locals[codeObject.co_argcount] = kwArgs;
+	      }
 	    }
-            //codeObject.co_locals = localVars;
-	    for (var i=0; i<localVars.length; i++) {
+	    //codeObject.co_locals = localVars;
+	    for (var i=0; i<codeObject.co_argcount; i++) {
 	      codeObject.co_locals[i] = localVars[i];
 	    }
             stack.newFrame(codeObject.co_nlocals, codeObject.co_locals);
@@ -1021,20 +1070,14 @@ function PyIterator(iterable) {
         throw "Iterator empty";
       }
     }; };
-  } else if (iterable instanceof PyXRange) {
-    this.next = function(it) { return function(vars) {
-      if(it.store.index < it.store.stop) {
-        var index = it.store.index;
-        it.store.index = index + it.store.step;
-        return index;
-      } else {
-        throw "Iterator empty";
-      }
-    }; };
   } else if (iterable instanceof PyDict) {
     throw "Iterator not implemented for dictionaries.";
   } else if (iterable instanceof PyObject) {
-    throw "Iterator not implemented for objects.";
+    this.next = function(it) {
+      var index = it.class.codeObject.co_varnames.indexOf("next");
+      if (index > -1) { return it.class.codeObject.co_locals[index]; }
+      throw "Object is not iterable.";
+    }
   } else {
     throw "Object not iterable";
   }
@@ -1201,16 +1244,6 @@ function PyList(elements) {
   this.toString = function() { return "["+this.store+"]"; };
 }
 PyList.prototype = new Array;
-
-function PyXRange(start, stop, step) {
-  this.start = start;
-  this.index = start;
-  this.stop = stop;
-  this.step = step;
-  this.toString = function() {
-    return "XRange("+this.start+","+this.index+
-	   ","+this.stop+","+this.step+")";};
-}
 
 
 function printObject(object) {
