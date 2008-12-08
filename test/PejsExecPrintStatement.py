@@ -1,1 +1,1 @@
-exec "printOut(42);" in "JavaScript"
+exec "PEJS.prototype.printOut(42);" in "JavaScript"

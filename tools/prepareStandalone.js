@@ -17,15 +17,16 @@ function runTest(delayArr, withExceptions) {
     var result = "";
     var timeSpent;
     var progName = delayArr[i];
+    var pejs = new PEJS();
     result += indent(""+(i+1),4);
     result += indent(progName,45);
     total++;
     if (withExceptions) {
-      interpret(progName);
+      pejs.interpret(progName);
     } else {
       try {
 	var startTime = (new Date()).getTime();
-	interpret(progName);
+        pejs.interpret(progName);
 	var endTime = (new Date()).getTime();
 	timeSpent = endTime - startTime;
 	totalTime += timeSpent;
@@ -40,10 +41,10 @@ function runTest(delayArr, withExceptions) {
 }
 runTest(testArray, false);
 
-print(indent("Total time spent: "+totalTime+"ms"));
-print(indent(total+" tests run: "+success+" succeeded, "+
+print("Total time spent: "+totalTime+"ms");
+print(total+" tests run: "+success+" succeeded, "+
 		(total-(success+exceptions.length))+" returned wrong result and "+
-		exceptions.length +" failed with an exception.\n"));
+		exceptions.length +" failed with an exception.\n");
 
 if (exceptions.length > 0) {
   print("Exceptions:");

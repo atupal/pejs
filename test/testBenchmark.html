@@ -5,14 +5,6 @@
   <script type="text/javascript" src="../src/lib/lib.js"></script>
   <script type="text/javascript" src="test.js"></script>
   <script type="text/javascript">
-    var runBenchmark = false;
-    var strHref = window.location.href;
-    if (strHref.indexOf("?") > -1) {
-      urlText = strHref.substr(strHref.indexOf("?")+1);
-      if (urlText == "RunBenchmark")
-        runBenchmark = true;
-    }
-
     importJS("../src/lib/",libArray);
     testArray.sort();
     importJS("",testArray);
@@ -83,13 +75,9 @@
  <body>
   <h1>PEJS Full Test</h1>
       <script type="text/javascript">
-        if (runBenchmark)
-          document.write("<a href=\"test.html\">Run without benchmark files</a>");
-        else
-          document.write("<a href=\"?RunBenchmark\">Run benchmark files as well</a>");
-        </script>
-        <a href="testBenchmark.html">Run benchmark files</a>
-        <table><tr><th>No.</th><th>Test</th><th colspan="2">Source</th><th>Result</th><th>Time (ms)</th></tr>
+        document.write("<a href=\"test.html\">Run tests</a>");
+      </script>
+      <table><tr><th>No.</th><th>Test</th><th colspan="2">Source</th><th>Result</th><th>Time (ms)</th></tr>
     <script type="text/javascript">
       var exceptions = new Array();
       var success = 0;
@@ -101,10 +89,9 @@
           var timeSpent;
           var progName = delayArr[i];
           var pejs = new PEJS();
-          if (!runBenchmark && progName.substring(0,9) == "Benchmark") {
+          if (progName.substring(0,9) != "Benchmark") {
             continue;
           }
-          document.write("<tr><td class='no'>"+(i+1)+"</td><td class='progName'><a href=\"testSingle.html?"+progName+"\">"+progName+"</a></td><td class=\"sourcejs\"><a href='"+progName+".js'>Js</a></td><td class=\"sourcepy\"><a href='"+progName+".py'>Py</a></td><td class='result'>");
           total++;
           if (withExceptions) {
             pejs.interpret(progName);
@@ -116,11 +103,11 @@
               timeSpent = endTime - startTime;
               totalTime += timeSpent;
             } catch (exception) {
-              document.write("<a title=\""+exception+"\">FAIL</a>");
-              exceptions.push("<b>"+progName+"</b>: "+exception);
+              document.write("FAIL");
+              exceptions.push(""+progName+": "+exception);
             }
           }
-          document.write("</td><td class=\"time\">"+timeSpent+"</td>");
+          document.write((i+1)+" "+progName+" "+timeSpent+" ");
         }
       }
 

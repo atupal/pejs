@@ -38,3 +38,44 @@ Last Changed Date: 2008-12-08 10:23:34 +0100 (Mon, 08 Dec 2008)
 35   BenchmarkTuplesSmallTuples                    741
 36   BenchmarkTuplesTupleSlicing                   1373
 Total time spent: 35595ms
+
+Last Changed Author: ubbewelling
+Last Changed Rev: 57
+Last Changed Date: 2008-12-08 10:23:34 +0100 (Mon, 08 Dec 2008)
+1    BenchmarkArithmeticSimpleFloatArithmetic      883
+2    BenchmarkArithmeticSimpleIntFloatArithmetic   915
+3    BenchmarkArithmeticSimpleIntegerArithmetic    912
+4    BenchmarkArithmeticSimpleLongArithmetic       912
+5    BenchmarkCallsBuiltinFunctionCalls            1166
+6    BenchmarkCallsPythonFunctionCalls             312
+7    BenchmarkCallsPythonMethodCalls               364
+8    BenchmarkCallsRecursion                       400
+9    BenchmarkConstructFor                         203
+10   BenchmarkConstructIfThenElse                  300
+11   BenchmarkConstructNestedFor                   799
+12   BenchmarkDictDictCreation                     1018
+13   BenchmarkDictDictWithFloatKeys                1239
+14   BenchmarkDictDictWithIntegerKeys              1401
+15   BenchmarkDictDictWithStringKeys               1632
+16   BenchmarkDictSimpleDictManipulation           1534
+17   BenchmarkExceptionsTryExcept                  1038
+18   BenchmarkInstancesCreateInstances             1214
+19   BenchmarkListsListSlicing                     3170
+20   BenchmarkListsSimpleListManipulation          1774
+21   BenchmarkListsSmallLists                      1453
+22   BenchmarkLookupsBuiltinMethodLookup           1133
+23   BenchmarkLookupsNormalClassAttribute          1339
+24   BenchmarkLookupsNormalInstanceAttribute       1264
+25   BenchmarkLookupsSpecialClassAttribute         1328
+26   BenchmarkLookupsSpecialInstanceAttribute      1281
+27   BenchmarkNewInstancesCreateNewInstances       1000
+28   BenchmarkNumbersCompareFloats                 405
+29   BenchmarkNumbersCompareFloatsIntegers         1487
+30   BenchmarkNumbersCompareIntegers               300
+31   BenchmarkStringsCompareInternedStrings        517
+32   BenchmarkStringsCompareStrings                633
+33   BenchmarkStringsConcatStrings                 641
+34   BenchmarkStringsCreateStringsWithConcat       1376
+35   BenchmarkTuplesSmallTuples                    693
+36   BenchmarkTuplesTupleSlicing                   1508
+Total time spent: 37544ms
