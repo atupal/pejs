@@ -183,12 +183,16 @@ function execute(code_object) {
   if (debug) { printfDebug("blue","Execution trace of "+code_object.co_name); }
   var bytecode, offset, argument;
   var prog = code_object.co_code;
-  for (var pc=0; pc<prog.length; pc++) {
-    bytecode = prog[pc][0];
-    offset = prog[pc][1];
-    argument = prog[pc][2]; //Unknown contents if no argument
+  for (var pc=0; pc<prog.length;) {
+    bytecode = prog[pc];
+    if (bytecode >= 90) {
+      argument = prog[pc+2];
+      pc += 3;
+    } else {
+      pc++;
+    }
     
-    if (debug) { printInstruction(prog[pc]); }
+    if (debug) { printInstruction(bytecode, argument, pc); }
     
     switch(bytecode) {
       case 0: //STOP_CODE
@@ -426,12 +430,7 @@ function execute(code_object) {
       case 80: //BREAK_LOOP
 	  //Terminates a loop due to a break statement.
 	  var block = blockStack.pop();
-	  var targetOffset = block[0] + block[1] + 1;
-          var j = pc + 1;
-          while(prog[j][1] != targetOffset) {
-            j = j + 1;
-          }
-          pc = j - 1;
+          pc = block[0] + block[1];
           break;
       case 82: //LOAD_LOCALS
           //Pushes a reference to the locals of the
@@ -551,40 +550,14 @@ function execute(code_object) {
 	    if (!execute(codeObject.co_locals[index].codeObject)) {
 	      stack.pop();
 	      stack.pop();
-	      var targetOffset = offset + argument + 1 + 2;
-	      if (argument > 0) {
-		var j = pc;
-		while(prog[j][1] != targetOffset) {
-		  j = j + 1;
-		}
-		pc = j - 1;
-	      } else {
-		var j = pc;
-		while(prog[j][1] != targetOffset) {
-		  j = j - 1;
-		}
-		pc = j - 1;
-	      }
+              pc += argument;
 	    }
 	  } else {
 	    try {
 	      stack.push(iterator.next(iterator)());
 	    } catch(e) {
 	      stack.pop();
-	      var targetOffset = offset + argument + 1 + 2;
-	      if (argument > 0) {
-		var j = pc;
-		while(prog[j][1] != targetOffset) {
-		  j = j + 1;
-		}
-		pc = j - 1;
-	      } else {
-		var j = pc;
-		while(prog[j][1] != targetOffset) {
-		  j = j - 1;
-		}
-		pc = j - 1;
-	      }
+              pc += argument;
 	    }
 	  }
           break;
@@ -759,63 +732,24 @@ function execute(code_object) {
           stack.push(attr);
           break;
       case 110: //JUMP_FORWARD
-          // current_offset + jump + bytecode + argument
-          var targetOffset = offset + argument + 1 + 2;
-          var j = pc + 1;
-          while(prog[j][1] != targetOffset) {
-            j = j + 1;
-          }
-          pc = j - 1;
+          pc += argument;
           break;
       case 111: //JUMP_IF_FALSE
           //If TOS is false, increment the byte code counter by delta.
           //TOS is not changed.
           if(!stack.peek()) {
-            // current_offset + jump + bytecode + argument
-            var targetOffset = offset + argument + 1 + 2;
-            if (argument > 0) {
-              var j = pc;
-              while(prog[j][1] != targetOffset) {
-                j = j + 1;
-              }
-              pc = j - 1;
-            } else {
-              var j = pc;
-              while(prog[j][1] != targetOffset) {
-                j = j - 1;
-              }
-              pc = j - 1;
-            }
+            pc += argument;
           }
           break;
       case 112: //JUMP_IF_TRUE
           //If TOS is true, increment the byte code counter by delta.
           //TOS is left on the stack
           if(stack.peek()) {
-            // current_offset + jump + bytecode + argument
-            var targetOffset = offset + argument + 1 + 2;
-            if (argument > 0) {
-              var j = pc;
-              while(prog[j][1] != targetOffset) {
-                j = j + 1;
-              }
-              pc = j - 1;
-            } else {
-              var j = pc;
-              while(prog[j][1] != targetOffset) {
-                j = j - 1;
-              }
-              pc = j - 1;
-            }
+            pc += argument;
           }
           break;
       case 113: //JUMP_ABSOLUTE
-          //Perhaps a bit naive
-          var j = 1;
-          while(prog[j][1] != argument) {
-            j = j + 1;
-          }
-          pc = j - 1;
+          pc = argument;
           break;
       case 116: //LOAD_GLOBAL
           // Loads the global named co_names[namei] onto the stack.
@@ -833,17 +767,17 @@ function execute(code_object) {
           // Pushes a block for a loop onto the block stack.
           // The block spans from the current instruction with
           // a size of delta bytes.
-	  blockStack.push([offset,argument,"loop"]);
+	  blockStack.push([pc,argument,"loop"]);
           break;
       case 121: //SETUP_EXCEPT
 	  //Pushes a try block from a try-except clause onto the block
 	  //stack. delta points to the first except block.
-	  blockStack.push([offset,argument,"except"]);
+          blockStack.push([pc,argument,"except"]);
           break;
       case 122: //SETUP_FINALLY
 	  //Pushes a try block from a try-except clause onto the block
 	  //stack. delta points to the finally block.
-	  blockStack.push([offset,argument,"finally"]);
+          blockStack.push([pc,argument,"finally"]);
           break;
       case 124: //LOAD_FAST
           // Pushes a reference to the local co_varnames[var_num] onto the stack.
@@ -878,12 +812,7 @@ function execute(code_object) {
 	  }
 	  
 	  var exceptBlock = blockStack.pop();
-	  var targetOffset = exceptBlock[0] + exceptBlock[1] + 1 + 2;
-	  var j = pc;
-	  while(prog[j][1] != targetOffset) {
-	    j = j + 1;
-	  }
-	  pc = j - 1;
+          pc = exceptBlock[0] + exceptBlock[1];
           break;
       case 131: //CALL_FUNCTION
 	  var kwparams = argument >> 8;
@@ -1027,7 +956,7 @@ function execute(code_object) {
           throw "EXTENDED_ARG is not implemented yet!";
 	  break;
       default:
-          throw "Unexpected bytecode!";
+          throw "Unexpected bytecode:" + bytecode;
 	  break;
     }
   }
@@ -1266,6 +1195,121 @@ function printfDebug(color, str) {
   printDebug("<tr><td colspan=\"7\" class=\""+color+"\">"+str+"</td></tr>");
 }
 
+var bytecodes = {
+    0: "STOP_CODE",
+    1: "POP_TOP",
+    2: "ROT_TWO",
+    3: "ROT_THREE",
+    4: "DUP_TOP",
+    5: "ROT_FOUR",
+    9: "NOP",
+    10: "UNARY_POSITIVE",
+    11: "UNARY_NEGATIVE",
+    12: "UNARY_NOT",
+    13: "UNARY_CONVERT",
+    15: "UNARY_INVERT",
+    18: "LIST_APPEND",
+    19: "BINARY_POWER",
+    20: "BINARY_MULTIPLY",
+    21: "BINARY_DIVIDE",
+    22: "BINARY_MODULO",
+    23: "BINARY_ADD",
+    24: "BINARY_SUBTRACT",
+    25: "BINARY_SUBSCR",
+    26: "BINARY_FLOOR_DIVIDE",
+    27: "BINARY_TRUE_DIVIDE",
+    28: "INPLACE_FLOOR_DIVIDE",
+    29: "INPLACE_TRUE_DIVIDE",
+    30: "SLICE+0",
+    31: "SLICE+1",
+    32: "SLICE+2",
+    33: "SLICE+3",
+    40: "STORE_SLICE+0",
+    41: "STORE_SLICE+1",
+    42: "STORE_SLICE+2",
+    43: "STORE_SLICE+3",
+    50: "DELETE_SLICE+0",
+    51: "DELETE_SLICE+1",
+    52: "DELETE_SLICE+2",
+    53: "DELETE_SLICE+3",
+    55: "INPLACE_ADD",
+    56: "INPLACE_SUBTRACT",
+    57: "INPLACE_MULTIPLY",
+    58: "INPLACE_DIVIDE",
+    59: "INPLACE_MODULO",
+    60: "STORE_SUBSCR",
+    61: "DELETE_SUBSCR",
+    62: "BINARY_LSHIFT",
+    63: "BINARY_RSHIFT",
+    64: "BINARY_AND",
+    65: "BINARY_XOR",
+    66: "BINARY_OR",
+    67: "INPLACE_POWER",
+    68: "GET_ITER",
+    70: "PRINT_EXPR",
+    71: "PRINT_ITEM",
+    72: "PRINT_NEWLINE",
+    73: "PRINT_ITEM_TO",
+    74: "PRINT_NEWLINE_TO",
+    75: "INPLACE_LSHIFT",
+    76: "INPLACE_RSHIFT",
+    77: "INPLACE_AND",
+    78: "INPLACE_XOR",
+    79: "INPLACE_OR",
+    80: "BREAK_LOOP",
+    82: "LOAD_LOCALS",
+    83: "RETURN_VALUE",
+    84: "IMPORT_STAR",
+    85: "EXEC_STMT",
+    86: "YIELD_VALUE",
+    87: "POP_BLOCK",
+    88: "END_FINALLY",
+    89: "BUILD_CLASS",
+    90: "STORE_NAME",
+    91: "DELETE_NAME",
+    92: "UNPACK_SEQUENCE",
+    93: "FOR_ITER",
+    95: "STORE_ATTR",
+    96: "DELETE_ATTR",
+    97: "STORE_GLOBAL",
+    98: "DELETE_GLOBAL",
+    99: "DUP_TOPX",
+    100: "LOAD_CONST",
+    101: "LOAD_NAME",
+    102: "BUILD_TUPLE",
+    103: "BUILD_LIST",
+    104: "BUILD_MAP",
+    105: "LOAD_ATTR",
+    106: "COMPARE_OP",
+    107: "IMPORT_NAME",
+    108: "IMPORT_FROM",
+    110: "JUMP_FORWARD",
+    111: "JUMP_IF_FALSE",
+    112: "JUMP_IF_TRUE",
+    113: "JUMP_ABSOLUTE",
+    116: "LOAD_GLOBAL",
+    119: "CONTINUE_LOOP",
+    120: "SETUP_LOOP",
+    121: "SETUP_EXCEPT",
+    122: "SETUP_FINALLY",
+    124: "LOAD_FAST",
+    125: "STORE_FAST",
+    126: "DELETE_FAST",
+    130: "RAISE_VARARGS",
+    131: "CALL_FUNCTION",
+    132: "MAKE_FUNCTION",
+    133: "BUILD_SLICE",
+    134: "MAKE_CLOSURE",
+    135: "LOAD_CLOSURE",
+    136: "LOAD_DEREF",
+    137: "STORE_DEREF",
+    140: "CALL_FUNCTION_VAR",
+    141: "CALL_FUNTION_KW",
+    142: "CALL_FUNCTION_VAR_KW",
+    143: "EXTENDED_ARG"
+}
+
+
 function printPairs(names, values, title) {
   res = title +":<br/>";
   for (var i=0;i<names.length;i++) {
@@ -1275,22 +1319,22 @@ function printPairs(names, values, title) {
   printfDebug("green",res);
 }
 
-function printInstruction(inst) {
+function printInstruction(inst, arg, pc) {
   var res = "<tr>";
-  if (inst.length == 3) {
-    res += "<td class=\"offset\">"+inst[1]+"</td>"+
-	   "<td class=\"inst\">"+inst[2]+"</td>"+
+  if (inst <= 90) {
+    res += "<td class=\"offset\">"+pc+"</td>"+
+        "<td class=\"inst\">"+bytecodes[inst]+"</td>"+
 	   "<td></td>"+
 	   "<td></td>"+
-	   "<td class=\"code\">"+inst[0]+"</td>"+
+	   "<td class=\"code\">"+inst+"</td>"+
 	   "<td></td>";
   } else { //length == 6
-    res += "<td class=\"offset\">"+inst[1]+"</td>"+
-	   "<td class=\"inst\">"+inst[5]+"</td>"+
-	   "<td class=\"value\">"+inst[4]+"</td>"+
-	   "<td class=\"type\">"+inst[3]+"</td>"+
-	   "<td class=\"code\">"+inst[0]+"</td>"+
-	   "<td class=\"arg\">"+inst[2]+"</td>";
+    res += "<td class=\"offset\">"+pc+"</td>"+
+	   "<td class=\"inst\">"+bytecodes[inst]+"</td>"+
+	   "<td class=\"value\"></td>"+
+	   "<td class=\"type\"></td>"+
+	   "<td class=\"code\">"+inst+"</td>"+
+	   "<td class=\"arg\">"+arg+"</td>";
   }
   res += "<td class=\"stack\">"+stack+"</td>";
   printDebug(res +"</tr>");
