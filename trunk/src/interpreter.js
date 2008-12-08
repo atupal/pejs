@@ -942,7 +942,7 @@ function execute(code_object) {
             var object = new PyObject(stack.peek());
             //Find all fields that belong to this object
             function injectFields(object,class) {
-              for (var i=0;i<class.__bases__.length;i++) {
+              for (var i=class.__bases__.length-1; i>=0; i--) {
                 injectFields(object, class.__bases__[i]);
               }
               var codeObj = class.codeObject;
@@ -952,6 +952,7 @@ function execute(code_object) {
                 object.fields[codeObj.co_varnames[j]] = codeObj.co_locals[j];
               }
             }
+            printObject(object.class.__bases__);
             injectFields(object,object.class);
             //Execute the __init__ method if it exists
             var classCodeObject = object.class.codeObject;

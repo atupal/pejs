@@ -2,7 +2,7 @@ class TupleSlicing:
 
     version = 2.0
     operations = 3 * 25 * 10 * 7
-    rounds = 5#00
+    rounds = 10 #5#00
 
     def test(self):
 
