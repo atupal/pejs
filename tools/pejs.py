@@ -125,6 +125,7 @@ def print_code(code_object, indent, varname):
   #result = result + "co_cellvars: " + print_names(code_object.co_cellvars, "") + ",\n"
   #result = result + "co_freevars: " + print_names(code_object.co_freevars, "") + ",\n"
   result = result + "co_code: " + print_instructions(instructions, indent + "    ")+",\n"
+  result = result + "co_code2: " + print_instructions2(instructions, indent + "    ")+",\n"
   result = result + "co_consts: " + print_consts(code_object.co_consts, "", varname) + ",\n"
   result = result + "co_names: " + print_names(code_object.co_names, "")  + ",\n"
   #result = result + "co_filename: \"" + code_object.co_filename + "\",\n"
@@ -174,8 +175,30 @@ def print_consts(consts, indent, varname):
     result = result[:len(result) - 2]
   return result + indent +"]"
 
+def padZeroes(string, count):
+  while len(string) < count:
+    string = "0"+ string
+  return string
+
 # Helper for print_code, prints the instructions.
+#def print_instructions(instructions, indent):
+  #result = indent + "\""
+  #for (offset, op, name, argument, argtype, argvalue) in instructions:
+    #result = result + padZeroes(str(op),3)        # Opcode value
+    #if (op >= opcode.HAVE_ARGUMENT):
+      #result = result + padZeroes(str(argument),6)      # Argument
+  #return result + "\""
+
 def print_instructions(instructions, indent):
+  result = indent + "["
+  for (offset, op, name, argument, argtype, argvalue) in instructions:
+    result = result + str(op) +","        # Opcode value
+    if (op >= opcode.HAVE_ARGUMENT):
+      result = result +"0,"+ str(argument) +","     # Argument
+  return result[:len(result)-1] + "]"
+
+# Helper for print_code, prints the instructions.
+def print_instructions2(instructions, indent):
   result = indent + "[ //Instructions\n"
   i = 0
   for (offset, op, name, argument, argtype, argvalue) in instructions:

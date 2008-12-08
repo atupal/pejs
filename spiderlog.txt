@@ -1,0 +1,41 @@
+rev 57
+8. dec
+
+1 BenchmarkArithmeticSimpleFloatArithmetic 2093 42
+2 BenchmarkArithmeticSimpleIntFloatArithmetic 2104 42
+3 BenchmarkArithmeticSimpleIntegerArithmetic 2080 42
+4 BenchmarkArithmeticSimpleLongArithmetic 2090 42
+5 BenchmarkCallsBuiltinFunctionCalls 5112 42
+6 BenchmarkCallsPythonFunctionCalls 1357 42
+7 BenchmarkCallsPythonMethodCalls 1192 42
+8 BenchmarkCallsRecursion 1462 42
+9 BenchmarkConstructFor 1554 42
+10 BenchmarkConstructIfThenElse 1593 42
+11 BenchmarkConstructNestedFor 3040 42
+12 BenchmarkDictDictCreation 2283 42
+13 BenchmarkDictDictWithFloatKeys 2409 42
+14 BenchmarkDictDictWithIntegerKeys 2233 42
+15 BenchmarkDictDictWithStringKeys 2819 42
+16 BenchmarkDictSimpleDictManipulation 2771 42
+17 BenchmarkExceptionsTryExcept 3130 42
+18 BenchmarkInstancesCreateInstances 4169 42
+19 BenchmarkListsListSlicing 979 42
+20 BenchmarkListsSimpleListManipulation 3414 42
+21 BenchmarkListsSmallLists 2329 42
+22 BenchmarkLookupsBuiltinMethodLookup 2031 42
+23 BenchmarkLookupsNormalClassAttribute 1947 42
+24 BenchmarkLookupsNormalInstanceAttribute 1785 42
+25 BenchmarkLookupsSpecialClassAttribute 2455 42
+26 BenchmarkLookupsSpecialInstanceAttribute 1831 42
+27 BenchmarkNewInstancesCreateNewInstances 2953 42
+28 BenchmarkNumbersCompareFloats 1515 42
+29 BenchmarkNumbersCompareFloatsIntegers 6146 42
+30 BenchmarkNumbersCompareIntegers 1293 42
+31 BenchmarkStringsCompareInternedStrings 1220 42
+32 BenchmarkStringsCompareStrings 1626 42
+33 BenchmarkStringsConcatStrings 2361 42
+34 BenchmarkStringsCreateStringsWithConcat 3623 42
+35 BenchmarkTuplesSmallTuples 1961 42
+36 BenchmarkTuplesTupleSlicing 1977 42
+
+Total time spent: 84937ms
