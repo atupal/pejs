@@ -33,7 +33,7 @@ def main(filename):
     global code_object
     code_object = get_code_object(filename)
     js_file_print(code_object, filename[:len(filename) - 4])
-    print "%s.js created" % (filename[:len(filename) - 4])
+    #print "%s.js created" % (filename[:len(filename) - 4])
   else:
     print "File \"%s\" doesnt exist" % (filename)
 

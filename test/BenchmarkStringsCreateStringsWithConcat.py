@@ -1,7 +1,7 @@
 class CreateStringsWithConcat:
     version = 2.0
     operations = 10 * 5
-    rounds = 20#0000
+    rounds = 2000#00
 
     def test(self):
         for i in xrange(self.rounds):
