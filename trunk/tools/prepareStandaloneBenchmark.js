@@ -17,17 +17,18 @@ function runTest(delayArr, withExceptions) {
     var result = "";
     var timeSpent;
     var progName = delayArr[i];
+    var pejs = new PEJS();
     if (!(/^Benchmark/.test(progName)))
       continue;
     result += indent(""+(i+1),4);
     result += indent(progName,45);
     total++;
     if (withExceptions) {
-      interpret(progName);
+      pejs.interpret(progName);
     } else {
       try {
 	var startTime = (new Date()).getTime();
-	interpret(progName);
+        pejs.interpret(progName);
 	var endTime = (new Date()).getTime();
 	timeSpent = endTime - startTime;
 	totalTime += timeSpent;

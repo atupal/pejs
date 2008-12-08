@@ -53,7 +53,7 @@ def list(tuple):
 
 def tuple(list):
   result = ()
-  exec "new PyTuple("+list+");" in "JavaScript", "result"
+  exec "new PEJS.prototype.types.PyTuple("+list+");" in "JavaScript", "result"
   return result
 
 #Apply function to every item of iterable and return a list of the results.

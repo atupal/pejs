@@ -1,6 +1,5 @@
 rev 57
 8. dec
-
 1 BenchmarkArithmeticSimpleFloatArithmetic 2093 42
 2 BenchmarkArithmeticSimpleIntFloatArithmetic 2104 42
 3 BenchmarkArithmeticSimpleIntegerArithmetic 2080 42
@@ -37,5 +36,44 @@ rev 57
 34 BenchmarkStringsCreateStringsWithConcat 3623 42
 35 BenchmarkTuplesSmallTuples 1961 42
 36 BenchmarkTuplesTupleSlicing 1977 42
-
 Total time spent: 84937ms
+
+rev 58
+8. dec
+1 BenchmarkArithmeticSimpleFloatArithmetic 1789 42
+2 BenchmarkArithmeticSimpleIntFloatArithmetic 1748 42
+3 BenchmarkArithmeticSimpleIntegerArithmetic 2585 42
+4 BenchmarkArithmeticSimpleLongArithmetic 2723 42
+5 BenchmarkCallsBuiltinFunctionCalls 6265 42
+6 BenchmarkCallsPythonFunctionCalls 1839 42
+7 BenchmarkCallsPythonMethodCalls 2166 42
+8 BenchmarkCallsRecursion 1631 42
+9 BenchmarkConstructFor 683 42
+10 BenchmarkConstructIfThenElse 985 42
+11 BenchmarkConstructNestedFor 2787 42
+12 BenchmarkDictDictCreation 2928 42
+13 BenchmarkDictDictWithFloatKeys 3073 42
+14 BenchmarkDictDictWithIntegerKeys 2811 42
+15 BenchmarkDictDictWithStringKeys 3233 42
+16 BenchmarkDictSimpleDictManipulation 3177 42
+17 BenchmarkExceptionsTryExcept 2232 42
+18 BenchmarkInstancesCreateInstances 4125 42
+19 BenchmarkListsListSlicing 1063 42
+20 BenchmarkListsSimpleListManipulation 4047 42
+21 BenchmarkListsSmallLists 2361 42
+22 BenchmarkLookupsBuiltinMethodLookup 2724 42
+23 BenchmarkLookupsNormalClassAttribute 2249 42
+24 BenchmarkLookupsNormalInstanceAttribute 1841 42
+25 BenchmarkLookupsSpecialClassAttribute 2036 42
+26 BenchmarkLookupsSpecialInstanceAttribute 1810 42
+27 BenchmarkNewInstancesCreateNewInstances 3004 42
+28 BenchmarkNumbersCompareFloats 1530 42
+29 BenchmarkNumbersCompareFloatsIntegers 5581 42
+30 BenchmarkNumbersCompareIntegers 1519 42
+31 BenchmarkStringsCompareInternedStrings 1051 42
+32 BenchmarkStringsCompareStrings 1338 42
+33 BenchmarkStringsConcatStrings 1446 42
+34 BenchmarkStringsCreateStringsWithConcat 2856 42
+35 BenchmarkTuplesSmallTuples 1560 42
+36 BenchmarkTuplesTupleSlicing 1546 42
+Total time spent: 86342ms
