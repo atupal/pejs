@@ -1,0 +1,283 @@
+#LyX 1.4.5.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass article
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\float_placement H
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry true
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language swedish
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+
+\series bold
+\size giant
+PEJS
+\series default
+\size default
+
+\newline
+Python Executed in JavaScript
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename logo.png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float table
+placement b
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="3" columns="3">
+<features>
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Jesper Jakobsen
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Rune Fogh
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Ubbe Welling
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+20052904
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+20052251
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+20052275
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+u052904@daimi.au.dk
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+rfogh@daimi.au.dk
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+ubbe@daimi.au.dk
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\newpage
+
+\end_layout
+
+\begin_layout Section
+
+\series bold
+Instructions on how to run your code
+\end_layout
+
+\begin_layout Section
+
+\series bold
+The status of your work.
+ What can your VM do? For example:
+\end_layout
+
+\begin_layout Itemize
+How much of the client language do you support and what did you leave out?
+\end_layout
+
+\begin_layout Itemize
+How far did you get compared to your original plans and how did your plans
+ change during the quarter.
+\end_layout
+
+\begin_layout Section
+
+\series bold
+An account of the architecture of the VM.
+ Which parts does the code contain and how do they fit together?
+\end_layout
+
+\begin_layout Section
+
+\series bold
+A description of the techniques used to implement the VM.
+ For example:
+\end_layout
+
+\begin_layout Itemize
+How do you represent the runtime state of the program?
+\end_layout
+
+\begin_layout Itemize
+What are the pros and cons of your particular choice of representation?
+\end_layout
+
+\begin_layout Itemize
+Which of the optimization techniques described during the first quarter
+ of the have you implemented for you VM and how did you have to modify these
+ techniques to put them to use for your VM and your client language?
+\end_layout
+
+\begin_layout Section
+
+\series bold
+What were the three most interesting conclusions you had while implementing
+ the VM? For example:
+\end_layout
+
+\begin_layout Itemize
+Did some of the applied techniques work particulary good or bad for your
+ project?
+\end_layout
+
+\begin_layout Section
+
+\series bold
+Performance measures for running some test programs on your VM (perhaps
+ comparing your VM with a particular optimization enabled to your VM with
+ the same optimization disabled), including:
+\end_layout
+
+\begin_layout Itemize
+Memory benchmarks
+\end_layout
+
+\begin_layout Itemize
+CPU time benchmarks
+\end_layout
+
+\begin_layout Section
+
+\series bold
+Relate and compare your work to the Course Objectives as given on the front
+ page
+\end_layout
+
+\begin_layout Section
+
+\series bold
+Conclusions on your work
+\end_layout
+
+\end_body
+\end_document
