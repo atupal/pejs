@@ -48,79 +48,73 @@ PEJS.prototype = {
             break;
         case 1: //POP_TOP
             stack.pop();
-        break;
+	    break;
         case 2: //ROT_TWO
             stack.rotate2();
-        break;
-        case 3: //ROT_THREE
+	    break;
+	case 3: //ROT_THREE
             stack.rotate3();
-        break;
+	    break;
         case 4: //DUP_TOP
             stack.duplicateTop();
-        break;
+	    break;
         case 5: //ROT_FOUR
             stack.rotate4();
-        break;
+	    break;
         case 9: //NOP
             break;
         case 10: //UNARY_POSITIVE
             stack.push(+stack.pop());
-        break;
+	    break;
         case 11: //UNARY_NEGATIVE
             stack.push(-stack.pop());
-        break;
+	    break;
         case 12: //UNARY_NOT
             stack.push(!stack.pop());
-        break;
+	    break;
         case 13: //UNARY_CONVERT
             throw "UNARY_CONVERT is not implemented yet!";
-        break;
         case 15: //UNARY_INVERT
             stack.push(~stack.pop());
-        break;
+	    break;
         case 18: //LIST_APPEND
             throw "LIST_APPEND is not implemented yet!";
-        break;
         case 19: //BINARY_POWER
             var temp = stack.pop();
-        stack.push(Math.pow(stack.pop(), temp));
-        break;
+	    stack.push(Math.pow(stack.pop(), temp));
+	    break;
         case 20: //BINARY_MULTIPLY
             var temp = stack.pop();
-        stack.push(stack.pop() * temp);
-        break;
+	    stack.push(stack.pop() * temp);
+	    break;
         case 21: //BINARY_DIVIDE
             var temp = stack.pop();
-        stack.push(stack.pop() / temp);
-        break;
+	    stack.push(stack.pop() / temp);
+	    break;
         case 22: //BINARY_MODULO
             var temp = stack.pop();
-        stack.push(stack.pop() % temp);
-        break;
+	    stack.push(stack.pop() % temp);
+	    break;
         case 23: //BINARY_ADD
             var temp = stack.pop();
-        stack.push(stack.pop() + temp);
-        break;
+	    stack.push(stack.pop() + temp);
+	    break;
         case 24: //BINARY_SUBTRACT
             var temp = stack.pop();
-        stack.push(stack.pop() - temp);
-        break;
+	    stack.push(stack.pop() - temp);
+	    break;
         case 25: //BINARY_SUBSCR
             var temp = stack.pop();
-        stack.push(stack.pop().store[temp]);
-        break;
+	    stack.push(stack.pop().store[temp]);
+	    break;
         case 26: //BINARY_FLOOR_DIVIDE
             throw "BINARY_FLOOR_DIVIDE is not implemented yet!";
-        break;
         case 27: //BINARY_TRUE_DIVIDE
             throw "BINARY_TRUE_DIVIDE is not implemented yet!";
-        break;
         case 28: //INPLACE_FLOOR_DIVIDE
             throw "INPLACE_FLOOR_DIVIDE is not implemented yet!";
-        break;
         case 29: //INPLACE_TRUE_DIVIDE
             throw "INPLACE_TRUE_DIVIDE is not implemented yet!";
-        break;
         case 30: //SLICE+0
             stack.push(new this.types.PyList(stack.pop().store.slice(0)));
             break;
@@ -195,7 +189,6 @@ PEJS.prototype = {
             break;
         case 58: //INPLACE_DIVIDE
             throw "INPLACE_DIVIDE is not implemented yet!";
-            break;
         case 59: //INPLACE_MODULO
             var temp = stack.pop();
             stack.push(stack.pop() % temp);
@@ -243,7 +236,6 @@ PEJS.prototype = {
             break;
         case 70: //PRINT_EXPR
             throw "PRINT_EXPR is not implemented yet!";
-            break;
         case 71: //PRINT_ITEM
             this.printOut(stack.pop());
             break;
@@ -252,10 +244,8 @@ PEJS.prototype = {
             break;
         case 73: //PRINT_ITEM_TO
             throw "PRINT_ITEM_TO is not implemented yet!";
-            break;
         case 74: //PRINT_NEWLINE_TO
             throw "PRINT_NEWLINE_TO is not implemented yet!";
-            break;
         case 75: //INPLACE_LSHIFT
             var temp = stack.pop();
             stack.push(stack.pop() << temp);
@@ -278,8 +268,7 @@ PEJS.prototype = {
             break;
         case 80: //BREAK_LOOP
             //Terminates a loop due to a break statement.
-            var block = this.blockStack.pop();
-            pc = block[0] + block[1];
+            pc = this.blockStack.pop();
             break;
         case 82: //LOAD_LOCALS
             //Pushes a reference to the locals of the
@@ -294,7 +283,6 @@ PEJS.prototype = {
             return true;
         case 84: //IMPORT_STAR
             throw "IMPORT_STAR is not implemented yet!";
-            break;
         case 85: //EXEC_STMT
 	  //Implements exec TOS2,TOS1,TOS. The compiler fills
 	  //missing optional parameters with None.
@@ -325,7 +313,6 @@ PEJS.prototype = {
             break;
         case 86: //YIELD_VALUE
             throw "YIELD_VALUE is not implemented yet!";
-            break;
         case 87: //POP_BLOCK
             this.blockStack.pop();
             break;
@@ -359,7 +346,7 @@ PEJS.prototype = {
             } else if (this.globals.contains(name)) {
               this.globals.store(name, stack.pop());
             } else {
-                //new variable
+	      //new variable
               var index = code_object.co_varnames.length;
               code_object.co_varnames[index] = name;
               code_object.co_locals[index] = stack.pop();
@@ -419,22 +406,20 @@ PEJS.prototype = {
             if (object instanceof this.types.PyClass){
               var index = object.codeObject.co_varnames.indexOf(name);
               if (index > -1) {
-                  //Set value of existing field
+		//Set value of existing field
                 object.codeObject.co_locals[index] = stack.pop();
               } else {
-                  //Inject field
+		//Inject field
                 var index = object.codeObject.co_varnames.length;
                 object.codeObject.co_varnames[index] = name;
                 object.codeObject.co_locals[index] = stack.pop();
               }
-                
             } else {
               object.fields[name] = stack.pop();
             }
             break;
         case 96: //DELETE_ATTR
             throw "DELETE_ATTR is not implemented yet!";
-            break;
         case 97: //STORE_GLOBAL
             this.globals.store(code_object.co_names[argument], stack.pop());
             break;
@@ -447,15 +432,14 @@ PEJS.prototype = {
             break;
         case 99: //DUP_TOPX
             throw "DUP_TOPX is not implemented yet!";
-            break;
         case 100: //LOAD_CONST
-            var temp = code_object.co_consts[argument];
-            if (typeof(temp) == typeof("") && temp.match(/^CODEOBJ: \w+$/)) {
-              temp = eval(temp.substring(9, temp.length));
-            } else if (temp instanceof Array) {
-              temp = new this.types.PyTuple(temp);
+            var value = code_object.co_consts[argument];
+            if (typeof(value) == typeof("") && value.match(/^CODEOBJ: \w+$/)) {
+              value = eval(value.substring(9, value.length));
+            } else if (value instanceof Array) {
+              value = new this.types.PyTuple(value);
             }
-            stack.push(temp);
+            stack.push(value);
             break;
         case 101: //LOAD_NAME
             //Pushes the value associated with "co_names[namei]" onto the stack.
@@ -521,9 +505,6 @@ PEJS.prototype = {
                   }
                 }
                 var attrObject = lookup(object.class,name);
-                  
-                  //index = object.class.codeObject.co_varnames.indexOf(name);
-                  //var attrObject = object.class.codeObject.co_locals[index];
                 if (attrObject instanceof PEJS.prototype.types.PyFunction) {
                   attrObject.codeObject.co_varnames[0] = "self";
                   attrObject.codeObject.co_locals[0] = object;
@@ -533,7 +514,7 @@ PEJS.prototype = {
                 }
                 stack.push(attrObject);
               }
-            } else if(object instanceof PEJS.prototype.types.PyClass) {
+            } else if(object instanceof this.types.PyClass) {
               index = object.codeObject.co_varnames.indexOf(name);
               stack.push(object.codeObject.co_locals[index]);
             } else {
@@ -610,22 +591,21 @@ PEJS.prototype = {
             break;
         case 119: //CONTINUE_LOOP
             throw "CONTINUE_LOOP is not implemented yet!";
-            break;
         case 120: //SETUP_LOOP
             //Pushes a block for a loop onto the block stack.
             //The block spans from the current instruction with
             //a size of delta bytes.
-            this.blockStack.push([pc,argument,"loop"]);
+            this.blockStack.push(pc+argument);
             break;
         case 121: //SETUP_EXCEPT
 	    //Pushes a try block from a try-except clause onto the block
 	    //stack. delta points to the first except block.
-            this.blockStack.push([pc,argument,"except"]);
+            this.blockStack.push(pc+argument);
             break;
         case 122: //SETUP_FINALLY
 	    //Pushes a try block from a try-except clause onto the block
 	    //stack. delta points to the finally block.
-            this.blockStack.push([pc,argument,"finally"]);
+            this.blockStack.push(pc+argument);
             break;
         case 124: //LOAD_FAST
             //Pushes a reference to the local co_varnames[var_num] onto the stack.
@@ -658,109 +638,117 @@ PEJS.prototype = {
                 return false;
               }
             }
-	  
-            var exceptBlock = this.blockStack.pop();
-            pc = exceptBlock[0] + exceptBlock[1];
+            pc = this.blockStack.pop();
             break;
         case 131: //CALL_FUNCTION
-            var kwparams = argument >> 8;
-            argument &= 255;
-            var kwArgs = new this.types.PyDict();
-            for (var j = kwparams-1; j >= 0; j--) {
-              var i = stack.pop();
-              kwArgs.store[stack.pop()] = i;
-            }
-            var localVars = [];
-            for (var j = argument-1; j >= 0; j--) {
-              localVars[j] = stack.pop();
-            }
-            if (stack.peek() instanceof this.types.PyFunction) {
-              this.callPyFunction(argument, localVars, kwArgs, stack, stack.peek());
-            } else if (stack.peek() instanceof this.types.PyClass) {
-              this.callPyClass(argument, localVars, kwArgs, stack);
-            } else if (stack.peek() instanceof Function) {
-              stack.push(stack.pop()(localVars));
-            } else {
-              throw "CALL_FUNCTION tried to execute non-executable: "+stack.pop();
-            }
+	    this.callFunction(argument, stack, [], []);
             break;
         case 132: //MAKE_FUNCTION
             //Pushes a new function object on the stack. TOS is the code
             //associated with the function. The function object is defined
             //to have argc default parameters, which are found below TOS. 
-            var functionObject = new PEJS.prototype.types.PyFunction(argument, stack.pop());
+            var pyFunction = new PEJS.prototype.types.PyFunction(argument, stack.pop());
             for (var j = argument-1; j >= 0; j--){
-              functionObject.addArg(j, stack.pop());
+              pyFunction.addArg(j, stack.pop());
             }
-            stack.push(functionObject);
+            stack.push(pyFunction);
             break;
         case 133: //BUILD_SLICE
             throw "BUILD_SLICE is not implemented yet!";
-            break;
         case 134: //MAKE_CLOSURE
             throw "MAKE_CLOSURE is not implemented yet!";
-            break;
         case 135: //LOAD_CLOSURE
             throw "LOAD_CLOSURE is not implemented yet!";
-            break;
         case 136: //LOAD_DEREF
             throw "LOAD_DEREF is not implemented yet!";
-            break;
         case 137: //STORE_DEREF
             throw "STORE_DEREF is not implemented yet!";
-            break;
         case 140: //CALL_FUNCTION_VAR
-            throw "CALL_FUNCTION_VAR is not implemented yet!";
+	    this.callFunction(argument, stack, stack.pop().store, []);
             break;
         case 141: //CALL_FUNTION_KW
-            throw "CALL_FUNTION_KW is not implemented yet!";
+	    this.callFunction(argument, stack, [], stack.pop().store);
             break;
         case 142: //CALL_FUNCTION_VAR_KW
-            throw "CALL_FUNCTION_VAR_KW is not implemented yet!";
+	    var kwArgs = stack.pop().store;
+	    this.callFunction(argument, stack, stack.pop().store, kwArgs);
             break;
         case 143: //EXTENDED_ARG
             throw "EXTENDED_ARG is not implemented yet!";
-            break;
         default:
             throw "Unexpected bytecode:" + bytecode;
-            break;
       }
     }
   },
   
-  callPyFunction: function(actualArgc, posParams, kwParams, stack, pyFunction) {
-    var codeObject = pyFunction.codeObject;
-    if (codeObject.co_varnames.indexOf("self") > -1) {
-      //insert self reference
-      printfDebug("green","Hello");
-      posParams.splice(0,0,codeObject.co_locals[0]);
+  callFunction: function(argc, stack, varArgs, kwArgs) {
+    var kwargc = argc >> 8;
+    argc &= 255;
+    var kwParams = {};
+    for (name in kwArgs) {
+      kwParams[name] = kwArgs[name];
     }
+    var posParams = [];
+    for (i in varArgs) {
+      posParams[i] = varArgs[i];
+    }
+    for (var j = kwargc-1; j >= 0; j--) {
+      var i = stack.pop();
+      kwParams[stack.pop()] = i;
+    }
+    for (var j=0; j<argc; j++) {
+      posParams.unshift(stack.pop());
+    }
+    if (stack.peek() instanceof this.types.PyFunction) {
+      this.callPyFunction(argc, posParams, kwParams, stack, stack.peek());
+    } else if (stack.peek() instanceof this.types.PyClass) {
+      this.callPyClass(argc, posParams, kwParams, stack);
+    } else if (stack.peek() instanceof Function) {
+      stack.push(stack.pop()(posParams));
+    } else {
+      throw "CALL_FUNCTION tried to execute non-executable: "+stack.pop();
+    }
+  },
 
-    if (actualArgc < codeObject.co_argcount) {
+  callPyFunction: function(argc, posParams, kwParams, stack, pyFunction) {
+    var codeObject = pyFunction.codeObject;
+    if (codeObject.co_varnames[0] === "self") {
+      //insert self reference
+      posParams.unshift(codeObject.co_locals[0]);
+    }
+    if (argc < codeObject.co_argcount) {
       //insert default parameters if necessary
       var totalArgc = codeObject.co_argcount;
       var defArgc = pyFunction.defArgc;
       var defArgs = pyFunction.defArgs;
-      var overlap = (actualArgc + defArgc) - totalArgc;            
+      var overlap = (argc + defArgc) - totalArgc;            
       var index = posParams.length;
       while (index < totalArgc) {
-        posParams[index] = defArgs[index - actualArgc + overlap];
+        posParams[index] = defArgs[index - argc + overlap];
         index = posParams.length;
       }
-      for (var i in kwParams.store) {
-        posParams[codeObject.co_varnames.indexOf(i)] = kwParams.store[i];
-      }
-    } else if (actualArgc > codeObject.co_argcount) {
+    } else if (argc > codeObject.co_argcount) {
       var list = [];
       for (var i=codeObject.co_argcount;i<posParams.length;i++) {
         list.push(posParams[i]);
       }
       if (list.length > 0) {
         codeObject.co_locals[codeObject.co_argcount] = new this.types.PyTuple(list);
-        codeObject.co_locals[codeObject.co_argcount+1] = kwParams;
-      } else {
-        codeObject.co_locals[codeObject.co_argcount] = kwParams;
       }
+    }
+    for (var name in kwParams) {
+      var index = codeObject.co_varnames.indexOf(name);
+      if (index > -1) {
+	posParams[index] = kwParams[name];
+	delete kwParams[name];
+      }
+    }
+    var kwDict = new this.types.PyDict();
+    kwDict.store = kwParams;
+    if (codeObject.co_locals[codeObject.co_argcount] instanceof this.types.PyTuple) {
+      codeObject.co_locals[codeObject.co_argcount+1] = kwDict;
+    } else {
+      codeObject.co_locals[codeObject.co_argcount] = kwDict;
     }
     //codeObject.co_locals = posParams;
     for (var i=0; i<codeObject.co_argcount; i++) {
@@ -901,66 +889,66 @@ PEJS.prototype.Stack = function() {
 }
 
 PEJS.prototype.Globals = function() {
-  var values = [[]]; //Initialized with a special array for new globals
-  var names = [[]];
+  this.values = [[]]; //Initialized with a special array for new globals
+  this.names = [[]];
 
   this.add = function(nameArray, valueArray) {
-    names[names.length] = nameArray;
-    values[values.length] = valueArray;
+    this.names[this.names.length] = nameArray;
+    this.values[this.values.length] = valueArray;
   };
 
   this.store = function(name, value) {
     var index;
-    for(var i=0; i<names.length; i++) {
-      index = names[i].indexOf(name);
+    for(var i=0; i<this.names.length; i++) {
+      index = this.names[i].indexOf(name);
       if (index > -1) {
-        values[i][index] = value;
+        this.values[i][index] = value;
         return;
       }
     }
     //new global variable - added to a special array
-    index = names[0].length;
-    names[0][index] = name;
-    values[0][index] = value;
+    index = this.names[0].length;
+    this.names[0][index] = name;
+    this.values[0][index] = value;
   };
 
   this.lookup = function(name) {
-    for(var i=0; i<names.length; i++) {
-      var index = names[i].indexOf(name);
-      if (index > -1) { return values[i][index]; }
+    for(var i=0; i<this.names.length; i++) {
+      var index = this.names[i].indexOf(name);
+      if (index > -1) { return this.values[i][index]; }
     }
     throw "Global lookup of \""+name+"\" failed.";
   };
 
   this.contains = function(name) {
-    for(var i=0; i<names.length; i++) {
-      var index = names[i].indexOf(name);
+    for(var i=0; i<this.names.length; i++) {
+      var index = this.names[i].indexOf(name);
       if (index > -1) { return true; }
     }
     return false;
   };
 
   this.remove = function(name) {
-    for(var i=0; i<names.length; i++) {
-      var index = names[i].indexOf(name);
+    for(var i=0; i<this.names.length; i++) {
+      var index = this.names[i].indexOf(name);
       if (index > -1) {
-        delete names[i][index];
-        delete values[i][index];
+        delete this.names[i][index];
+        delete this.values[i][index];
         return;
       }
     }
     throw "Global delete of \""+name+"\" failed.";
   };
 
-  this.print = function() {
+  this.toString = function() {
     var res = "Globals: <br/>";
-    for(var i=0; i<names.length; i++) {
-      for(var j=0; j<names[i].length; j++) {
-        res += "  ["+i+"]["+j+"]"+ 
-            names[i][j] +": "+ values[i][j] +"<br/>";
+    for(var i=0; i<this.names.length; i++) {
+      for(var j=0; j<this.names[i].length; j++) {
+        res += " ["+i+"]["+j+"] "+ 
+            this.names[i][j] +": "+ this.values[i][j] +"<br/>";
       }
     }
-    PEJS.prototype.printOut("red", res);
+    return res;
   };
 }
 
@@ -1318,14 +1306,14 @@ function printPairs(names, values, title) {
 
 function printInstruction(inst, arg, pc, stack) {
   var res = "<tr>";
-  if (inst <= 90) {
+  if (inst < 90) {
     res += "<td class=\"offset\">"+pc+"</td>"+
         "<td class=\"inst\">"+bytecodes[inst]+"</td>"+
 	   "<td></td>"+
 	   "<td></td>"+
 	   "<td class=\"code\">"+inst+"</td>"+
 	   "<td></td>";
-  } else { //length == 6
+  } else {
     res += "<td class=\"offset\">"+pc+"</td>"+
 	   "<td class=\"inst\">"+bytecodes[inst]+"</td>"+
 	   "<td class=\"value\"></td>"+
