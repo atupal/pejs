@@ -709,31 +709,32 @@ PEJS.prototype = {
       throw "CALL_FUNCTION tried to execute non-executable: "+stack.pop();
     }
   },
-
+  
   callPyFunction: function(argc, posParams, kwParams, stack, pyFunction) {
-    var codeObject = pyFunction.codeObject;
+    var codeObject = pyFunction.codeObject;    
+    var locals = codeObject.co_locals;
+    var co_argc = codeObject.co_argcount;
     if (codeObject.co_varnames[0] === "self") {
       //insert self reference
-      posParams.unshift(codeObject.co_locals[0]);
+      posParams.unshift(locals[0]);
     }
-    if (argc < codeObject.co_argcount) {
+    if (argc < co_argc) {
       //insert default parameters if necessary
-      var totalArgc = codeObject.co_argcount;
       var defArgc = pyFunction.defArgc;
       var defArgs = pyFunction.defArgs;
-      var overlap = (argc + defArgc) - totalArgc;            
+      var overlap = (argc + defArgc) - co_argc;            
       var index = posParams.length;
-      while (index < totalArgc) {
+      while (index < co_argc) {
         posParams[index] = defArgs[index - argc + overlap];
         index = posParams.length;
       }
-    } else if (argc > codeObject.co_argcount) {
+    } else if (argc > co_argc) {
       var list = [];
-      for (var i=codeObject.co_argcount;i<posParams.length;i++) {
+      for (var i=co_argc;i<posParams.length;i++) {
         list.push(posParams[i]);
       }
       if (list.length > 0) {
-        codeObject.co_locals[codeObject.co_argcount] = new this.types.PyTuple(list);
+        locals[co_argc] = new this.types.PyTuple(list);
       }
     }
     for (var name in kwParams) {
@@ -745,18 +746,24 @@ PEJS.prototype = {
     }
     var kwDict = new this.types.PyDict();
     kwDict.store = kwParams;
-    if (codeObject.co_locals[codeObject.co_argcount] instanceof this.types.PyTuple) {
-      codeObject.co_locals[codeObject.co_argcount+1] = kwDict;
+    if (locals[co_argc] instanceof this.types.PyTuple) {
+      locals[co_argc+1] = kwDict;
     } else {
-      codeObject.co_locals[codeObject.co_argcount] = kwDict;
+      locals[co_argc] = kwDict;
     }
     //codeObject.co_locals = posParams;
-    for (var i=0; i<codeObject.co_argcount; i++) {
-      codeObject.co_locals[i] = posParams[i];
+    for (var i=0; i<co_argc; i++) {
+      locals[i] = posParams[i];
     }
-    stack.newFrame(codeObject.co_nlocals, codeObject.co_locals);
+    stack.newFrame(codeObject.co_nlocals, locals);
     this.execute(codeObject);
   },
+  
+  /*execafterinsparam: function(pyFunction) {
+    this.execute(pyFunction.codeObject);
+  },*/
+  
+
   
   callPyClass: function(actualArgc, posParams, kwParams, stack) {
     //Creation of new object
