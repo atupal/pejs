@@ -497,7 +497,7 @@ PEJS.prototype = {
                 function lookup(class,name) {
                   index = class.codeObject.co_varnames.indexOf(name);
                   if (index > -1)
-                  return class.codeObject.co_locals[index];
+                    return class.codeObject.co_locals[index];
                   var result;
                   for (var i=0;i<class.__bases__.length;i++) {
                     var result = lookup(class.__bases__[i],name);
