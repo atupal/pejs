@@ -188,95 +188,148 @@ ubbe@daimi.au.dk
 
 \end_layout
 
-\begin_layout Section
+\begin_layout Standard
+\begin_inset LatexCommand \tableofcontents{}
 
-\series bold
-Instructions on how to run your code
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\newpage
+
 \end_layout
 
 \begin_layout Section
 
 \series bold
-The status of your work.
- What can your VM do? For example:
-\end_layout
-
-\begin_layout Itemize
-How much of the client language do you support and what did you leave out?
-\end_layout
-
-\begin_layout Itemize
-How far did you get compared to your original plans and how did your plans
- change during the quarter.
+Introduction
 \end_layout
 
 \begin_layout Section
-
-\series bold
-An account of the architecture of the VM.
- Which parts does the code contain and how do they fit together?
+Motivation
 \end_layout
 
 \begin_layout Section
-
-\series bold
-A description of the techniques used to implement the VM.
- For example:
-\end_layout
-
-\begin_layout Itemize
-How do you represent the runtime state of the program?
-\end_layout
-
-\begin_layout Itemize
-What are the pros and cons of your particular choice of representation?
-\end_layout
-
-\begin_layout Itemize
-Which of the optimization techniques described during the first quarter
- of the have you implemented for you VM and how did you have to modify these
- techniques to put them to use for your VM and your client language?
+Goals
 \end_layout
 
 \begin_layout Section
-
-\series bold
-What were the three most interesting conclusions you had while implementing
- the VM? For example:
+Description
 \end_layout
 
-\begin_layout Itemize
-Did some of the applied techniques work particulary good or bad for your
- project?
+\begin_layout Subsection
+Overview
+\end_layout
+
+\begin_layout Subsubsection
+How to run
+\end_layout
+
+\begin_layout Subsubsection
+Architecture
+\end_layout
+
+\begin_layout Subsection
+Compiler
+\end_layout
+
+\begin_layout Subsection
+Code objects
+\end_layout
+
+\begin_layout Subsection
+Interpreter
+\end_layout
+
+\begin_layout Subsection
+Memory model
+\end_layout
+
+\begin_layout Subsubsection
+Stack
+\end_layout
+
+\begin_layout Subsubsection
+Objects
+\end_layout
+
+\begin_layout Paragraph
+PyClass
+\end_layout
+
+\begin_layout Paragraph
+PyObject
+\end_layout
+
+\begin_layout Paragraph
+PyFunction
+\end_layout
+
+\begin_layout Paragraph
+PyTuple, PyList, PyDict
+\end_layout
+
+\begin_layout Subsection
+Library
 \end_layout
 
 \begin_layout Section
-
-\series bold
-Performance measures for running some test programs on your VM (perhaps
- comparing your VM with a particular optimization enabled to your VM with
- the same optimization disabled), including:
+Current status
 \end_layout
 
-\begin_layout Itemize
-Memory benchmarks
+\begin_layout Subsection
+Supported language
 \end_layout
 
-\begin_layout Itemize
-CPU time benchmarks
+\begin_layout Subsection
+Optimizations
+\end_layout
+
+\begin_layout Subsubsection
+Jumps
+\end_layout
+
+\begin_layout Subsection
+Benchmarks
+\end_layout
+
+\begin_layout Subsection
+Compare with goals
 \end_layout
 
 \begin_layout Section
+Future work
+\end_layout
 
-\series bold
-Relate and compare your work to the Course Objectives as given on the front
- page
+\begin_layout Subsection
+Optimizations
+\end_layout
+
+\begin_layout Subsubsection
+Stack as array
+\end_layout
+
+\begin_layout Subsubsection
+Optimizations on byte code format
+\end_layout
+
+\begin_layout Subsection
+Python compiler
+\end_layout
+
+\begin_layout Subsection
+JIT Compilation
+\end_layout
+
+\begin_layout Subsection
+Library extension (DOM extension)
 \end_layout
 
 \begin_layout Section
-
-\series bold
-Conclusions on your work
+Conclusions
 \end_layout
 
 \end_body
