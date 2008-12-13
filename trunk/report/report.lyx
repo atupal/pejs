@@ -338,10 +338,6 @@ Description
 Overview
 \end_layout
 
-\begin_layout Subsubsection
-Architecture
-\end_layout
-
 \begin_layout Standard
 The project consists of two parts, compiling the python code to python opcodes
  in a format we can interpret, and interpreting the opcodes in JavaScript.
@@ -393,10 +389,6 @@ Overview of PEJS
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsubsection
-How to run
 \end_layout
 
 \begin_layout Standard
@@ -1018,11 +1010,111 @@ At the moment, we pay the full penalty of the switch-case, but we have some
 \end_layout
 
 \begin_layout Subsection
+Architecture
+\end_layout
+
+\begin_layout Standard
+The virtual machine is structured as shown in figure 
+\begin_inset LatexCommand \ref{static-structure}
+
+\end_inset
+
+.
+ The interpreter has been implemented on the 
+\family typewriter
+prototype
+\family default
+ object of the 
+\family typewriter
+PEJS
+\family default
+ constructor.
+ Two constructors are also implemented on the 
+\family typewriter
+prototype
+\family default
+ object, namely 
+\family typewriter
+Stack
+\family default
+ and 
+\family typewriter
+Globals
+\family default
+, which are described in more details in section 
+\begin_inset LatexCommand \ref{description_memory-model}
+
+\end_inset
+
+.
+ Furthermore, the 
+\family typewriter
+types
+\family default
+ 
+\begin_inset Quotes sld
+\end_inset
+
+namespace
+\begin_inset Quotes srd
+\end_inset
+
+ (implemented as an object) on the 
+\family typewriter
+prototype
+\family default
+ object, contains the constructors for all built-in types.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename static_structure.eps
+	lyxscale 50
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{static-structure}
+
+\end_inset
+
+Static structure of 
+\family typewriter
+interpret.js
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
 Memory model
+\begin_inset LatexCommand \label{description_memory-model}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
 Stack
+\begin_inset LatexCommand \label{description_memory-model_Stack}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1083,6 +1175,75 @@ On removeFrame we syncronize the localvariables with the arguments on the
  It could be advantageous to delete data over the SP when returning from
  a method this would allow the JavaScript VM to garbage collect the used
  data.
+\end_layout
+
+\begin_layout Subsubsection
+Local and global variables
+\end_layout
+
+\begin_layout Standard
+Local variables are stored in the respective code object's 
+\family typewriter
+co_varnames
+\family default
+ and 
+\family typewriter
+co_locals
+\family default
+.
+ The compiler resolves most of the names and adds them to 
+\family typewriter
+co_varnames
+\family default
+, and on runtime, the corresponding values are stored at the same index
+ in 
+\family typewriter
+co_locals
+\family default
+.
+ When a function is called, a new stack frame is created, with space allocated
+ for the local variables as described in section 
+\begin_inset LatexCommand \ref{description_memory-model_Stack}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Global variables are stored in the 
+\family typewriter
+Globals
+\family default
+ object, which consists of an array of arrays and some convenience methods.
+ The first inner array is a special array reserved for new global variables,
+ while the other inner arrays are added on runtime as direct references
+ to the outermost code objects's 
+\family typewriter
+co_varnames
+\family default
+ and 
+\family typewriter
+co_locals
+\family default
+.
+ The reason for this odd construction is the Python compilers lacking ability
+ to resolve whether a variable is local or global at compile-time, so the
+ best working solution we have come up with so far is the one just outlined.
+\end_layout
+
+\begin_layout Standard
+Lookup of unresolved variables, implemented as the byte code 
+\family typewriter
+LOAD_NAME
+\family default
+, is done by first looking through 
+\family typewriter
+co_varnames 
+\family default
+and secondly through the global variables.
+ Each of these lookups takes time linear in the number of local and global
+ variables, respectively.
 \end_layout
 
 \begin_layout Subsubsection
@@ -1159,14 +1320,14 @@ During our development of our VM, it became obvious that we needed to establish
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Standard
 \align center
 \begin_inset Graphics
 	filename testscreenshot.png
 	lyxscale 50
-	scale 40
+	scale 35
 
 \end_inset
 
@@ -1194,7 +1355,7 @@ status collapsed
 \begin_inset Graphics
 	filename testscreenshot2.png
 	lyxscale 50
-	scale 50
+	scale 35
 
 \end_inset
 
@@ -1226,9 +1387,15 @@ The setup was fairly slick so tests could be added just by adding the file
 \end_layout
 
 \begin_layout Standard
-After having established this small test framework, our develelopment was
+After having established this small test framework, our development was
  almost purely testdriven.
- 
+ This made development somewhat more relaxed as the tests provided confidence
+ that a given modification actually worked.
+ The tests also encouraged us to a more experimental approach to possible
+ modifications - making a change and testing it was often much quicker than
+ figuring out if it would work in every situation.
+ Finally it was also quicker for us to correct errors, as the test overview
+ and especially the single test trace made it easy to identify problems.
 \end_layout
 
 \begin_layout Section
@@ -1483,6 +1650,294 @@ debugger
 
 \begin_layout Section
 Conclusions
+\end_layout
+
+\begin_layout Section
+\start_of_appendix
+Directory structure
+\end_layout
+
+\begin_layout Standard
+For convenience we provide an overview of the directory structure and content
+ and purpose of the various files in the project.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout LyX-Code
+
+\color red
+src/ 
+\end_layout
+
+\begin_layout LyX-Code
+
+\color red
+  lib/
+\color inherit
+                   
+\color black
+Library functions, implemented in Python.
+\end_layout
+
+\begin_layout LyX-Code
+    
+\color blue
+stdlib.py            
+\color black
+Python standard library, imported by default.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+    string.py            
+\color black
+Python string library.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+    time.py              
+\color black
+Python time library.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+  interpreter.js    
+\color inherit
+     All of the actual virtual machine.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color red
+test/ 
+\color inherit
+                   Tests and benchmarks.
+ Note that benchmarks look like
+\end_layout
+
+\begin_layout LyX-Code
+                         tests, but don't actually test anything.
+\end_layout
+
+\begin_layout LyX-Code
+ 
+\color red
+ unsupported/
+\color inherit
+           Tests and benchmarks not currently supported.
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+    
+\series default
+\color blue
+<test or benchmark>.py
+\end_layout
+
+\begin_layout LyX-Code
+  
+\color blue
+test.html  
+\color inherit
+            Open this to run tests and see results in a browser 
+\end_layout
+
+\begin_layout LyX-Code
+                         (requires tools/createTest.py to be run first).
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+  testBenchmark.html   
+\color inherit
+  Run benchmarks in browser, output formatted for
+\end_layout
+
+\begin_layout LyX-Code
+                         copying to spiderlog.txt (accessible from test.html).
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+  
+\series default
+\color blue
+testSingle.html   
+\color inherit
+     Run single test and show execution and stack trace 
+\end_layout
+
+\begin_layout LyX-Code
+                         (should be accessed from test.html).
+\end_layout
+
+\begin_layout LyX-Code
+  
+\color blue
+<test or benchmark>.py
+\color inherit
+ Actual tests and benchmarks.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color red
+tools/  
+\color inherit
+                 Utility scripts.
+ Should be invoked from root folder
+\end_layout
+
+\begin_layout LyX-Code
+                         (e.g.
+ ./tools/createTest.py).
+\end_layout
+
+\begin_layout LyX-Code
+  
+\color blue
+prepareStandalone.js
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+  prepareStandaloneBenchmark.js
+\end_layout
+
+\begin_layout LyX-Code
+  
+\color blue
+compiler.py 
+\color inherit
+           Uses the Python compiler to translate from Python
+\end_layout
+
+\begin_layout LyX-Code
+                         source code to JavaScript containing Python bytecodes.
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+  
+\series default
+\color blue
+createTest.py  
+\color inherit
+        Translates all tests and benchmarks.
+ 
+\end_layout
+
+\begin_layout LyX-Code
+                         Necessary for test.html to work.
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+ 
+\series default
+\color blue
+ benchmarkInV8.sh   
+\color inherit
+    Performs benchmark in V8 and appends the result 
+\end_layout
+
+\begin_layout LyX-Code
+                         to v8log.txt.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+  cleanup.sh   
+\color inherit
+          Removes all generated files.
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+ 
+\series default
+\color blue
+ prepareStandalone.sh
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+  prepareStandaloneBenchmark.sh
+\end_layout
+
+\begin_layout LyX-Code
+  
+\color blue
+testInPython.sh  
+\color inherit
+      Runs tests in Python, outputting results to console.
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+ 
+\series default
+\color blue
+ testInV8.sh   
+\color inherit
+         Runs tests in V8, outputting results to console.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+spiderlog.txt   
+\series bold
+\color inherit
+         
+\series default
+Benchmark results from Firefox.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+v8log.txt  
+\series bold
+\color inherit
+              
+\series default
+Benchmark results from V8.
+\end_layout
+
+\begin_layout Caption
+Directory and file structure.
+ Unimportant folders and files have been omitted.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+How to run
 \end_layout
 
 \end_body
