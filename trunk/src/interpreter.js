@@ -33,7 +33,7 @@ PEJS.prototype = {
     var prog = code_object.co_code;
     var stack = this.stack;
     var pc = 0;
-    while(true) { //This is safe as long as the program returns by itself
+    fetch: while(true) { //This is safe as long as the program returns by itself
       bytecode = prog[pc];
       if (bytecode >= 90) {
         argument = prog[pc+2];
@@ -46,68 +46,68 @@ PEJS.prototype = {
     
       switch(bytecode) {
         case 0: //STOP_CODE
-            break;
+            continue fetch;
         case 1: //POP_TOP
             stack.pop();
-	    break;
+	    continue fetch;
         case 2: //ROT_TWO
             stack.rotate2();
-	    break;
+	    continue fetch;
 	case 3: //ROT_THREE
             stack.rotate3();
-	    break;
+	    continue fetch;
         case 4: //DUP_TOP
             stack.duplicateTop();
-	    break;
+	    continue fetch;
         case 5: //ROT_FOUR
             stack.rotate4();
-	    break;
+	    continue fetch;
         case 9: //NOP
-            break;
+            continue fetch;
         case 10: //UNARY_POSITIVE
             stack.push(+stack.pop());
-	    break;
+	    continue fetch;
         case 11: //UNARY_NEGATIVE
             stack.push(-stack.pop());
-	    break;
+	    continue fetch;
         case 12: //UNARY_NOT
             stack.push(!stack.pop());
-	    break;
+	    continue fetch;
         case 13: //UNARY_CONVERT
             throw "UNARY_CONVERT is not implemented yet!";
         case 15: //UNARY_INVERT
             stack.push(~stack.pop());
-	    break;
+	    continue fetch;
         case 18: //LIST_APPEND
             throw "LIST_APPEND is not implemented yet!";
         case 19: //BINARY_POWER
             var temp = stack.pop();
 	    stack.push(Math.pow(stack.pop(), temp));
-	    break;
+	    continue fetch;
         case 20: //BINARY_MULTIPLY
             var temp = stack.pop();
 	    stack.push(stack.pop() * temp);
-	    break;
+	    continue fetch;
         case 21: //BINARY_DIVIDE
             var temp = stack.pop();
 	    stack.push(stack.pop() / temp);
-	    break;
+	    continue fetch;
         case 22: //BINARY_MODULO
             var temp = stack.pop();
 	    stack.push(stack.pop() % temp);
-	    break;
+	    continue fetch;
         case 23: //BINARY_ADD
             var temp = stack.pop();
 	    stack.push(stack.pop() + temp);
-	    break;
+	    continue fetch;
         case 24: //BINARY_SUBTRACT
             var temp = stack.pop();
 	    stack.push(stack.pop() - temp);
-	    break;
+	    continue fetch;
         case 25: //BINARY_SUBSCR
             var temp = stack.pop();
 	    stack.push(stack.pop().store[temp]);
-	    break;
+	    continue fetch;
         case 26: //BINARY_FLOOR_DIVIDE
             throw "BINARY_FLOOR_DIVIDE is not implemented yet!";
         case 27: //BINARY_TRUE_DIVIDE
@@ -118,115 +118,115 @@ PEJS.prototype = {
             throw "INPLACE_TRUE_DIVIDE is not implemented yet!";
         case 30: //SLICE+0
             stack.push(new this.types.PyList(stack.pop().store.slice(0)));
-            break;
+            continue fetch;
         case 31: //SLICE+1
             var start = stack.pop();
             stack.push(new this.types.PyList(stack.pop().store.slice(start)));
-            break;
+            continue fetch;
         case 32: //SLICE+2
             var end = stack.pop();
             stack.push(new this.types.PyList(stack.pop().store.slice(0,end)));
-            break;
+            continue fetch;
         case 33: //SLICE+3
             var end = stack.pop();
             var start = stack.pop();
             stack.push(new this.types.PyList(stack.pop().store.slice(start,end)));
-            break;
+            continue fetch;
         case 40: //STORE_SLICE+0
             var list = stack.pop().store;
             var args = [0,list.length].concat(stack.pop().store);
             Array.prototype.splice.apply(list,args);
-            break;
+            continue fetch;
         case 41: //STORE_SLICE+1
             var start = stack.pop();
             var list = stack.pop().store;
             var args = [start,list.length].concat(stack.pop().store);
             Array.prototype.splice.apply(list,args);
-            break;
+            continue fetch;
         case 42: //STORE_SLICE+2
             var end = stack.pop();
             var list = stack.pop().store;
             var args = [0,end].concat(stack.pop().store);
             Array.prototype.splice.apply(list,args);
-            break;
+            continue fetch;
         case 43: //STORE_SLICE+3
             var end = stack.pop();
             var start = stack.pop();
             var list = stack.pop().store;
             var args = [start,end-start].concat(stack.pop().store);
             Array.prototype.splice.apply(list,args);
-            break;
+            continue fetch;
         case 50: //DELETE_SLICE+0
             var list = stack.pop().store;
             list.splice(0,list.length);
-            break;
+            continue fetch;
         case 51: //DELETE_SLICE+1
             var start = stack.pop();
             var list = stack.pop().store;
             list.splice(start,list.length-start);
-            break;
+            continue fetch;
         case 52: //DELETE_SLICE+2
             var end = stack.pop();
             var list = stack.pop().store;
             list.splice(0,end);
-            break;
+            continue fetch;
         case 53: //DELETE_SLICE+3
             var end = stack.pop();
             var start = stack.pop();
             var list = stack.pop().store;
             list.splice(start,end-start);
-            break;
+            continue fetch;
         case 55: //INPLACE_ADD
             var temp = stack.pop();
             stack.push(stack.pop() + temp);
-            break;
+            continue fetch;
         case 56: //INPLACE_SUBTRACT
             var temp = stack.pop();
             stack.push(stack.pop() - temp);
-            break;
+            continue fetch;
         case 57: //INPLACE_MULTIPLY
             var temp = stack.pop();
             stack.push(stack.pop() * temp);
-            break;
+            continue fetch;
         case 58: //INPLACE_DIVIDE
             throw "INPLACE_DIVIDE is not implemented yet!";
         case 59: //INPLACE_MODULO
             var temp = stack.pop();
             stack.push(stack.pop() % temp);
-            break;
+            continue fetch;
         case 60: //STORE_SUBSCR
             var temp = stack.pop();
             stack.pop().store[temp] = stack.pop();
-            break;
+            continue fetch;
         case 61: //DELETE_SUBSCR
           //Implements del TOS1[TOS].
             var temp = stack.pop();
             delete stack.pop().store[temp];
-            break;
+            continue fetch;
         case 62: //BINARY_LSHIFT
             var temp = stack.pop();
             stack.push(stack.pop() << temp);
-            break;
+            continue fetch;
         case 63: //BINARY_RSHIFT
             var temp = stack.pop();
             stack.push(stack.pop() >> temp);
-            break;
+            continue fetch;
         case 64: //BINARY_AND
             var temp = stack.pop();
             stack.push(stack.pop() & temp);
-            break;
+            continue fetch;
         case 65: //BINARY_XOR
             var temp = stack.pop();
             stack.push(stack.pop() ^ temp);
-            break;
+            continue fetch;
         case 66: //BINARY_OR
             var temp = stack.pop();
             stack.push(stack.pop() | temp);
-            break;
+            continue fetch;
         case 67: //INPLACE_POWER
             var temp = stack.pop();
             stack.push(Math.pow(stack.pop(), temp));
-            break;
+            continue fetch;
         case 68: //GET_ITER
             //Implements TOS = iter(TOS).
             var iterable = stack.pop();
@@ -243,15 +243,15 @@ PEJS.prototype = {
             } else {
               stack.push(new this.types.PyIterator(iterable));
             }
-            break;
+            continue fetch;
         case 70: //PRINT_EXPR
             throw "PRINT_EXPR is not implemented yet!";
         case 71: //PRINT_ITEM
             this.printOut(stack.pop());
-            break;
+            continue fetch;
         case 72: //PRINT_NEWLINE
             this.printNewline();
-            break;
+            continue fetch;
         case 73: //PRINT_ITEM_TO
             throw "PRINT_ITEM_TO is not implemented yet!";
         case 74: //PRINT_NEWLINE_TO
@@ -259,27 +259,27 @@ PEJS.prototype = {
         case 75: //INPLACE_LSHIFT
             var temp = stack.pop();
             stack.push(stack.pop() << temp);
-            break;
+            continue fetch;
         case 76: //INPLACE_RSHIFT
             var temp = stack.pop();
             stack.push(stack.pop() >> temp);
-            break;
+            continue fetch;
         case 77: //INPLACE_AND
             var temp = stack.pop();
             stack.push(stack.pop() & temp);
-            break;
+            continue fetch;
         case 78: //INPLACE_XOR
             var temp = stack.pop();
             stack.push(stack.pop() ^ temp);
-            break;
+            continue fetch;
         case 79: //INPLACE_OR
             var temp = stack.pop();
             stack.push(stack.pop() | temp);
-            break;
+            continue fetch;
         case 80: //BREAK_LOOP
             //Terminates a loop due to a break statement.
             pc = this.blockStack.pop();
-            break;
+            continue fetch;
         case 82: //LOAD_LOCALS
             //Pushes a reference to the locals of the
             //current scope on the stack.
@@ -287,7 +287,7 @@ PEJS.prototype = {
             // After the class body is evaluated,
             //the locals are passed to the class definition. 
             stack.push(code_object);
-            break;
+            continue fetch;
         case 83: //RETURN_VALUE
             stack.removeFrame(code_object.co_nlocals, code_object.co_locals);
             return true;
@@ -320,18 +320,18 @@ PEJS.prototype = {
             } else {
               throw "EXEC_STMT is not implemented for Python statements yet!";
             }
-            break;
+            continue fetch;
         case 86: //YIELD_VALUE
             throw "YIELD_VALUE is not implemented yet!";
         case 87: //POP_BLOCK
             this.blockStack.pop();
-            break;
+            continue fetch;
         case 88: //END_FINALLY
             //Terminates a finally clause. The interpreter recalls whether
             //the exception has to be re-raised, or whether the function
             //returns, and continues with the outer-next block. 
             this.blockStack.pop();
-            break;
+            continue fetch;
         case 89: //BUILD_CLASS
             //Creates a new class object. TOS is the methods dictionary,
             // TOS1 the tuple of the names of the base classes, and TOS2
@@ -340,7 +340,7 @@ PEJS.prototype = {
             var bases = stack.pop();
             var className = stack.pop();
             stack.push(new PEJS.prototype.types.PyClass(className, bases.store, codeObj));
-            break;
+            continue fetch;
         case 90: //STORE_NAME --------------- HAVE_ARGUMENT ---------------
             //Implements name = TOS. namei is the index of name in the attribute
             //co_names of the code object.
@@ -361,7 +361,7 @@ PEJS.prototype = {
               code_object.co_varnames[index] = name;
               code_object.co_locals[index] = stack.pop();
             }
-            break;
+            continue fetch;
         case 91: //DELETE_NAME
             var name = code_object.co_names[argument];
             var index = code_object.co_varnames.indexOf(name);
@@ -374,7 +374,7 @@ PEJS.prototype = {
             } else if (this.globals.contains(name)) {
               this.globals.remove(name);
             } else { throw "Could not find name \""+name+"\" to delete"; }
-            break;
+            continue fetch;
         case 92: //UNPACK_SEQUENCE
             //Unpacks TOS into count individual values, which are put onto the
             //stack right-to-left. 
@@ -382,7 +382,7 @@ PEJS.prototype = {
             for (var i = 0; i < seq.length; i++) {
               stack.push(seq[i]);
             }
-            break;
+            continue fetch;
         case 93: //FOR_ITER
             //TOS is an iterator. Call its next() method. If this yields a new
             //value, push it on the stack (leaving the iterator below it). If
@@ -407,7 +407,7 @@ PEJS.prototype = {
                 pc += argument;
               }
             }
-            break;
+            continue fetch;
         case 95: //STORE_ATTR
             //Implements TOS.name = TOS1, where namei is
             //the index of name in co_names.
@@ -427,19 +427,19 @@ PEJS.prototype = {
             } else {
               object.fields[name] = stack.pop();
             }
-            break;
+            continue fetch;
         case 96: //DELETE_ATTR
             throw "DELETE_ATTR is not implemented yet!";
         case 97: //STORE_GLOBAL
             this.globals.store(code_object.co_names[argument], stack.pop());
-            break;
+            continue fetch;
         case 98: //DELETE_GLOBAL
             var name = code_object.co_names[argument];
             delete code_object.co_names[argument];
             if (this.globals.contains(name)) {
               this.globals.remove(name);
             }
-            break;
+            continue fetch;
         case 99: //DUP_TOPX
             throw "DUP_TOPX is not implemented yet!";
         case 100: //LOAD_CONST
@@ -450,7 +450,7 @@ PEJS.prototype = {
               value = new this.types.PyTuple(value);
             }
             stack.push(value);
-            break;
+            continue fetch;
         case 101: //LOAD_NAME
             //Pushes the value associated with "co_names[namei]" onto the stack.
             //First we try to find the value in locals then in globals.
@@ -469,7 +469,7 @@ PEJS.prototype = {
             } else {
               throw "LOAD_NAME attempted to load non-existing name \""+name+"\"";
             }
-            break;
+            continue fetch;
         case 102: //BUILD_TUPLE
             // Creates a tuple consuming count items from the stack,
             // and pushes the resulting tuple onto the stack.
@@ -478,7 +478,7 @@ PEJS.prototype = {
               tuple[j] = stack.pop();
             }
             stack.push(new this.types.PyTuple(tuple));
-            break;
+            continue fetch;
         case 103: //BUILD_LIST
             //Works as BUILD_TUPLE, but creates a list.
             var list = [];
@@ -486,12 +486,12 @@ PEJS.prototype = {
               list[j] = stack.pop();
             }
             stack.push(new this.types.PyList(list));
-            break;
+            continue fetch;
         case 104: //BUILD_MAP
             //Pushes a new empty dictionary object onto the stack.
             //The argument is ignored and set to zero by the compiler.
             stack.push(new this.types.PyDict());
-            break;
+            continue fetch;
         case 105: //LOAD_ATTR
             //Replaces TOS with getattr(TOS, co_names[namei])
             var object = stack.pop();
@@ -531,7 +531,7 @@ PEJS.prototype = {
               throw "LOAD_ATTR tried to load "+ name +
                   " from "+ typeof(object) +" "+ object;
             }
-            break;
+            continue fetch;
         case 106: //COMPARE_OP
             var temp1 = stack.pop();
             var temp2 = stack.pop();          
@@ -540,7 +540,7 @@ PEJS.prototype = {
               temp2 = "\"" + temp2 + "\"";
             }
             stack.push(eval(temp2 + this.compareOps[argument] + temp1));
-            break;
+            continue fetch;
         case 107: //IMPORT_NAME
             //Imports the module co_names[namei]. The module object is pushed
             //onto the stack. The current namespace is not affected: for a
@@ -560,7 +560,7 @@ PEJS.prototype = {
             }
             stack.pop(); //Remove return value from the executed codeObject
             stack.push(object);
-            break;
+            continue fetch;
         case 108: //IMPORT_FROM
             //Loads the attribute co_names[namei] from the module found in TOS. 
             //The resulting object is pushed onto the stack, to be subsequently 
@@ -569,27 +569,27 @@ PEJS.prototype = {
             var attrname = code_object.co_names[argument];           
             var attr = codeObject.co_locals[codeObject.co_varnames.indexOf(attrname)];
             stack.push(attr);
-            break;
+            continue fetch;
         case 110: //JUMP_FORWARD
             pc += argument;
-            break;
+            continue fetch;
         case 111: //JUMP_IF_FALSE
             //If TOS is false, increment the byte code counter by delta.
             //TOS is not changed.
             if(!stack.peek()) {
               pc += argument;
             }
-            break;
+            continue fetch;
         case 112: //JUMP_IF_TRUE
             //If TOS is true, increment the byte code counter by delta.
             //TOS is left on the stack
             if(stack.peek()) {
               pc += argument;
             }
-            break;
+            continue fetch;
         case 113: //JUMP_ABSOLUTE
             pc = argument;
-            break;
+            continue fetch;
         case 116: //LOAD_GLOBAL
             // Loads the global named co_names[namei] onto the stack.
             var name = code_object.co_names[argument];
@@ -598,7 +598,7 @@ PEJS.prototype = {
             } else {
               stack.push(this.globals.lookup(name));
             }
-            break;
+            continue fetch;
         case 119: //CONTINUE_LOOP
             throw "CONTINUE_LOOP is not implemented yet!";
         case 120: //SETUP_LOOP
@@ -606,32 +606,32 @@ PEJS.prototype = {
             //The block spans from the current instruction with
             //a size of delta bytes.
             this.blockStack.push(pc+argument);
-            break;
+            continue fetch;
         case 121: //SETUP_EXCEPT
 	    //Pushes a try block from a try-except clause onto the block
 	    //stack. delta points to the first except block.
             this.blockStack.push(pc+argument);
-            break;
+            continue fetch;
         case 122: //SETUP_FINALLY
 	    //Pushes a try block from a try-except clause onto the block
 	    //stack. delta points to the finally block.
             this.blockStack.push(pc+argument);
-            break;
+            continue fetch;
         case 124: //LOAD_FAST
             //Pushes a reference to the local co_varnames[var_num] onto the stack.
             stack.push(stack.read(argument));
-            break;
+            continue fetch;
         case 125: //STORE_FAST
             //Stores TOS into the local co_varnames[var_num].
             var value = stack.pop();
             stack.write(argument, value);
             code_object.co_locals[argument] = value;
-            break;
+            continue fetch;
         case 126: //DELETE_FAST
             stack.write(argument, undefined);
             delete code_object.co_locals[argument];
             delete code_object.co_varnames[argument];
-            break;
+            continue fetch;
         case 130: //RAISE_VARARGS
 	    //Raises an exception. argc indicates the number of parameters
 	    //to the raise statement, ranging from 0 to 3. The handler will
@@ -650,10 +650,10 @@ PEJS.prototype = {
               //Other exceptions should be handled here, but are not supported yet
             }
             pc = this.blockStack.pop();
-            break;
+            continue fetch;
         case 131: //CALL_FUNCTION
 	    this.callFunction(argument, stack, [], []);
-            break;
+            continue fetch;
         case 132: //MAKE_FUNCTION
             //Pushes a new function object on the stack. TOS is the code
             //associated with the function. The function object is defined
@@ -663,7 +663,7 @@ PEJS.prototype = {
               pyFunction.addArg(j, stack.pop());
             }
             stack.push(pyFunction);
-            break;
+            continue fetch;
         case 133: //BUILD_SLICE
             throw "BUILD_SLICE is not implemented yet!";
         case 134: //MAKE_CLOSURE
@@ -676,14 +676,14 @@ PEJS.prototype = {
             throw "STORE_DEREF is not implemented yet!";
         case 140: //CALL_FUNCTION_VAR
 	    this.callFunction(argument, stack, stack.pop().store, []);
-            break;
+            continue fetch;
         case 141: //CALL_FUNTION_KW
 	    this.callFunction(argument, stack, [], stack.pop().store);
-            break;
+            continue fetch;
         case 142: //CALL_FUNCTION_VAR_KW
 	    var kwArgs = stack.pop().store;
 	    this.callFunction(argument, stack, stack.pop().store, kwArgs);
-            break;
+            continue fetch;
         case 143: //EXTENDED_ARG
             throw "EXTENDED_ARG is not implemented yet!";
         default:
