@@ -893,6 +893,66 @@ Memory model
 Stack
 \end_layout
 
+\begin_layout Standard
+We have implemented the stack as a JavaScript object with an array containing
+ containing the elements of the stack.
+ The stack object also has a bottom pointer(BP) and a stack pointer(SP)
+ pointing to the top and bottom of the current stackframe respectively.
+ When we call and return from functions we call the removeFrame and newFrame
+ methods, these modify the stack as shown in figure 
+\begin_inset LatexCommand \ref{stack}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename stack.eps
+	lyxscale 30
+	scale 24
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{stack}
+
+\end_inset
+
+Stack example
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+On removeFrame we syncronize the localvariables with the arguments on the
+ stack and sets TOS to the return value.
+ From figure 
+\begin_inset LatexCommand \ref{stack}
+
+\end_inset
+
+ it shows that we don't delete things from the stack again, we just overwrite
+ the contents when pushing data onto the stack.
+ It could be advantageous to delete data over the SP when returning from
+ a method this would allow the JavaScript VM to garbage collect the used
+ data.
+\end_layout
+
 \begin_layout Subsubsection
 Objects
 \end_layout
@@ -921,6 +981,17 @@ Library
 Test framework
 \end_layout
 
+\begin_layout Standard
+During our development of our VM, it became obvious that we needed to establish
+ some kind of systematic testing in order to make sure that we didn't break
+ existing functionality when refactoring and adding new features.
+ Thus, we set up a few scripts to automatically translate our tests written
+ in Python.
+ We could then benefit from the fact that our VM runs in a browser in that
+ we pretty quickly had a nice HTML interface working in which we could run
+ all tests and also debug runs of single tests.
+\end_layout
+
 \begin_layout Section
 Current status
 \end_layout
@@ -945,6 +1016,7 @@ Everything described here is assured to some degree with testcases, but
  it should be noted that there is lots of room for more thorough testing.
  This also means that our claims of supported features below only holds
  to the extent ensured by our tests.
+ Examples of unsupported features can be seen in test/unsupported
 \end_layout
 
 \begin_layout Standard
@@ -1026,17 +1098,16 @@ Classes and objects
 
 \begin_layout Standard
 Classes and objects are of course supported.
- Noticable features are: The method 
-\begin_inset Quotes sld
-\end_inset
-
-__init__ 
-\begin_inset Quotes sld
-\end_inset
-
- which is the closest thing Python has to a constructor, and injection of
- fields and methods on both classes and objects.
- 
+ We don't fully support the correct semantics when dynamically injecting
+ fields on classes.
+ In Python, update or addition of a field on a class is automatically pushed
+ to all instances of the class, overwriting or marking dirty every instance's
+ value for that field.
+ We have not implemented this behavior, as that would require every class
+ to hold references to all instances of it.
+ This is of course possible, but we decided not to implement it partly because
+ we discovered the issue shortly before deadline and partly because it would
+ not be very elegant.
 \end_layout
 
 \begin_layout Standard
@@ -1048,9 +1119,9 @@ on, as Python's inheritance rules are reasonably simple.
 \end_layout
 
 \begin_layout Standard
-It should be noted that we have not examined every corner of the language,
- and therefore there probably are subtle (and less subtle) features we don't
- handle.
+It should be noted that we have by no means examined every corner of the
+ language, and therefore there probably are subtle (and less subtle) features
+ we don't handle.
 \end_layout
 
 \begin_layout Subsubsection
@@ -1106,8 +1177,7 @@ It should also be possible to give an argument to
 \family typewriter
 raise
 \family default
-, which will simply be ignored.
- but this has not been tested.
+, which will simply be ignored, but this has not been tested.
 \end_layout
 
 \begin_layout Subsection
