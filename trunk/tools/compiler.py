@@ -1,15 +1,7 @@
 #!/usr/bin/python
-# Input a .py or .pyc file, and a js file with an array
-# containing the instructions, constants, local varialbles(initialy empty)
-# and symboltable will be created.
-# The array is named the same as the python file.
-# An instruction consists of an array with the following:
-# [0] Opcode
-# [1] Offset
-# [2] Argument        (Optional)
-# [3] Argument Type   (Optional)
-# [4] Argument Value  (Optional)
-# [5] Opcode name
+# Input a .py or .pyc file, and a .js file of the same name will be created.
+# The .js file contains a number of JavaScript objects, each representing a
+# Python code object.
 
 import sys, py_compile, marshal, opcode, os
 
@@ -33,7 +25,6 @@ def main(filename):
     global code_object
     code_object = get_code_object(filename)
     js_file_print(code_object, filename[:len(filename) - 4])
-    #print "%s.js created" % (filename[:len(filename) - 4])
   else:
     print "File \"%s\" doesnt exist" % (filename)
 
@@ -95,26 +86,18 @@ def decompile(code_object):
 # Opens the js file for reading, calls the print methods and closes the file.
 def js_file_print(code_object, filename):
   file = open(filename + ".js", 'w')
-  file.write("// This file was automatically created with pejs.py\n\n")
-  file.write("// The structure of an instruction is:\n")
-  file.write("// [Opcode, Offset, (Arg, Arg Type, Arg Value,)? Opcode Name]\n\n")
+  file.write("//This file was automatically created with compiler.py\n\n")
   global queue
   file.write(print_code(code_object, "", filename))
   while len(queue) > 0:
     code_object, varname = queue[0]
     queue.remove((code_object, varname))
-    file.write(print_code(code_object, "", varname))
+    file.write(print_code(code_object, varname))
   file.close()
 
-# [0] Opcode
-# [1] Offset
-# [2] Argument        (Optional)
-# [3] Argument Type   (Optional)
-# [4] Argument Value  (Optional)
-# [5] Opcode name
-# Creates a string with the js code, calls the appropriete methods
+# Creates a string with the js code, calls the appropriate methods
 # to collect all the information.
-def print_code(code_object, indent, varname):
+def print_code(code_object, varname):
   instructions = decompile(code_object)
   result = "var "+ varname + " = {\n"
   result = result + "co_name: \"" + code_object.co_name + "\",\n"
@@ -131,78 +114,76 @@ def print_code(code_object, indent, varname):
   return result
 
 # Helper for print_code, prints names
-def print_names(names, indent):
-  result = indent + "["
+def print_names(names):
+  result = "["
   i = 0
   for (name) in names:
-    result = result + indent + "\"" + name +"\", "
+    result = result +"\""+ name +"\", "
     i = i + 1
   if i > 0:
     result = result[:len(result)-2]
-  return result + indent + "]"
+  return result +"]"
 
 # Helper for print_code, prints the constants.
-def print_consts(consts, indent, varname):
-  result = indent + "["
+def print_consts(consts, varname):
+  result = "["
   i = 0
   for (const) in consts:
     if type(const) == type(""):
-      result = result + indent + "\""+ const.replace("\"","\\\"") + "\", "
+      result = result +"\""+ const.replace("\"","\\\"") +"\", "
     elif type(const) == type(42):
-      result = result + indent + str(const) + ", "
+      result = result + str(const) +", "
     elif type(const) == type(None):
-      result = result + indent + "\"" + str(const) + "\"" + ", "
+      result = result +"\""+ str(const) +"\", "
     elif type(const) == type(code_object):
-      result = result + indent + "\"CODEOBJ: " + varname +"_"+const.co_name + "\", "
-      queue.append((const, varname +"_"+const.co_name))
+      result = result +"\"CODEOBJ: "+ varname +"_"+ const.co_name + "\", "
+      queue.append((const, varname +"_"+ const.co_name))
     elif type(const) == type(()):
-      result = result + print_consts(const, indent, varname) + ", "
+      result = result + print_consts(const, varname) +", "
     else:
-      result = result + indent + str(const) + ", "
+      result = result + str(const) +", "
     i = i + 1
   if i > 0:
     result = result[:len(result) - 2]
-  return result + indent +"]"
+  return result +"]"
 
 def padZeroes(string, count):
   while len(string) < count:
     string = "0"+ string
   return string
 
-def print_instructions(instructions, indent):
-  result = indent + "["
+def print_instructions(instructions):
+  result = "["
   for (offset, op, name, argument, argtype, argvalue) in instructions:
     result = result + str(op) +","        # Opcode value
     if (op >= opcode.HAVE_ARGUMENT):
       result = result +"0,"+ str(argument) +","     # Argument
-  return result[:len(result)-1] + "]"
+  return result[:len(result)-1] +"]"
 
 # Helper for print_code, prints the instructions.
-def print_instructions2(instructions, indent):
-  result = indent + "[ //Instructions\n"
-  i = 0
-  for (offset, op, name, argument, argtype, argvalue) in instructions:
-    result = result + indent +"  ["+ str(op)        # Opcode value
-    result = result +","+ str(offset)               # Offset
-    if (op >= opcode.HAVE_ARGUMENT):
-      result = result +","+ str(argument)           # Argument
-      result = result +",\""+ str(argtype) +"\""    # Argument Type
-      if type(argvalue) == type(""):
-        argvalue = argvalue.replace("\"","\\\"")
-      result = result +",\""+ str(argvalue) +"\""   # Argument Value
-    result = result +",\""+ str(name) +"\""+ "],\n" # Name
-    i = i + 1
-  return result[:len(result)-2] + "\n" + indent + "]"
+#def print_instructions2(instructions):
+#  result = "[ //Instructions\n"
+#  i = 0
+#  for (offset, op, name, argument, argtype, argvalue) in instructions:
+#    result = result + "  ["+ str(op)        # Opcode value
+#    result = result +","+ str(offset)               # Offset
+#    if (op >= opcode.HAVE_ARGUMENT):
+#      result = result +","+ str(argument)           # Argument
+#      result = result +",\""+ str(argtype) +"\""    # Argument Type
+#      if type(argvalue) == type(""):
+#        argvalue = argvalue.replace("\"","\\\"")
+#      result = result +",\""+ str(argvalue) +"\""   # Argument Value
+#    result = result +",\""+ str(name) +"\""+ "],\n" # Name
+#    i = i + 1
+#  return result[:len(result)-2] + "\n]"
 
 # Boolean file_exist test.
 def file_exists(filename):
   try:
     file = open(filename)
   except IOError:
-    exists = 0
-  else:
-    exists = 1
-  return exists
+    return False
+  return True
 
 if __name__ == "__main__":
   if len(sys.argv) < 2:
