@@ -957,16 +957,45 @@ On removeFrame we syncronize the localvariables with the arguments on the
 Objects
 \end_layout
 
-\begin_layout Paragraph
-PyClass
+\begin_layout Standard
+Python does, not surprisingly, use classes, objects and functions.
+ We have choosen to implement these elements as objects.
+ The properties and relations of these is given in figure 
+\begin_inset LatexCommand \ref{python objects}
+
+\end_inset
+
+.
 \end_layout
 
-\begin_layout Paragraph
-PyObject
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename types.eps
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+
 \end_layout
 
-\begin_layout Paragraph
-PyFunction
+\begin_layout Caption
+\begin_inset LatexCommand \label{python objects}
+
+\end_inset
+
+Representation of Python objecs and classes
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Paragraph
@@ -985,11 +1014,88 @@ Test framework
 During our development of our VM, it became obvious that we needed to establish
  some kind of systematic testing in order to make sure that we didn't break
  existing functionality when refactoring and adding new features.
- Thus, we set up a few scripts to automatically translate our tests written
- in Python.
+ Thus, we set up a few scripts to automatically translate tests written
+ in Python into our JavaScript representation.
  We could then benefit from the fact that our VM runs in a browser in that
- we pretty quickly had a nice HTML interface working in which we could run
- all tests and also debug runs of single tests.
+ we pretty quickly had a nice HTML interface (test/test.html) working in
+ which we could run all tests and also see detailed runs of single tests.
+ We used this for running benchmarks as well.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename testscreenshot.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+Screenshot of full test.
+ Each test can be clicked in order to run a trace of that particular case.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename testscreenshot2.png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+Screenshot of single test.
+ Each blue headline indicates that control has been transferred to another
+ code object.
+ The stack grows to the right.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In addition to the HTML interface, we set up scripts for running the tests
+ and benchmarks in the console using Google's V8 to run our VM, as well
+ as directly in Python.
+\end_layout
+
+\begin_layout Standard
+The setup was fairly slick so tests could be added just by adding the file
+ containing the test code and running a single script (tools/createTest.py).
+ 
+\end_layout
+
+\begin_layout Standard
+After having established this small test framework, our develelopment was
+ almost purely testdriven.
+ 
 \end_layout
 
 \begin_layout Section
