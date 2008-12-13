@@ -1,8 +1,4 @@
-Stack
-We have implemented the stack as a JavaScript object with an array containing containing the elements of the stack. The stack object also has a bottom pointer(BP) and a stack pointer(SP) pointing to the top and bottom of the current stackframe respectively.
-When we call and return from functions we call the removeFrame and newFrame methods, these modify the stack as shown in figure FIGNUMBER!!!.
+Types
+Python does not surprisingly use classes, objects and functions. We have choosen to implement these elements as objects. The properties and relations of these is given in figure FIG#!!!.
 
-Figure report/stack.eps
-
-On removeFrame we syncronize the localvariables with the arguments on the stack and sets TOS to the return value. From figure FIGNUMBER!!! it shows that we dont delete things from the stack again, we just overwrite the contents when popping data onto the stack.
-It could be advantageous to delete data over the SP when returning from a method this would allow the JavaScript VM to garbage collect the used data.
+FIGURE report/types.eps
