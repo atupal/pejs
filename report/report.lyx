@@ -706,6 +706,8 @@ Explanation
 \begin_inset Text
 
 \begin_layout Standard
+
+\family typewriter
 co_name
 \end_layout
 
@@ -726,6 +728,8 @@ Name of the class or function
 \begin_inset Text
 
 \begin_layout Standard
+
+\family typewriter
 co_argcount
 \end_layout
 
@@ -746,6 +750,8 @@ Number of arguments expected by function
 \begin_inset Text
 
 \begin_layout Standard
+
+\family typewriter
 co_nlocals
 \end_layout
 
@@ -766,6 +772,8 @@ Number of local variables used in the code object
 \begin_inset Text
 
 \begin_layout Standard
+
+\family typewriter
 co_varnames
 \end_layout
 
@@ -786,6 +794,8 @@ Array of local variable names
 \begin_inset Text
 
 \begin_layout Standard
+
+\family typewriter
 co_code
 \end_layout
 
@@ -806,6 +816,8 @@ Array of byte codes, represented as integers
 \begin_inset Text
 
 \begin_layout Standard
+
+\family typewriter
 co_consts
 \end_layout
 
@@ -826,6 +838,8 @@ Array of constants such as string, integers and other code objects
 \begin_inset Text
 
 \begin_layout Standard
+
+\family typewriter
 co_names
 \end_layout
 
@@ -846,6 +860,8 @@ Array of names of functions, classes and/or properties
 \begin_inset Text
 
 \begin_layout Standard
+
+\family typewriter
 co_locals
 \end_layout
 
@@ -881,8 +897,124 @@ Our Javascript representation of Python code objects.
 
 \end_layout
 
+\begin_layout Standard
+The byte codes have been represented in two different ways during the project.
+ At first, we represented each byte code as an Array in order to carry a
+ lot of debugging information along with the byte codes.
+ Later in the project, when we settled on the basic structure and most of
+ our VM worked as in the current state, we changed this to a more effective
+ representation, where each byte code is one or three entries in an array
+ instead of one an entire array by itself.
+ The optimization benefits of this change is discussed later in the report.
+\end_layout
+
 \begin_layout Subsection
 Interpreter
+\end_layout
+
+\begin_layout Standard
+The interpreter is designed as a simple fetch-decode-execute cycle.
+ The main structure of the interpreter is a while-loop with a switch-case
+ that executes code objects.
+ As shown the example in figure 
+\begin_inset LatexCommand \ref{fetch-decode-execute}
+
+\end_inset
+
+, the interpreter maintains a program counter (
+\family typewriter
+pc
+\family default
+), which is an array index in the code objects 
+\family typewriter
+co_code
+\family default
+ property.
+ The byte code indexed by 
+\family typewriter
+pc
+\family default
+ is read out to the 
+\family typewriter
+bytecode
+\family default
+ variable.
+ In Python, all byte codes of value 90 or larger has an argument as well,
+ so if this is the case, the argument is read out as well, and 
+\family typewriter
+pc
+\family default
+ incremented correspondingly.
+ Then 
+\family typewriter
+bytecode
+\family default
+ is switched to get the correct case, and the contents of the case is executed.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename interpreter.eps
+	lyxscale 50
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fetch-decode-execute}
+
+\end_inset
+
+Fetch-decode-execute cycle for byte code 
+\family typewriter
+116
+\family default
+, 
+\family typewriter
+LOAD_GLOBAL
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The fetch-decode-execute cycle is initiated when a new function is called
+ and terminates with the byte code 
+\family typewriter
+RETURN_VALUE
+\family default
+ or when an exception is raised without being catched in the current cycle
+ (At the moment, exceptions is not fully supported.
+ See more in section 
+\begin_inset LatexCommand \ref{current status - exceptions}
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+At the moment, we pay the full penalty of the switch-case, but we have some
+ suggestions on how to improve performance of the cycle.
+ These suggestions can be found in section 
+\begin_inset LatexCommand \ref{future work}
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsection
@@ -911,7 +1043,7 @@ We have implemented the stack as a JavaScript object with an array containing
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Standard
 \align center
@@ -972,13 +1104,14 @@ Python does, not surprisingly, use classes, objects and functions.
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Standard
+\align center
 \begin_inset Graphics
 	filename types.eps
 	lyxscale 50
-	scale 50
+	scale 40
 
 \end_inset
 
@@ -1026,7 +1159,7 @@ During our development of our VM, it became obvious that we needed to establish
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Standard
 \align center
@@ -1260,6 +1393,11 @@ meaning that it can return an iterator that can enumerate the object in
 
 \begin_layout Subsubsection
 Exceptions
+\begin_inset LatexCommand \label{current status - exceptions}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1304,6 +1442,11 @@ Compare with goals
 
 \begin_layout Section
 Future work
+\begin_inset LatexCommand \label{future work}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
