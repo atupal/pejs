@@ -100,17 +100,17 @@ def js_file_print(code_object, filename):
 def print_code(code_object, varname):
   instructions = decompile(code_object)
   result = "var "+ varname + " = {\n"
-  result = result + "co_name: \"" + code_object.co_name + "\",\n"
-  result = result + "co_argcount: " + str(code_object.co_argcount) + ",\n"
-  result = result + "co_nlocals: " + str(code_object.co_nlocals) + ",\n"
-  result = result + "co_varnames: " + print_names(code_object.co_varnames) + ",\n"
-  result = result + "co_code: " + print_instructions(instructions)+",\n"
-#  result = result + "co_code2: " + print_instructions2(instructions)+",\n"
-  result = result + "co_consts: " + print_consts(code_object.co_consts, varname) + ",\n"
-  result = result + "co_names: " + print_names(code_object.co_names)  + ",\n"
-  result = result + "co_stacksize: " + str(code_object.co_stacksize) + ",\n"
-  result = result + "co_locals: [],\n"
-  result = result + "toString: function() { return \"CodeObject:"+varname+"\"} };\n\n"
+  result = result + "  co_name: \"" + code_object.co_name + "\",\n"
+  result = result + "  co_argcount: " + str(code_object.co_argcount) + ",\n"
+  result = result + "  co_nlocals: " + str(code_object.co_nlocals) + ",\n"
+  result = result + "  co_varnames: " + print_names(code_object.co_varnames) + ",\n"
+  result = result + "  co_code: " + print_instructions(instructions)+",\n"
+#  result = result + "  co_code2: " + print_instructions2(instructions)+",\n"
+  result = result + "  co_consts: " + print_consts(code_object.co_consts, varname) + ",\n"
+  result = result + "  co_names: " + print_names(code_object.co_names)  + ",\n"
+#  result = result + "  co_stacksize: " + str(code_object.co_stacksize) + ",\n"
+  result = result + "  co_locals: [],\n"
+  result = result + "  toString: function() { return \"CodeObject:"+varname+"\"}\n};\n\n"
   return result
 
 # Helper for print_code, prints names

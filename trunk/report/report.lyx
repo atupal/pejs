@@ -208,12 +208,126 @@ ubbe@daimi.au.dk
 Introduction
 \end_layout
 
+\begin_layout Standard
+This report is the final handin in the course 
+\begin_inset Quotes sld
+\end_inset
+
+Design of Virtual Machines for Object Oriented Languages
+\begin_inset Quotes srd
+\end_inset
+
+ taught at Department of Computer Science at Aarhus University.
+ The course has been taught by Lars Bak and Kasper Lund, assisted by teaching
+ assistant Mathias Schwarz.
+\end_layout
+
+\begin_layout Standard
+It describes the design and implementation of a virtual machine for for
+ the programming language Python done in JavaScript.
+ The purpose of this report is to convey a description of our work process,
+ the status of the project and the results obtained so far.
+\end_layout
+
 \begin_layout Section
 Motivation
 \end_layout
 
+\begin_layout Standard
+Virtual machines for JavaScript exist in all modern browsers and since browsers
+ exist on most operating systems JavaScript is practicaly platform independent.
+ So if we could make a virtual machine in JavaScript that takes a python
+ program we can make python platform independent.
+\end_layout
+
+\begin_layout Standard
+Further the groving use of JavaScript on the internet has pushed the need
+ for an efficient virtual machine, the work by Google
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+http://code.google.com/p/v8
+\end_layout
+
+\end_inset
+
+ and Mozilla
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+http://www.mozilla.org/js/spidermonkey
+\end_layout
+
+\end_inset
+
+ has made it interesting to investigate if it is viable to build a virtual
+ machine on top of a JavaScript virtual machinal which is known for having
+ poor performance.
+\end_layout
+
 \begin_layout Section
 Goals
+\end_layout
+
+\begin_layout Standard
+Here we briefly state our initial goals and milestones for the project.
+\end_layout
+
+\begin_layout Standard
+Our main goal was:
+\newline
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+In JavaScript, implement a VM for a subset of the Python language.
+\series default
+
+\newline
+
+\end_layout
+
+\begin_layout Standard
+This was broken down into smaller goals, or milestones, as follows:
+\end_layout
+
+\begin_layout Enumerate
+Get simple interpreter operating on a stack up and running
+\end_layout
+
+\begin_layout Enumerate
+Implement basic constructs: Jumps and loops
+\end_layout
+
+\begin_layout Enumerate
+Decide on object representation and heap layout
+\end_layout
+
+\begin_layout Enumerate
+Implement classes and objects
+\end_layout
+
+\begin_layout Enumerate
+Implement simple garbage collector if necessary
+\end_layout
+
+\begin_layout Enumerate
+Handle calls to Python library somehow
+\end_layout
+
+\begin_layout Enumerate
+Do performance evaluation and improvement
+\end_layout
+
+\begin_layout Standard
+As we only had around 8 weeks for the project, we decided that points 1-4
+ were required while 5 and 6 could be omitted if necessary.
+ Performance evaluation was naturally a must, and improvement was also something
+ we definitely aimed at working with.
 \end_layout
 
 \begin_layout Section
@@ -225,11 +339,290 @@ Overview
 \end_layout
 
 \begin_layout Subsubsection
-How to run
+Architecture
+\end_layout
+
+\begin_layout Standard
+The project consists of two parts, compiling the python code to python opcodes
+ in a format we can interpret, and interpreting the opcodes in JavaScript.
+ The focus of this course is to make a VM so naturally we focus on the interpret
+ation part rather than the compilation part.
+ In order to save time we use the python compiler to get the opcodes and
+ other information we need at print it as needed.
+\end_layout
+
+\begin_layout Standard
+The intermediary opcode format is formed as a JavaScript object we call
+ codeObject.
+ This is illustrated by figure 
+\begin_inset LatexCommand \ref{overview}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename overview.eps
+	lyxscale 50
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{overview}
+
+\end_inset
+
+Overview of PEJS
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
-Architecture
+How to run
+\end_layout
+
+\begin_layout Standard
+We compile the python file with tools/compile.py which outputs a js file
+ with the code object.
+ To illustrate this here is an example of a py file and the corresponding
+ codeObject.
+\end_layout
+
+\begin_layout LyX-Code
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+class Greet:
+\end_layout
+
+\begin_layout LyX-Code
+  def printGreeting(self):
+\end_layout
+
+\begin_layout LyX-Code
+    print "Hello world!"
+\end_layout
+
+\begin_layout LyX-Code
+Greet().printGreeting()
+\end_layout
+
+\begin_layout Caption
+Helloworld.py
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+//This file was automatically created with compiler.py
+\newline
+
+\newline
+
+\end_layout
+
+\begin_layout LyX-Code
+var Helloworld = {
+\end_layout
+
+\begin_layout LyX-Code
+  co_name: "?",
+\end_layout
+
+\begin_layout LyX-Code
+  co_argcount: 0,
+\end_layout
+
+\begin_layout LyX-Code
+  co_nlocals: 0,
+\end_layout
+
+\begin_layout LyX-Code
+  co_varnames: ["Greet"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_code: [100,0,0,102,0,0,100,0,1,132,0,0,131,0,0,89,90,0,0,101,0,0,
+\end_layout
+
+\begin_layout LyX-Code
+            131,0,0,105,0,1,131,0,0,1,100,0,2,83],
+\end_layout
+
+\begin_layout LyX-Code
+  co_consts: ["Greet", "CODEOBJ: Helloworld_Greet", "None"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_names: ["Greet", "printGreeting"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_locals: [],
+\end_layout
+
+\begin_layout LyX-Code
+  toString: function() { return "CodeObject:Helloworld"} 
+\end_layout
+
+\begin_layout LyX-Code
+};
+\newline
+
+\newline
+
+\end_layout
+
+\begin_layout LyX-Code
+var Helloworld_Greet = {
+\end_layout
+
+\begin_layout LyX-Code
+  co_name: "Greet",
+\end_layout
+
+\begin_layout LyX-Code
+  co_argcount: 0,
+\end_layout
+
+\begin_layout LyX-Code
+  co_nlocals: 0,
+\end_layout
+
+\begin_layout LyX-Code
+  co_varnames: [],
+\end_layout
+
+\begin_layout LyX-Code
+  co_code: [116,0,0,90,0,1,100,0,1,132,0,0,90,0,2,82,83],
+\end_layout
+
+\begin_layout LyX-Code
+  co_consts: ["None", "CODEOBJ: Helloworld_Greet_printGreeting"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_names: ["__name__", "__module__", "printGreeting"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_locals: [],
+\end_layout
+
+\begin_layout LyX-Code
+  toString: function() { return "CodeObject:Helloworld_Greet"} 
+\end_layout
+
+\begin_layout LyX-Code
+};
+\newline
+
+\newline
+
+\end_layout
+
+\begin_layout LyX-Code
+var Helloworld_Greet_printGreeting = {
+\end_layout
+
+\begin_layout LyX-Code
+  co_name: "printGreeting",
+\end_layout
+
+\begin_layout LyX-Code
+  co_argcount: 1,
+\end_layout
+
+\begin_layout LyX-Code
+  co_nlocals: 1,
+\end_layout
+
+\begin_layout LyX-Code
+  co_varnames: ["self"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_code: [100,0,1,71,72,100,0,0,83],
+\end_layout
+
+\begin_layout LyX-Code
+  co_consts: ["None", "Hello world!"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_names: [],
+\end_layout
+
+\begin_layout LyX-Code
+  co_locals: [],
+\end_layout
+
+\begin_layout LyX-Code
+  toString: function() { return "CodeObject:Helloworld_Greet_printGreeting"}
+ 
+\end_layout
+
+\begin_layout LyX-Code
+};
+\end_layout
+
+\begin_layout Caption
+Helloworld.js
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to run the python code in a browser you need to import the interpreter(
+src/interpreter.js) and the codeObject file, in this example Helloworld.js.
+ In a html file you then need to execute the interpret method with the name
+ of the file as a string.
+\end_layout
+
+\begin_layout Standard
+interpret("Helloworld");
+\end_layout
+
+\begin_layout Standard
+This implies that the creator of the website needs a python compiler to
+ generate codeObjects but not the users of the website.
+ It is possible to make a Python compiler in JavaScript which could be imported
+ in the html file.
+ That would allow Python directly embedded in the html.
+ This is not in the scope of the course and therefore not implemented.
 \end_layout
 
 \begin_layout Subsection
@@ -276,12 +669,118 @@ PyTuple, PyList, PyDict
 Library
 \end_layout
 
+\begin_layout Subsection
+Test framework
+\end_layout
+
 \begin_layout Section
 Current status
 \end_layout
 
 \begin_layout Subsection
 Supported language
+\end_layout
+
+\begin_layout Standard
+In this section we describe what parts of the Python language our VM supports.
+ Everything described here is assured to some degree with testcases, but
+ it should be noted that theres is lots of room for more thorough testing.
+\end_layout
+
+\begin_layout Standard
+We decided on implementing Python 2.4.3, as that was the version installed
+ on the department's machines.
+\end_layout
+
+\begin_layout Subsubsection
+Basic arithmetics
+\end_layout
+
+\begin_layout Standard
+Basic arithmetic operations were fairly easily implemented, as we just used
+ the corresponding JavaScript operators.
+ This also means that the semantics have not been ensured any further than
+ what is specified in the test cases.
+ Longs are not supported, bot floats are.
+ The implementation doesn't quite match Python's apparent intention of making
+ everything objects, which would imply that even the basic arithmetic operators
+ should be implemented as functions or methods.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Basic constructs
+\end_layout
+
+\begin_layout Standard
+Conditionals and loops are supported fully, and especially loops have been
+ tested reasonably well.
+ We support both the 
+\family typewriter
+range
+\family default
+ and 
+\family typewriter
+the xrange 
+\family default
+constructs which are typically used in 
+\family typewriter
+for
+\family default
+-loops.
+ The semantics are correct, as 
+\family typewriter
+range
+\family default
+ actually produces a list while 
+\family typewriter
+xrange
+\family default
+ is implemented in a more space efficient manner which generates each index
+ lazily.
+ Both are implemented in the library, purely in Python.
+\end_layout
+
+\begin_layout Subsubsection
+Functions/methods
+\end_layout
+
+\begin_layout Standard
+We implemented functions before classes, in order to be ready to implement
+ methods when introducing classes.
+ Functions and methods are fully supported, including nesting and recursion.
+ Keyword arguments and default arguments are working, and so is optional
+ parameters.
+ That is, both * and ** work, and can be used both when defining functions
+ and when calling them.
+\end_layout
+
+\begin_layout Subsubsection
+Classes and objects
+\end_layout
+
+\begin_layout Subsubsection
+Inheritance
+\end_layout
+
+\begin_layout Standard
+Inheritance was fairly easy to add on top of the class/object implementations,
+ as Python's inheritance rules are reasonably simple.
+ The simply state that the ordered list of base classes should be traversed
+ in order and the first field/method with matching name should be chosen.
+ This is working as it should which is ensured by a couple of tests.
+\end_layout
+
+\begin_layout Subsubsection
+Iterators
+\end_layout
+
+\begin_layout Subsubsection
+Lists, tuples and dictionaries
+\end_layout
+
+\begin_layout Subsubsection
+Exceptions
 \end_layout
 
 \begin_layout Subsection
@@ -326,6 +825,10 @@ JIT Compilation
 
 \begin_layout Subsection
 Library extension (DOM extension)
+\end_layout
+
+\begin_layout Standard
+Snapshot af library saa man slipper for loade hver gang
 \end_layout
 
 \begin_layout Section
