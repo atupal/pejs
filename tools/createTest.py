@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import pejs, os
+import compiler, os
 
 def main():
   #Generate test code
@@ -8,21 +8,21 @@ def main():
   filelist = os.listdir('.')
   for file in filelist:
     if file.endswith(".py"):
-      pejs.main(file)
+      compiler.main(file)
       jsstr = jsstr +"\""+ file[:len(file) - 3]+"\","
 
   jsstr = jsstr[:len(jsstr)-1] + "];"
   jsfile = open("test.js", "w")
   jsfile.write(jsstr)
   jsfile.close()
-  
+
   #Generate library code
   os.chdir("../src/lib")
   jsstr = "var libArray = ["
   filelist = os.listdir('.')
   for file in filelist:
     if file.endswith(".py"):
-      pejs.main(file)
+      compiler.main(file)
       jsstr = jsstr +"\""+ file[:len(file) - 3]+"\","
 
   jsstr = jsstr[:len(jsstr)-1] + "];"
