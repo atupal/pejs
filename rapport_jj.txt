@@ -1,63 +1,8 @@
-Motivation
-Virtual machines for JavaScript exist in all modern browsers and since browsers exist on most operating systems JavaScript is practicaly platform independent. So if we could make a virtual machine in JavaScript that takes a python program we can make python platform independent.
-Further the groving use of JavaScript on the internet has pushed the need for an efficient virtual machine, the work by Google(http://code.google.com/p/v8/) and Mozilla(http://www.mozilla.org/js/spidermonkey/) has made it interesting to investigate if it is viable to build a virtual machine on top of a JavaScript virtual machinal which is known for having poor performance.
+Stack
+We have implemented the stack as a JavaScript object with an array containing containing the elements of the stack. The stack object also has a bottom pointer(BP) and a stack pointer(SP) pointing to the top and bottom of the current stackframe respectively.
+When we call and return from functions we call the removeFrame and newFrame methods, these modify the stack as shown in figure FIGNUMBER!!!.
 
-Description - Overview
-The project consists of two parts, compiling the python code to python opcodes in a format we can interpret, and interpreting the opcodes in JavaScript. The focus of this course is to make a VM so naturally we focus on the interpretation part rather than the compilation part. In order to save time we use the python compiler to get the opcodes and other information we need at print it as needed.
-The intermediary opcode format is formed as a JavaScript object we call codeObject. This is illustrated by figure "TODO:Refer to figure number"
+Figure report/stack.eps
 
-FIGURE "rapport/overview.eps"
-
-We compile the python file with tools/compile.py which outputs a js file with the code object. To illustrate this here is an example of a py file and the corresponding codeObject.
-
-Helloworld.py:
-class Greet:
-  def printGreeting(self):
-    print "Hello world!"
-
-Greet().printGreeting()
-
-Helloworld.js:
-//This file was automatically created with compiler.py
-
-var Helloworld = {
-co_name: "?",
-co_argcount: 0,
-co_nlocals: 0,
-co_varnames: ["Greet"],
-co_code: [100,0,0,102,0,0,100,0,1,132,0,0,131,0,0,89,90,0,0,101,0,0,131,0,0,105,0,1,131,0,0,1,100,0,2,83],
-co_consts: ["Greet", "CODEOBJ: Helloworld_Greet", "None"],
-co_names: ["Greet", "printGreeting"],
-co_stacksize: 3,
-co_locals: [],
-toString: function() { return "CodeObject:Helloworld"} };
-
-var Helloworld_Greet = {
-co_name: "Greet",
-co_argcount: 0,
-co_nlocals: 0,
-co_varnames: [],
-co_code: [116,0,0,90,0,1,100,0,1,132,0,0,90,0,2,82,83],
-co_consts: ["None", "CODEOBJ: Helloworld_Greet_printGreeting"],
-co_names: ["__name__", "__module__", "printGreeting"],
-co_stacksize: 1,
-co_locals: [],
-toString: function() { return "CodeObject:Helloworld_Greet"} };
-
-var Helloworld_Greet_printGreeting = {
-co_name: "printGreeting",
-co_argcount: 1,
-co_nlocals: 1,
-co_varnames: ["self"],
-co_code: [100,0,1,71,72,100,0,0,83],
-co_consts: ["None", "Hello world!"],
-co_names: [],
-co_stacksize: 1,
-co_locals: [],
-toString: function() { return "CodeObject:Helloworld_Greet_printGreeting"} };
-
-In order to run the python code in a browser you need to import the interpreter(src/interpreter.js) and the codeObject file, in this example Helloworld.js. In a html file you then need to execute the interpret method with the name of the file as a string.
-
-interpret("Helloworld");
-
-This implies that the creator of the website need a python compiler to generate codeObjects but not the users of the website. It is possible to make a python compiler in JavaScript which could be imported in the html file, that would allow python directly embedded in the html. This is not in the scope of the couse and therefore not implemented.
+On removeFrame we syncronize the localvariables with the arguments on the stack and sets TOS to the return value. From figure FIGNUMBER!!! it shows that we dont delete things from the stack again, we just overwrite the contents when popping data onto the stack.
+It could be advantageous to delete data over the SP when returning from a method this would allow the JavaScript VM to garbage collect the used data.
