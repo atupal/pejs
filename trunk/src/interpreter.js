@@ -228,11 +228,20 @@ PEJS.prototype = {
             break;
         case 68: //GET_ITER
             //Implements TOS = iter(TOS).
-            var iter = stack.pop();
-            if (!(iter instanceof this.types.PyObject)) {
-              iter = new this.types.PyIterator(iter);
+            var iterable = stack.pop();
+            if (iterable instanceof this.types.PyObject) {
+              var codeObject = iterable.class.codeObject;
+              index = codeObject.co_varnames.indexOf("__iter__");
+              if (index > -1) {
+                stack.push(codeObject.co_locals[index]);
+                stack.newFrame(codeObject.co_nlocals+1,[iterable]);
+                this.execute(codeObject.co_locals[index].codeObject);
+              } else {
+                throw iterable +" is not iterable!";
+              }
+            } else {
+              stack.push(new this.types.PyIterator(iterable));
             }
-            stack.push(iter);
             break;
         case 70: //PRINT_EXPR
             throw "PRINT_EXPR is not implemented yet!";
@@ -637,6 +646,7 @@ PEJS.prototype = {
                 stack.removeFrame(code_object.co_nlocals, code_object.co_locals);
                 return false;
               }
+              //Other exceptions should be handled here, but are not supported yet
             }
             pc = this.blockStack.pop();
             break;
@@ -961,10 +971,7 @@ PEJS.prototype.Globals = function() {
 
 
 PEJS.prototype.types = {
-  PyCodeObject: function() {
-    this.toString = function() { return "CodeObject:"+this.co_name; };
-  },
-
+  
   PyClass: function(name, bases, codeObj) {
     this.__name__ = name;
     this.__bases__ = bases;

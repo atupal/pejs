@@ -930,14 +930,27 @@ Supported language
 \end_layout
 
 \begin_layout Standard
-In this section we describe what parts of the Python language our VM supports.
- Everything described here is assured to some degree with testcases, but
- it should be noted that theres is lots of room for more thorough testing.
+In this section we describe roughly what parts of the Python language our
+ VM supports.
+ 
 \end_layout
 
 \begin_layout Standard
 We decided on implementing Python 2.4.3, as that was the version installed
  on the department's machines.
+\end_layout
+
+\begin_layout Standard
+Everything described here is assured to some degree with testcases, but
+ it should be noted that there is lots of room for more thorough testing.
+ This also means that our claims of supported features below only holds
+ to the extent ensured by our tests.
+\end_layout
+
+\begin_layout Standard
+It should also be mentioned that we have no negative testcases and have
+ not attempted to catch illegal programs in our implementation.
+ Thus, running an illegal program will cause undefined behavior.
 \end_layout
 
 \begin_layout Subsubsection
@@ -949,7 +962,7 @@ Basic arithmetic operations were fairly easily implemented, as we just used
  the corresponding JavaScript operators.
  This also means that the semantics have not been ensured any further than
  what is specified in the test cases.
- Longs are not supported, bot floats are.
+ Longs are not supported, but floats are.
  The implementation doesn't quite match Python's apparent intention of making
  everything objects, which would imply that even the basic arithmetic operators
  should be implemented as functions or methods.
@@ -989,6 +1002,10 @@ xrange
  Both are implemented in the library, purely in Python.
 \end_layout
 
+\begin_layout Standard
+
+\end_layout
+
 \begin_layout Subsubsection
 Functions/methods
 \end_layout
@@ -1007,28 +1024,90 @@ We implemented functions before classes, in order to be ready to implement
 Classes and objects
 \end_layout
 
-\begin_layout Subsubsection
-Inheritance
+\begin_layout Standard
+Classes and objects are of course supported.
+ Noticable features are: The method 
+\begin_inset Quotes sld
+\end_inset
+
+__init__ 
+\begin_inset Quotes sld
+\end_inset
+
+ which is the closest thing Python has to a constructor, and injection of
+ fields and methods on both classes and objects.
+ 
 \end_layout
 
 \begin_layout Standard
-Inheritance was fairly easy to add on top of the class/object implementations,
- as Python's inheritance rules are reasonably simple.
- The simply state that the ordered list of base classes should be traversed
+Inheritance was fairly easy to add on top of the basic class/object implementati
+on, as Python's inheritance rules are reasonably simple.
+ They simply state that the ordered list of base classes should be traversed
  in order and the first field/method with matching name should be chosen.
  This is working as it should which is ensured by a couple of tests.
 \end_layout
 
-\begin_layout Subsubsection
-Iterators
+\begin_layout Standard
+It should be noted that we have not examined every corner of the language,
+ and therefore there probably are subtle (and less subtle) features we don't
+ handle.
 \end_layout
 
 \begin_layout Subsubsection
 Lists, tuples and dictionaries
 \end_layout
 
+\begin_layout Standard
+These are the basic data structures in Python.
+ They have all been implemented directly in JavaScript since Python has
+ no arrays on which to build.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Iterators
+\end_layout
+
+\begin_layout Standard
+In Python, any object may be 
+\emph on
+iterable, 
+\emph default
+meaning that it can return an iterator that can enumerate the object in
+ some sensible way, using the methods next() and getItem(...).
+ We've implemented the iterator for lists and tuples which works as it should.
+ In principle it also works for general objects, where the object itself
+ is responsible for implementing the actual iterator somehow.
+ This has not been tested though.
+\end_layout
+
 \begin_layout Subsubsection
 Exceptions
+\end_layout
+
+\begin_layout Standard
+We have very basic support for exceptions.
+ A special case handles the StopIteration exception which is necessary for
+ iterators to work.
+ Aside from that, using the 
+\family typewriter
+raise 
+\family default
+keyword with no argument behaves correctly together with 
+\family typewriter
+try
+\family default
+ and 
+\family typewriter
+except.
+ 
+\family default
+It should also be possible to give an argument to 
+\family typewriter
+raise
+\family default
+, which will simply be ignored.
+ but this has not been tested.
 \end_layout
 
 \begin_layout Subsection
@@ -1077,6 +1156,10 @@ Library extension (DOM extension)
 
 \begin_layout Standard
 Snapshot af library saa man slipper for loade hver gang
+\end_layout
+
+\begin_layout Subsection
+debugger
 \end_layout
 
 \begin_layout Section
