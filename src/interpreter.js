@@ -32,7 +32,8 @@ PEJS.prototype = {
     var bytecode, offset, argument;
     var prog = code_object.co_code;
     var stack = this.stack;
-    for (var pc=0; pc<prog.length;) {
+    var pc = 0;
+    while(true) { //This is safe as long as the program returns by itself
       bytecode = prog[pc];
       if (bytecode >= 90) {
         argument = prog[pc+2];
