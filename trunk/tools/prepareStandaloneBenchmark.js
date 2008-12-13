@@ -44,9 +44,6 @@ function runTest(delayArr, withExceptions) {
 runTest(testArray, false);
 
 print(indent("Total time spent: "+totalTime+"ms"));
-//print(indent(total+" tests run: "+success+" succeeded, "+
-//		(total-(success+exceptions.length))+" returned wrong result and "+
-//		exceptions.length +" failed with an exception.\n"));
 
 if (exceptions.length > 0) {
   print("Exceptions:");

@@ -103,7 +103,6 @@ def js_file_print(code_object, filename):
   while len(queue) > 0:
     code_object, varname = queue[0]
     queue.remove((code_object, varname))
-    #varname = filename+"_"+code_object.co_name
     file.write(print_code(code_object, "", varname))
   file.close()
 
@@ -122,17 +121,11 @@ def print_code(code_object, indent, varname):
   result = result + "co_argcount: " + str(code_object.co_argcount) + ",\n"
   result = result + "co_nlocals: " + str(code_object.co_nlocals) + ",\n"
   result = result + "co_varnames: " + print_names(code_object.co_varnames, "") + ",\n"
-  #result = result + "co_cellvars: " + print_names(code_object.co_cellvars, "") + ",\n"
-  #result = result + "co_freevars: " + print_names(code_object.co_freevars, "") + ",\n"
   result = result + "co_code: " + print_instructions(instructions, indent + "    ")+",\n"
   result = result + "co_code2: " + print_instructions2(instructions, indent + "    ")+",\n"
   result = result + "co_consts: " + print_consts(code_object.co_consts, "", varname) + ",\n"
   result = result + "co_names: " + print_names(code_object.co_names, "")  + ",\n"
-  #result = result + "co_filename: \"" + code_object.co_filename + "\",\n"
-  #result = result + "co_firstlineno: " + str(code_object.co_firstlineno) + ",\n"
-  #result = result + "co_lnotab: " + code_object.co_lnotab + ",\n"
   result = result + "co_stacksize: " + str(code_object.co_stacksize) + ",\n"
-  #result = result + "co_flags: " + str(code_object.co_flags) + ",\n"
   result = result + "co_locals: [],\n"
   result = result + "toString: function() { return \"CodeObject:"+varname+"\"} };\n\n"
   return result
@@ -163,11 +156,7 @@ def print_consts(consts, indent, varname):
       result = result + indent + "\"CODEOBJ: " + varname +"_"+const.co_name + "\", "
       queue.append((const, varname +"_"+const.co_name))
     elif type(const) == type(()):
-      #print "CONST: "+str(const)
       result = result + print_consts(const, indent, varname) + ", "
-      #result = result + "["
-      #for i in const:
-       # print_consts
     else:
       result = result + indent + str(const) + ", "
     i = i + 1
@@ -179,15 +168,6 @@ def padZeroes(string, count):
   while len(string) < count:
     string = "0"+ string
   return string
-
-# Helper for print_code, prints the instructions.
-#def print_instructions(instructions, indent):
-  #result = indent + "\""
-  #for (offset, op, name, argument, argtype, argvalue) in instructions:
-    #result = result + padZeroes(str(op),3)        # Opcode value
-    #if (op >= opcode.HAVE_ARGUMENT):
-      #result = result + padZeroes(str(argument),6)      # Argument
-  #return result + "\""
 
 def print_instructions(instructions, indent):
   result = indent + "["

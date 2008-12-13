@@ -1,0 +1,6 @@
+Motivation
+Virtual machines for JavaScript exist in all modern browsers and since browsers exist on most operating systems JavaScript is practicaly platform independent. So if we could make a virtual machine in JavaScript that takes a python program we can make python platform independent.
+Further the groving use of JavaScript on the internet has pushed the need for an efficient virtual machine, the work by Google(http://code.google.com/p/v8/) and Mozilla(http://www.mozilla.org/js/spidermonkey/) has made it interesting to investigate if it is viable to build a virtual machine on top of a JavaScript virtual machinal which is known for having poor performance.
+
+Description - Overview
+The project consists of two parts, compiling the python code to python opcodes in a format we can interpret, and interpreting the opcodes in JavaScript.
