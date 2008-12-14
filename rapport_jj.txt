@@ -11,3 +11,12 @@ This clearly enables arbitrary extensions of the library, as it is always possib
 
 The library .py-files are translated and the generated JavaScript file is then referenced in the HTML, just like the interpreter itself.
 Writing "import time" then works exactly as it should. The standard library is  imported automatically, as it should be. 
+
+---------------
+JIT compilation
+---------------
+An interesting optimization would be adding a kind of JIT compilation. In the interpreter switch, it is clearly possible just generating and saving JavasScript code as a string instead of actually executing it. This way, the Python bytecodes could be parsed, resulting in an equivalent JavaScript program which could then be executed without the interpreting overhead between each operation. This is an improvement in itself, but it would probably result in an additional performance gain when running on V8, which would be able to compile the entire program in one chunk.
+Generating code in this way would also enable us to do peephole optimization on our generated code, though it may be somewhat heavy to parse and modify a large program string.   
+
+The obstructing complication is jumps. When generating the JavaScript code, it seems obvious to use gotos and labels whenever we encounter Python bytecodes that jump. The only problem is that JavaScript doesn't have have labels and gotos in the normal sense, which at first seems a complete showstopper for this approach. A possible workaround would be to slice the entire program, dividing it into functions in every place a label is needed. A goto can then be done as a call to the correct function, and the semantics of the sequential program could be maintained by letting each function end by calling the next. This would probably generate an unreasonably high call stack, but this could be avoided by just calling the functions in sequence. Unfortunately, every jump would still cause a nested function call. That could be avoided by letting functions return a value indicating what they want to be called next, but then we've more or less introduced the interpreting overhead again which makes it all seem futile.
+An option would be to just generate code between jumps and let jumps be handled in the interpreter. It is not clear whether this would yield any significant performance improvement, and unfortunately we didn't have the time for implementing it. 
