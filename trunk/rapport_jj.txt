@@ -1,4 +1,13 @@
-Types
-Python does not surprisingly use classes, objects and functions. We have choosen to implement these elements as objects. The properties and relations of these is given in figure FIG#!!!.
+---------------------
+Description - library
+---------------------
+We have started an implementation of the Python library in order to support some of the most basic functionality. While we have not implemented much, the idea was just as much to see if we could get a library working at all.
 
-FIGURE report/types.eps
+The library is primaily implemented in Python which seemed most elegant. This includes  We still had to establish some way of calling into JavaScript which is done as in the following example:  
+  exec "new PEJS.prototype.types.PyTuple("+list+");" in "JavaScript", "result"
+  return result
+In the EXEC_STMT case in the interpreter (case 85) we test if the second parameter is "JavaScript", in which case we evaluate the given statement and store the result in the named variable, which is then accessible in Python.
+This clearly enables arbitrary extensions of the library, as it is always possible to bail out to JavaScript implementation when Python is not sufficient. It is also easy to add new implementation. One just writes the code in the right place, and everything works automatically. Se dét er elektronisk databehandling mine damer og herrer!
+
+The library .py-files are translated and the generated JavaScript file is then referenced in the HTML, just like the interpreter itself.
+Writing "import time" then works exactly as it should. The standard library is  imported automatically, as it should be. 
