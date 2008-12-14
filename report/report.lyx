@@ -17,7 +17,7 @@
 \use_bibtopic false
 \paperorientation portrait
 \secnumdepth 3
-\tocdepth 3
+\tocdepth 2
 \paragraph_separation indent
 \defskip medskip
 \quotes_language swedish
@@ -392,6 +392,11 @@ Description
 
 \begin_layout Subsection
 Overview
+\begin_inset LatexCommand \label{sub:Overview}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -661,13 +666,14 @@ Helloworld.js
 
 \begin_layout Standard
 In order to run the python code in a browser you need to import the interpreter(
-src/interpreter.js) and the codeObject file, in this example Helloworld.js.
+src/interpreter.js), the standart library(src/lib/stdlib.py) and the codeObject
+ file, in this example Helloworld.js.
  In a html file you then need to execute the interpret method with the name
  of the file as a string.
 \end_layout
 
-\begin_layout Standard
-interpret("Helloworld");
+\begin_layout LyX-Code
+(new PEJS()).interpret("Helloworld");
 \end_layout
 
 \begin_layout Standard
@@ -677,6 +683,12 @@ This implies that the creator of the website needs a python compiler to
  in the html file.
  That would allow Python directly embedded in the html.
  This is not in the scope of the course and therefore not implemented.
+ See appendix 
+\begin_inset LatexCommand \ref{sec:How-to-run}
+
+\end_inset
+
+ for more details on running PEJS.
 \end_layout
 
 \begin_layout Subsection
@@ -1788,8 +1800,9 @@ When we started the implenentation many of the elements from figure
  We expected to see a performance decrease since lookup of the elements
  would be more indirect, it turns out that the refactoring had an huge possitive
  impact on performance.
- We went from times around 3100ms to 1100ms we have tested that this is
- because globals takes a very long time to resolve.
+ We went from times around 3100ms to 1100ms to execute our benchmarks, we
+ have discovered that this is because globals takes a very long time to
+ resolve.
  
 \end_layout
 
@@ -1815,35 +1828,243 @@ Optimizations
 \end_layout
 
 \begin_layout Subsubsection
+JIT Compilation
+\end_layout
+
+\begin_layout Standard
+An interesting optimization would be adding a kind of JIT compilation.
+ In the interpreter switch, it is clearly possible just generating and saving
+ JavaScript code as a string instead of actually executing it.
+ This way, the Python bytecodes could be parsed, resulting in an equivalent
+ JavaScript program which could then be executed without the interpreting
+ overhead between each operation.
+ This is an improvement in itself, but it would probably result in an additional
+ performance gain when running on V8, which would be able to compile the
+ entire program in one chunk.
+ Generating code in this way would also enable us to do peephole optimization
+ on our generated code, though it may be somewhat heavy to parse and modify
+ a large program string.
+ 
+\end_layout
+
+\begin_layout Standard
+The obstructing complication is jumps.
+ When generating the JavaScript code, it seems obvious to use gotos and
+ labels whenever we encounter Python bytecodes that jump.
+ The only problem is that JavaScript doesn't have have labels and gotos
+ in the normal sense, which at first seems a complete showstopper for this
+ approach.
+ 
+\end_layout
+
+\begin_layout Standard
+A possible workaround would be to slice the entire program, dividing it
+ into functions in every place a label is needed.
+ A goto can then be done as a call to the correct function, and the semantics
+ of the sequential program could be maintained by letting each function
+ end by calling the next.
+ This would probably generate an unreasonably high call stack, but this
+ could be avoided by just calling the functions in sequence.
+ Unfortunately, every jump would still cause a nested function call.
+ That could be avoided by letting functions return a value indicating what
+ they want to be called next, but then we've more or less introduced the
+ interpreting overhead again which makes it all seem futile.
+ 
+\end_layout
+
+\begin_layout Standard
+An option would be to just generate code between jumps and let jumps be
+ handled in the interpreter.
+ It is not clear whether this would yield any significant performance improvemen
+t, and unfortunately we didn't have the time for implementing it.
+\end_layout
+
+\begin_layout Subsubsection
 Stack as array
 \end_layout
 
 \begin_layout Subsubsection
-Optimizations on byte code format
+Switch-case as array
+\end_layout
+
+\begin_layout Subsubsection
+Optimizations on byte code order and format
+\end_layout
+
+\begin_layout Standard
+Throughout the project, we have relied on the order, in which the Python
+ compiler output byte codes.
+ In some cases, the way we handle byte codes does not correspond to the
+ optimal order, in which elements could be placed on the stack.
+ In the example shown as algorithm 
+\begin_inset LatexCommand \ref{alg:bytecodeorder}
+
+\end_inset
+
+, three elements are placed on stack in the order shown in figure 
+\begin_inset LatexCommand \ref{fig:bytecodeorder}
+
+\end_inset
+
+.
+ The present stack order makes it necessary to use two named local variables,
+ instead of supplying the arguments unnamed to the JavaScript 
+\family typewriter
+slice
+\family default
+ method as shown.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+//Present byte code order:
+\end_layout
+
+\begin_layout LyX-Code
+case 33: //SLICE+3
+\end_layout
+
+\begin_layout LyX-Code
+  var end = stack.pop();
+\end_layout
+
+\begin_layout LyX-Code
+  var start = stack.pop();
+\end_layout
+
+\begin_layout LyX-Code
+  stack.push(new this.types.PyList(stack.pop().store.slice(start,end)));
+\end_layout
+
+\begin_layout LyX-Code
+  break;
+\newline
+
+\newline
+//Optimized byte code order:
+\end_layout
+
+\begin_layout LyX-Code
+case 33: //SLICE+3
+\end_layout
+
+\begin_layout LyX-Code
+  stack.push(new this.types.PyList(stack.pop().store.slice(stack.pop(),
+\end_layout
+
+\begin_layout LyX-Code
+                                                           stack.pop())));
+\end_layout
+
+\begin_layout LyX-Code
+  break;
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{alg:bytecodeorder}
+
+\end_inset
+
+Examples of present and optimized byte code order usage.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename bytecodeorder.eps
+	lyxscale 50
+	scale 35
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:bytecodeorder}
+
+\end_inset
+
+Stack in present an optimized state before a SLICE+3 byte code
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As JavaScript being a high-level language, the impact of this suggested
+ optimization is hard to predict, as a JavaScript compiler could optimize
+ the present implementation to be as performant as the suggested, optimized
+ implementation.
+\end_layout
+
+\begin_layout Subsubsection
+Library snapshot
+\end_layout
+
+\begin_layout Standard
+Upon startup of an execution we interpret the standard library every time.
+ Since the library is pretty static it could be advantageous to create a
+ snapshot of the library that could just be executed everytime instead of
+ interpretted.
+ This would decrease load time, especially as the library increases.
+ In the current state the library is not that big so the penalty is not
+ that big.
 \end_layout
 
 \begin_layout Subsection
 Python compiler
 \end_layout
 
-\begin_layout Subsection
-JIT Compilation
+\begin_layout Standard
+Implementing a python compiler in JavaScript that outputs the codeObjects
+ we need, would allow us to have python embedded in a html document.
+ There is no technical obsacles in the way of doing this, and if PEJS is
+ to have much use in the real world this would definately be needed.
+ We have focused on the VM since that is what this course is about, but
+ it could be a nice sparetime project.
+\end_layout
+
+\begin_layout Standard
+
 \end_layout
 
 \begin_layout Subsection
 Library extension (DOM extension)
 \end_layout
 
-\begin_layout Standard
-Snapshot af library saa man slipper for loade hver gang
-\end_layout
-
 \begin_layout Subsection
-debugger
+Debugger
 \end_layout
 
 \begin_layout Section
 Conclusions
+\end_layout
+
+\begin_layout Standard
+
+\newpage
+
 \end_layout
 
 \begin_layout Section
@@ -2133,6 +2354,11 @@ Directory and file structure.
 
 \begin_layout Section
 How to run
+\begin_inset LatexCommand \label{sec:How-to-run}
+
+\end_inset
+
+
 \end_layout
 
 \end_body
