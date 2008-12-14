@@ -1887,6 +1887,108 @@ Stack as array
 Switch-case as array
 \end_layout
 
+\begin_layout Standard
+Another attempt to minimize the interpreter overhead, could be to replace
+ the switch-case with an array containing JavaScript functions corresponding
+ to the code executed in each case.
+ The array indexes should match the case number, so a fetch-decode-execute
+ cycle would look like sketched in 
+\begin_inset LatexCommand \ref{alg:switch-case_as_array}
+
+\end_inset
+
+, where 
+\family typewriter
+functions
+\family default
+ is the array replacing the switch-case.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+while(true) {
+\end_layout
+
+\begin_layout LyX-Code
+  bytecode = prog[pc];
+\end_layout
+
+\begin_layout LyX-Code
+  if (bytecode >= 90) {
+\end_layout
+
+\begin_layout LyX-Code
+    argument = prog[pc+2];
+\end_layout
+
+\begin_layout LyX-Code
+    pc += 3;
+\end_layout
+
+\begin_layout LyX-Code
+  } else {
+\end_layout
+
+\begin_layout LyX-Code
+    pc++;
+\end_layout
+
+\begin_layout LyX-Code
+  }
+\end_layout
+
+\begin_layout LyX-Code
+  
+\end_layout
+
+\begin_layout LyX-Code
+  if (functions[bytecode](argument)) {
+\end_layout
+
+\begin_layout LyX-Code
+    return true; //Simple way of returning from execute
+\end_layout
+
+\begin_layout LyX-Code
+  }
+\end_layout
+
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{alg:switch-case_as_array}
+
+\end_inset
+
+Outline of the switch-case as array approach
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This approach will introduce an extra function call and a conditional check
+ per fetch-decode-execute cycle, but assuming constant-time lookup in the
+ array, it might be feasible.
+ The actual impact will have to be benchmarked.
+\end_layout
+
+\begin_layout Standard
+The approach has many resemblances to the threaded code approach, as described
+ by [James R.
+ Bell, 1973] but with larger overhead.
+ !!!INSERT REFERENCE AND BIBTEX!!!
+\end_layout
+
 \begin_layout Subsubsection
 Optimizations on byte code order and format
 \end_layout
