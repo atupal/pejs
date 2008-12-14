@@ -31,6 +31,18 @@
 \begin_body
 
 \begin_layout Title
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+date{}
+\end_layout
+
+\end_inset
+
 
 \series bold
 \size giant
@@ -40,6 +52,33 @@ PEJS
 
 \newline
 Python Executed in JavaScript
+\end_layout
+
+\begin_layout Standard
+\align center
+
+\series bold
+\size giant
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+setcounter{page}{-1}
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+thispagestyle{empty}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -190,6 +229,23 @@ ubbe@daimi.au.dk
 
 \begin_layout Standard
 \begin_inset LatexCommand \tableofcontents{}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+thispagestyle{empty}
+\end_layout
 
 \end_inset
 
@@ -364,7 +420,7 @@ The intermediary opcode format is formed as a JavaScript object we call
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Standard
 \align center
@@ -400,6 +456,7 @@ We compile the python file with tools/compile.py which outputs a js file
 
 \begin_layout LyX-Code
 \begin_inset Float algorithm
+placement H
 wide false
 sideways false
 status collapsed
@@ -431,6 +488,7 @@ Helloworld.py
 
 \begin_layout Standard
 \begin_inset Float algorithm
+placement H
 wide false
 sideways false
 status collapsed
@@ -589,6 +647,10 @@ var Helloworld_Greet_printGreeting = {
 \end_layout
 
 \begin_layout Caption
+\begin_inset LatexCommand \label{Helloworld.js codeObject}
+
+\end_inset
+
 Helloworld.js
 \end_layout
 
@@ -662,9 +724,10 @@ Python has a notion of code objects as containers of code.
 
 \begin_layout Standard
 \begin_inset Float table
+placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Standard
 \align center
@@ -1068,6 +1131,7 @@ prototype
 
 \begin_layout Standard
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status collapsed
@@ -1133,6 +1197,7 @@ We have implemented the stack as a JavaScript object with an array containing
 
 \begin_layout Standard
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status collapsed
@@ -1263,6 +1328,7 @@ Python does, not surprisingly, use classes, objects and functions.
 
 \begin_layout Standard
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status collapsed
@@ -1292,12 +1358,81 @@ Representation of Python objecs and classes
 
 \end_layout
 
-\begin_layout Paragraph
-PyTuple, PyList, PyDict
+\begin_layout Subsubsection
+Tuples, lists and dictionaries
+\begin_inset LatexCommand \label{Tuples,-lists-and}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Python has three basic collection types, namely tuples, lists and dictionaries.
+ Lists are mutable collections of values, corresponding to JavaScript arrays,
+ while tuples are immutable lists.
+ Dictionaries are a mutable collection of key-value pairs, similar to a
+ Javascript object.
+ The obvious approach was therefore to represent dictionaries as JavaScript
+ object and lists and tuples as JavaScript arrays.
+ The three collection types are represented as PyTuple, PyList and PyDict,
+ which each has a 
+\family typewriter
+store
+\family default
+ property, that contain an array or an object, respectively.
+\end_layout
+
+\begin_layout Standard
+Methods on lists and dictionaries are implemented in JavaScript only, which
+ was chosen because it was the simplest approach at the time, although they
+ possibly to a greater extent could be part of the standard library.
+ iew of the directory structure and content and purpose of the various files
+ in the project.
 \end_layout
 
 \begin_layout Subsection
 Library
+\end_layout
+
+\begin_layout Standard
+We have started an implementation of the Python library in order to support
+ some of the most basic functionality.
+ While we have not implemented much, the idea was just as much to see if
+ we could get a library working at all.
+\end_layout
+
+\begin_layout Standard
+The library is primaily implemented in Python which seemed most elegant.
+ This includes We still had to establish some way of calling into JavaScript
+ which is done as in the following example: 
+\end_layout
+
+\begin_layout LyX-Code
+exec "new PEJS.prototype.types.PyTuple("+list+");" in "JavaScript", "result"
+ 
+\end_layout
+
+\begin_layout LyX-Code
+return result
+\end_layout
+
+\begin_layout Standard
+In the EXEC_STMT case in the interpreter (case 85) we test if the second
+ parameter is "JavaScript", in which case we evaluate the given statement
+ and store the result in the named variable, which is then accessible in
+ Python.
+ This clearly enables arbitrary extensions of the library, as it is always
+ possible to bail out to JavaScript implementation when Python is not sufficient.
+ It is also easy to add new implementation.
+ One just writes the code in the right place, and everything works automatically.
+\end_layout
+
+\begin_layout Standard
+The library .py-files are translated and the generated JavaScript file is
+ then referenced in the HTML, just like the interpreter itself.
+ Writing "import time" then works exactly as it should.
+ The standard library is imported automatically, as it should be.
 \end_layout
 
 \begin_layout Subsection
@@ -1318,6 +1453,7 @@ During our development of our VM, it became obvious that we needed to establish
 
 \begin_layout Standard
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status collapsed
@@ -1346,6 +1482,7 @@ Screenshot of full test.
 
 \begin_layout Standard
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status collapsed
@@ -1538,7 +1675,12 @@ Lists, tuples and dictionaries
 These are the basic data structures in Python.
  They have all been implemented directly in JavaScript since Python has
  no arrays on which to build.
- 
+ For more information see section 
+\begin_inset LatexCommand \ref{Tuples,-lists-and}
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsubsection
@@ -1597,6 +1739,58 @@ Optimizations
 
 \begin_layout Subsubsection
 Jumps
+\end_layout
+
+\begin_layout Standard
+A jump bytecode has an argument telling where to jump to.
+ In the first version of our codeObject the co_code array, which contains
+ the opcodes and arguments, contained each instruction as a sub-array.
+ This meant that we could not jump directly to that index since we had obscured
+ the instruction array.
+ Instead we needed to search through the each instruction array to se if
+ this had the offset we were looking for.
+ This original approach had the advantage that we could have the instruction
+ name and other information available, this helped us understand the programs,
+ but we wanted to make it fast so we optimized it.
+\end_layout
+
+\begin_layout Standard
+The approach was to create a single array with the opcodes and arguments
+ an example of the co_code array can be seen in figure 
+\begin_inset LatexCommand \ref{Helloworld.js codeObject}
+
+\end_inset
+
+.
+ This allowed us to jump directly to the instruction given by the argument
+ to the jump bytecode.
+ We were expecting a big improvement in performance as jumping directly
+ must be way faster than looking through an array, in practice we only saw
+ a slight increase in performance based on the bencmarks in the test suite.
+ From about 3200ms to 3100ms we think thats due to the structure of the
+ tests where we don't need to jump very far and therefore don't need to
+ scan for the right offset very long.
+\end_layout
+
+\begin_layout Subsubsection
+Refactoring
+\end_layout
+
+\begin_layout Standard
+When we started the implenentation many of the elements from figure 
+\begin_inset LatexCommand \ref{static-structure}
+
+\end_inset
+
+ was implemented as globals.
+ This is obviously a poor choice and we desided to refactor and introduce
+ the structure we have now.
+ We expected to see a performance decrease since lookup of the elements
+ would be more indirect, it turns out that the refactoring had an huge possitive
+ impact on performance.
+ We went from times around 3100ms to 1100ms we have tested that this is
+ because globals takes a very long time to resolve.
+ 
 \end_layout
 
 \begin_layout Subsection
@@ -1664,9 +1858,10 @@ For convenience we provide an overview of the directory structure and content
 
 \begin_layout Standard
 \begin_inset Float algorithm
+placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout LyX-Code
 
