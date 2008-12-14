@@ -2454,6 +2454,12 @@ Directory and file structure.
 
 \end_layout
 
+\begin_layout Standard
+
+\newpage
+
+\end_layout
+
 \begin_layout Section
 How to run
 \begin_inset LatexCommand \label{sec:How-to-run}
@@ -2461,6 +2467,90 @@ How to run
 \end_inset
 
 
+\end_layout
+
+\begin_layout Subsubsection*
+Run tests
+\end_layout
+
+\begin_layout Standard
+In order to see the tests/benchmarks run:
+\end_layout
+
+\begin_layout Standard
+execute tools/createTest.py
+\end_layout
+
+\begin_layout Standard
+view test/test.html (click each test to see execution trace)
+\end_layout
+
+\begin_layout Subsubsection*
+Add a test
+\end_layout
+
+\begin_layout Standard
+Create .py file in test/ (make sure it prints 42)
+\end_layout
+
+\begin_layout Standard
+execute tools/createTest.py
+\end_layout
+
+\begin_layout Standard
+view test/test.html
+\end_layout
+
+\begin_layout Standard
+Embed in html
+\end_layout
+
+\begin_layout Standard
+Create and write "myProgram.py" file
+\end_layout
+
+\begin_layout Standard
+Translate with "tools/compiler.py myProgram.py"
+\end_layout
+
+\begin_layout Subsubsection*
+Put lines
+\end_layout
+
+\begin_layout Standard
+<script type="text/javascript" src="pejs/src/interpreter.js"></script>
+\end_layout
+
+\begin_layout Standard
+<script type="text/javascript" src="pejs/src/lib/stdlib.js"></script>
+\end_layout
+
+\begin_layout Standard
+<script type="text/javascript" src="myProgram.js"></script>
+\end_layout
+
+\begin_layout Standard
+in head of an html file
+\end_layout
+
+\begin_layout Standard
+put
+\end_layout
+
+\begin_layout Standard
+<script type="text/javascript">
+\end_layout
+
+\begin_layout Standard
+(new PEJS()).interpret("ost");
+\end_layout
+
+\begin_layout Standard
+</script>
+\end_layout
+
+\begin_layout Standard
+in body of html
 \end_layout
 
 \end_body

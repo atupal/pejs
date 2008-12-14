@@ -20,3 +20,30 @@ Generating code in this way would also enable us to do peephole optimization on 
 
 The obstructing complication is jumps. When generating the JavaScript code, it seems obvious to use gotos and labels whenever we encounter Python bytecodes that jump. The only problem is that JavaScript doesn't have have labels and gotos in the normal sense, which at first seems a complete showstopper for this approach. A possible workaround would be to slice the entire program, dividing it into functions in every place a label is needed. A goto can then be done as a call to the correct function, and the semantics of the sequential program could be maintained by letting each function end by calling the next. This would probably generate an unreasonably high call stack, but this could be avoided by just calling the functions in sequence. Unfortunately, every jump would still cause a nested function call. That could be avoided by letting functions return a value indicating what they want to be called next, but then we've more or less introduced the interpreting overhead again which makes it all seem futile.
 An option would be to just generate code between jumps and let jumps be handled in the interpreter. It is not clear whether this would yield any significant performance improvement, and unfortunately we didn't have the time for implementing it. 
+
+----------
+How to run
+----------
+Run tests
+In order to see the tests/benchmarks run:
+ execute tools/createTest.py
+ view test/test.html (click each test to see execution trace)
+
+Add a test
+ Create .py file in test/ (make sure it prints 42)
+ execute tools/createTest.py
+ view test/test.html
+
+Embed in html
+ Create and write "myProgram.py" file
+ Translate with "tools/compiler.py myProgram.py"
+ Put lines
+  <script type="text/javascript" src="pejs/src/interpreter.js"></script>
+  <script type="text/javascript" src="pejs/src/lib/stdlib.js"></script>
+  <script type="text/javascript" src="myProgram.js"></script>
+ in head of an html file
+ put
+  <script type="text/javascript">
+    (new PEJS()).interpret("ost");
+  </script>
+ in body of html

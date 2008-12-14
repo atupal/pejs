@@ -813,6 +813,7 @@ PEJS.prototype = {
           if (str == "42") {
             success++;
           }
+          print(str);
           break;
     }
   },
