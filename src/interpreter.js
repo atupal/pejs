@@ -483,7 +483,11 @@ PEJS.prototype = {
             } else if (this.globals.contains(name)) {
               stack.push(this.globals.lookup(name));
             } else if (name == "__name__") {
-              stack.push(stack.peek().codeObject.co_name);
+	      if (typeof(stack.peek()) == typeof(undefined)) {
+		stack.push(code_object.co_name);
+	      } else {
+		stack.push(stack.peek().codeObject.co_name);
+	      }
             } else {
               throw "LOAD_NAME attempted to load non-existing name \""+name+"\"";
             }
