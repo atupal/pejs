@@ -163,3 +163,43 @@ Last Changed Date: 2008-12-10 13:19:52 +0100 (Wed, 10 Dec 2008)
 Total time spent: 26249ms
 Det bemærkes at benchmarken er betydeligt langsommere - men tilsyneladende uden gyldig grund.
 Eneste "betydelige" ændring er at CALL_FUNCTION er faktoriseret ud i en metode.
+Last Changed Author: jakobsen.jesper
+Last Changed Rev: 93
+Last Changed Date: 2008-12-15 14:43:30 +0100 (Mon, 15 Dec 2008)
+1    BenchmarkArithmeticSimpleFloatArithmetic      162
+2    BenchmarkArithmeticSimpleIntFloatArithmetic   150
+3    BenchmarkArithmeticSimpleIntegerArithmetic    143
+4    BenchmarkArithmeticSimpleLongArithmetic       149
+5    BenchmarkCallsBuiltinFunctionCalls            666
+6    BenchmarkCallsPythonFunctionCalls             163
+7    BenchmarkCallsPythonMethodCalls               139
+8    BenchmarkCallsRecursion                       139
+9    BenchmarkConstructFor                         41
+10   BenchmarkConstructIfThenElse                  59
+11   BenchmarkConstructNestedFor                   195
+12   BenchmarkDictDictCreation                     614
+13   BenchmarkDictDictWithFloatKeys                310
+14   BenchmarkDictDictWithIntegerKeys              299
+15   BenchmarkDictDictWithStringKeys               393
+16   BenchmarkDictSimpleDictManipulation           405
+17   BenchmarkExceptionsTryExcept                  138
+18   BenchmarkInstancesCreateInstances             508
+19   BenchmarkListsListSlicing                     1881
+20   BenchmarkListsSimpleListManipulation          526
+21   BenchmarkListsSmallLists                      499
+22   BenchmarkLookupsBuiltinMethodLookup           184
+23   BenchmarkLookupsNormalClassAttribute          273
+24   BenchmarkLookupsNormalInstanceAttribute       280
+25   BenchmarkLookupsSpecialClassAttribute         269
+26   BenchmarkLookupsSpecialInstanceAttribute      288
+27   BenchmarkNewInstancesCreateNewInstances       394
+28   BenchmarkNumbersCompareFloats                 174
+29   BenchmarkNumbersCompareFloatsIntegers         520
+30   BenchmarkNumbersCompareIntegers               99
+31   BenchmarkStringsCompareInternedStrings        210
+32   BenchmarkStringsCompareStrings                242
+33   BenchmarkStringsConcatStrings                 104
+34   BenchmarkStringsCreateStringsWithConcat       331
+35   BenchmarkTuplesSmallTuples                    210
+36   BenchmarkTuplesTupleSlicing                   571
+Total time spent: 11728ms

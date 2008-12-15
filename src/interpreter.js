@@ -1,34 +1,35 @@
-
-
 var PEJS = function() {
-  //this.stack = new PEJS.prototype.Stack();
-  this.blockStack = new Array();
-  this.globals = new PEJS.prototype.Globals();
+  this.blockStack;
+  this.globals;
 }
 
 PEJS.prototype = {
   compareOps: ['<','<=','==','!=','>','>=','in','not in','is','is not','exception match','BAD'],
 
   interpret: function(progName, debugEnabled) {
+    this.blockStack = [];
     this.globals = new this.Globals();
-    if (debugEnabled) { debug = true; }
+    if (debugEnabled) { this.debugPrinter.debug = true; }
     if (typeof(stdlib) != typeof(undefined)) {
       this.globals.add(stdlib.co_varnames, stdlib.co_locals);
-      if (debug) { printfDebug("blue","Execution trace of PEJS Library"); }
+      if (this.Debugger.debug) {
+	this.Debugger.printDebug("blue","Execution trace of PEJS Library");
+      }
       this.execute(stdlib);
     } else {
       throw "PEJS standard library not found";
     }
-    //this.stack = new this.Stack();
     this.blockStack = [];
     var code_object = eval(progName);
     this.globals.add(code_object.co_varnames, code_object.co_locals);
-    if (debug) { printfDebug("blue","Execution trace of "+progName); }
+    if (this.Debugger.debug) {
+      this.Debugger.printDebug("blue","Execution trace of "+ progName);
+    }
     this.execute(code_object);
   },
 
   execute: function(code_object) {
-    var debugEnabled = debug;
+    var debugEnabled = this.Debugger.debug;
     if (debugEnabled) { printfDebug("blue","Execution trace of "+code_object.co_name); }
     var bytecode, offset, argument;
     var prog = code_object.co_code;
@@ -936,10 +937,10 @@ PEJS.prototype.types = {
   
   PyIterator: function(iterable) {
     this.store = iterable;
-    if (iterable instanceof PEJS.prototype.types.PyList || iterable instanceof PEJS.prototype.types.PyTuple) {
+    if (iterable instanceof PEJS.prototype.types.PyList ||
+	iterable instanceof PEJS.prototype.types.PyTuple) {
       this.index = 0;
       this.next = function(it) { return function(vars) {
-        //if (it.index == undefined) { it.index = 0; }
         if (it.store.store.length > it.index) {
           return it.store.store[it.index++];
         } else {
@@ -1112,172 +1113,46 @@ PEJS.prototype.types = {
 }
 
 
+PEJS.prototype.Debugger = {
+  debug: false,
 
+  bytecodes: ["STOP_CODE", "POP_TOP", "ROT_TWO", "ROT_THREE", "DUP_TOP", "ROT_FOUR",,,, "NOP", "UNARY_POSITIVE", "UNARY_NEGATIVE", "UNARY_NOT", "UNARY_CONVERT",, "UNARY_INVERT",,, "LIST_APPEND", "BINARY_POWER", "BINARY_MULTIPLY", "BINARY_DIVIDE", "BINARY_MODULO", "BINARY_ADD", "BINARY_SUBTRACT", "BINARY_SUBSCR", "BINARY_FLOOR_DIVIDE", "BINARY_TRUE_DIVIDE", "INPLACE_FLOOR_DIVIDE", "INPLACE_TRUE_DIVIDE", "SLICE+0", "SLICE+1", "SLICE+2", "SLICE+3",,,,,,, "STORE_SLICE+0", "STORE_SLICE+1", "STORE_SLICE+2", "STORE_SLICE+3",,,,,,, "DELETE_SLICE+0", "DELETE_SLICE+1", "DELETE_SLICE+2", "DELETE_SLICE+3",, "INPLACE_ADD", "INPLACE_SUBTRACT", "INPLACE_MULTIPLY", "INPLACE_DIVIDE", "INPLACE_MODULO", "STORE_SUBSCR", "DELETE_SUBSCR", "BINARY_LSHIFT", "BINARY_RSHIFT", "BINARY_AND", "BINARY_XOR", "BINARY_OR", "INPLACE_POWER", "GET_ITER",, "PRINT_EXPR", "PRINT_ITEM", "PRINT_NEWLINE", "PRINT_ITEM_TO", "PRINT_NEWLINE_TO", "INPLACE_LSHIFT", "INPLACE_RSHIFT", "INPLACE_AND", "INPLACE_XOR", "INPLACE_OR", "BREAK_LOOP",, "LOAD_LOCALS", "RETURN_VALUE", "IMPORT_STAR", "EXEC_STMT", "YIELD_VALUE", "POP_BLOCK", "END_FINALLY", "BUILD_CLASS", "STORE_NAME", "DELETE_NAME", "UNPACK_SEQUENCE", "FOR_ITER",, "STORE_ATTR", "DELETE_ATTR", "STORE_GLOBAL", "DELETE_GLOBAL", "DUP_TOPX", "LOAD_CONST", "LOAD_NAME", "BUILD_TUPLE", "BUILD_LIST", "BUILD_MAP", "LOAD_ATTR", "COMPARE_OP", "IMPORT_NAME", "IMPORT_FROM",, "JUMP_FORWARD", "JUMP_IF_FALSE", "JUMP_IF_TRUE", "JUMP_ABSOLUTE",,, "LOAD_GLOBAL",,, "CONTINUE_LOOP", "SETUP_LOOP", "SETUP_EXCEPT", "SETUP_FINALLY",, "LOAD_FAST", "STORE_FAST", "DELETE_FAST",,,, "RAISE_VARARGS", "CALL_FUNCTION", "MAKE_FUNCTION", "BUILD_SLICE", "MAKE_CLOSURE", "LOAD_CLOSURE", "LOAD_DEREF", "STORE_DEREF",,, "CALL_FUNCTION_VAR", "CALL_FUNTION_KW", "CALL_FUNCTION_VAR_KW", "EXTENDED_ARG"],
 
+  printDebug: function(color, str) {
+    if (this.debug) {
+      PEJS.prototype.printOut("<tr><td colspan=\"7\" class=\""+color+"\">"+
+			      str+"</td></tr>");
+    }
+  },
+  
+  printInstruction: function(inst, arg, pc, stack) {
+    var res = "<tr>";
+    if (inst < 90) {
+      res += "<td class=\"offset\">"+pc+"</td>"+
+	  "<td class=\"inst\">"+bytecodes[inst]+"</td>"+
+	    "<td></td>"+
+	    "<td></td>"+
+	    "<td class=\"code\">"+inst+"</td>"+
+	    "<td></td>";
+    } else {
+      res += "<td class=\"offset\">"+pc+"</td>"+
+	    "<td class=\"inst\">"+bytecodes[inst]+"</td>"+
+	    "<td class=\"value\"></td>"+
+	    "<td class=\"type\"></td>"+
+	    "<td class=\"code\">"+inst+"</td>"+
+	    "<td class=\"arg\">"+arg+"</td>";
+    }
+    res += "<td class=\"stack\">"+stack+"</td>";
+    this.printDebug(res +"</tr>");
+  },
 
-function printObject(object) {
-  var res = "Object print:<br/>";
-  for (prop in object) {
-    res += "&nbsp;&nbsp;&nbsp;"+ prop +": "+ object[prop] +"<br/>";
+  printObject: function(object) {
+    var res = "Object print:<br/>";
+    for (prop in object) {
+      res += "&nbsp;&nbsp;&nbsp;"+ prop +": "+ object[prop] +"<br/>";
+    }
+    this.printDebug("green",res);
   }
-  printfDebug("green",res);
-}
-
-var debug = false;
-function printDebug(str) {
-  if (debug) {
-    PEJS.prototype.printOut(str);
-  }
-}
-
-function printfDebug(color, str) {
-  printDebug("<tr><td colspan=\"7\" class=\""+color+"\">"+str+"</td></tr>");
-}
-
-var bytecodes = {
-    0: "STOP_CODE",
-    1: "POP_TOP",
-    2: "ROT_TWO",
-    3: "ROT_THREE",
-    4: "DUP_TOP",
-    5: "ROT_FOUR",
-    9: "NOP",
-    10: "UNARY_POSITIVE",
-    11: "UNARY_NEGATIVE",
-    12: "UNARY_NOT",
-    13: "UNARY_CONVERT",
-    15: "UNARY_INVERT",
-    18: "LIST_APPEND",
-    19: "BINARY_POWER",
-    20: "BINARY_MULTIPLY",
-    21: "BINARY_DIVIDE",
-    22: "BINARY_MODULO",
-    23: "BINARY_ADD",
-    24: "BINARY_SUBTRACT",
-    25: "BINARY_SUBSCR",
-    26: "BINARY_FLOOR_DIVIDE",
-    27: "BINARY_TRUE_DIVIDE",
-    28: "INPLACE_FLOOR_DIVIDE",
-    29: "INPLACE_TRUE_DIVIDE",
-    30: "SLICE+0",
-    31: "SLICE+1",
-    32: "SLICE+2",
-    33: "SLICE+3",
-    40: "STORE_SLICE+0",
-    41: "STORE_SLICE+1",
-    42: "STORE_SLICE+2",
-    43: "STORE_SLICE+3",
-    50: "DELETE_SLICE+0",
-    51: "DELETE_SLICE+1",
-    52: "DELETE_SLICE+2",
-    53: "DELETE_SLICE+3",
-    55: "INPLACE_ADD",
-    56: "INPLACE_SUBTRACT",
-    57: "INPLACE_MULTIPLY",
-    58: "INPLACE_DIVIDE",
-    59: "INPLACE_MODULO",
-    60: "STORE_SUBSCR",
-    61: "DELETE_SUBSCR",
-    62: "BINARY_LSHIFT",
-    63: "BINARY_RSHIFT",
-    64: "BINARY_AND",
-    65: "BINARY_XOR",
-    66: "BINARY_OR",
-    67: "INPLACE_POWER",
-    68: "GET_ITER",
-    70: "PRINT_EXPR",
-    71: "PRINT_ITEM",
-    72: "PRINT_NEWLINE",
-    73: "PRINT_ITEM_TO",
-    74: "PRINT_NEWLINE_TO",
-    75: "INPLACE_LSHIFT",
-    76: "INPLACE_RSHIFT",
-    77: "INPLACE_AND",
-    78: "INPLACE_XOR",
-    79: "INPLACE_OR",
-    80: "BREAK_LOOP",
-    82: "LOAD_LOCALS",
-    83: "RETURN_VALUE",
-    84: "IMPORT_STAR",
-    85: "EXEC_STMT",
-    86: "YIELD_VALUE",
-    87: "POP_BLOCK",
-    88: "END_FINALLY",
-    89: "BUILD_CLASS",
-    90: "STORE_NAME",
-    91: "DELETE_NAME",
-    92: "UNPACK_SEQUENCE",
-    93: "FOR_ITER",
-    95: "STORE_ATTR",
-    96: "DELETE_ATTR",
-    97: "STORE_GLOBAL",
-    98: "DELETE_GLOBAL",
-    99: "DUP_TOPX",
-    100: "LOAD_CONST",
-    101: "LOAD_NAME",
-    102: "BUILD_TUPLE",
-    103: "BUILD_LIST",
-    104: "BUILD_MAP",
-    105: "LOAD_ATTR",
-    106: "COMPARE_OP",
-    107: "IMPORT_NAME",
-    108: "IMPORT_FROM",
-    110: "JUMP_FORWARD",
-    111: "JUMP_IF_FALSE",
-    112: "JUMP_IF_TRUE",
-    113: "JUMP_ABSOLUTE",
-    116: "LOAD_GLOBAL",
-    119: "CONTINUE_LOOP",
-    120: "SETUP_LOOP",
-    121: "SETUP_EXCEPT",
-    122: "SETUP_FINALLY",
-    124: "LOAD_FAST",
-    125: "STORE_FAST",
-    126: "DELETE_FAST",
-    130: "RAISE_VARARGS",
-    131: "CALL_FUNCTION",
-    132: "MAKE_FUNCTION",
-    133: "BUILD_SLICE",
-    134: "MAKE_CLOSURE",
-    135: "LOAD_CLOSURE",
-    136: "LOAD_DEREF",
-    137: "STORE_DEREF",
-    140: "CALL_FUNCTION_VAR",
-    141: "CALL_FUNTION_KW",
-    142: "CALL_FUNCTION_VAR_KW",
-    143: "EXTENDED_ARG"
-}
-
-
-function printPairs(names, values, title) {
-  res = title +":<br/>";
-  for (var i=0;i<names.length;i++) {
-    res += "&nbsp;&nbsp;"+ names[i] +
-	   ": "+values[i] +"<br/>";
-  }
-  printfDebug("green",res);
-}
-
-function printInstruction(inst, arg, pc, stack) {
-  var res = "<tr>";
-  if (inst < 90) {
-    res += "<td class=\"offset\">"+pc+"</td>"+
-        "<td class=\"inst\">"+bytecodes[inst]+"</td>"+
-	   "<td></td>"+
-	   "<td></td>"+
-	   "<td class=\"code\">"+inst+"</td>"+
-	   "<td></td>";
-  } else {
-    res += "<td class=\"offset\">"+pc+"</td>"+
-	   "<td class=\"inst\">"+bytecodes[inst]+"</td>"+
-	   "<td class=\"value\"></td>"+
-	   "<td class=\"type\"></td>"+
-	   "<td class=\"code\">"+inst+"</td>"+
-	   "<td class=\"arg\">"+arg+"</td>";
-  }
-  res += "<td class=\"stack\">"+stack+"</td>";
-  printDebug(res +"</tr>");
-}
-
+}  
 
 
