@@ -159,3 +159,44 @@ rev 61
 Total time spent: 96165ms
 Det bemærkes at benchmarken er betydeligt langsommere - men tilsyneladende uden gyldig grund.
 Eneste "betydelige" ændring er at CALL_FUNCTION er faktoriseret ud i en metode
+
+rev 93:
+1 BenchmarkArithmeticSimpleFloatArithmetic 2258 42
+2 BenchmarkArithmeticSimpleIntFloatArithmetic 2252 42
+3 BenchmarkArithmeticSimpleIntegerArithmetic 2243 42
+4 BenchmarkArithmeticSimpleLongArithmetic 2299 42
+5 BenchmarkCallsBuiltinFunctionCalls 14555 42
+6 BenchmarkCallsPythonFunctionCalls 1231 42
+7 BenchmarkCallsPythonMethodCalls 876 42
+8 BenchmarkCallsRecursion 4680 42
+9 BenchmarkConstructFor 467 42
+10 BenchmarkConstructIfThenElse 8208 42
+11 BenchmarkConstructNestedFor 2116 42
+12 BenchmarkDictDictCreation 3498 42
+13 BenchmarkDictDictWithFloatKeys 4929 42
+14 BenchmarkDictDictWithIntegerKeys 2792 42
+15 BenchmarkDictDictWithStringKeys 3045 42
+16 BenchmarkDictSimpleDictManipulation 2861 42
+17 BenchmarkExceptionsTryExcept 1478 42
+18 BenchmarkInstancesCreateInstances 2970 42
+19 BenchmarkListsListSlicing 3012 42
+20 BenchmarkListsSimpleListManipulation 4238 42
+21 BenchmarkListsSmallLists 3040 42
+22 BenchmarkLookupsBuiltinMethodLookup 1981 42
+23 BenchmarkLookupsNormalClassAttribute 1877 42
+24 BenchmarkLookupsNormalInstanceAttribute 1838 42
+25 BenchmarkLookupsSpecialClassAttribute 1883 42
+26 BenchmarkLookupsSpecialInstanceAttribute 1855 42
+27 BenchmarkNewInstancesCreateNewInstances 4390 42
+28 BenchmarkNumbersCompareFloats 14630 42
+29 BenchmarkNumbersCompareFloatsIntegers 55018 42
+30 BenchmarkNumbersCompareIntegers 12048 42
+31 BenchmarkStringsCompareInternedStrings 8047 42
+32 BenchmarkStringsCompareStrings 13141 42
+33 BenchmarkStringsConcatStrings 2947 42
+34 BenchmarkStringsCreateStringsWithConcat 2782 42
+35 BenchmarkTuplesSmallTuples 2438 42
+36 BenchmarkTuplesTupleSlicing 2418
+No.	Test	Source	Result	Time (ms)
+
+Total time spent: 200341ms
