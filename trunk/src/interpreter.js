@@ -1,8 +1,8 @@
 
 
 var PEJS = function() {
-  this.stack = new PEJS.prototype.Stack();
-  this.blockStack = new PEJS.prototype.Stack();
+  //this.stack = new PEJS.prototype.Stack();
+  this.blockStack = new Array();
   this.globals = new PEJS.prototype.Globals();
 }
 
@@ -19,8 +19,8 @@ PEJS.prototype = {
     } else {
       throw "PEJS standard library not found";
     }
-    this.stack = new this.Stack();
-    this.blockStack = new this.Stack();
+    //this.stack = new this.Stack();
+    this.blockStack = new Array();
     var code_object = eval(progName);
     this.globals.add(code_object.co_varnames, code_object.co_locals);
     if (debug) { printfDebug("blue","Execution trace of "+progName); }
@@ -32,7 +32,23 @@ PEJS.prototype = {
     if (debugEnabled) { printfDebug("blue","Execution trace of "+code_object.co_name); }
     var bytecode, offset, argument;
     var prog = code_object.co_code;
-    var stack = this.stack;
+    
+    var stack = new Array();
+    stack.peek = function() {
+      return this[this.length-1];
+    }    
+    //push parameters on stack
+    if (code_object.co_varnames[0] == "self") {
+      stack.push(code_object.co_locals[0]);
+      for (var i=0; i<code_object.co_nlocals; i++) {
+        stack.push(code_object.co_locals[i+1]);
+      }
+    } else {
+      for (var i=0; i<code_object.co_nlocals; i++) {
+        stack.push(code_object.co_locals[i]);
+      }
+    }
+    
     var pc = 0;
     while(true) { //This is safe as long as the program returns by itself
       bytecode = prog[pc];
@@ -52,16 +68,16 @@ PEJS.prototype = {
             stack.pop();
 	    break;
         case 2: //ROT_TWO
-            stack.rotate2();
+            stack.splice(-1, 0, stack.pop());
 	    break;
 	case 3: //ROT_THREE
-            stack.rotate3();
+            stack.splice(-2, 0, stack.pop());
 	    break;
         case 4: //DUP_TOP
-            stack.duplicateTop();
+            stack.push(stack.peek());
 	    break;
         case 5: //ROT_FOUR
-            stack.rotate4();
+            stack.splice(-3, 0, stack.pop());            
 	    break;
         case 9: //NOP
             break;
@@ -235,9 +251,10 @@ PEJS.prototype = {
               var codeObject = iterable.class.codeObject;
               index = codeObject.co_varnames.indexOf("__iter__");
               if (index > -1) {
+                //Set self object on __iter__ method
+                codeObject.co_locals[index].codeObject.co_locals[0] = iterable;
                 stack.push(codeObject.co_locals[index]);
-                stack.newFrame(codeObject.co_nlocals+1,[iterable]);
-                this.execute(codeObject.co_locals[index].codeObject);
+                this.callFunction(0, stack,[],{});
               } else {
                 throw iterable +" is not iterable!";
               }
@@ -290,8 +307,7 @@ PEJS.prototype = {
             stack.push(code_object);
             break;
         case 83: //RETURN_VALUE
-            stack.removeFrame(code_object.co_nlocals, code_object.co_locals);
-            return true;
+            return stack.pop();
         case 84: //IMPORT_STAR
             throw "IMPORT_STAR is not implemented yet!";
         case 85: //EXEC_STMT
@@ -306,7 +322,7 @@ PEJS.prototype = {
                 var index = code_object.co_varnames.indexOf(varname);
                 if (index > -1) {
                   if (index < code_object.co_nlocals) {
-                    stack.write(index, value);
+                    stack[index] = value;
                   }
                   code_object.co_locals[index] = value;
                 } else if(this.globals.contains(varname)) {
@@ -351,7 +367,7 @@ PEJS.prototype = {
             if (index > -1) {
               var value = stack.pop();
               if (index < code_object.co_nlocals) {
-                stack.write(index, value);
+                stack[index] = value;
               }
               code_object.co_locals[index] = value;
             } else if (this.globals.contains(name)) {
@@ -390,23 +406,24 @@ PEJS.prototype = {
             //the iterator indicates it is exhausted TOS is popped, and the
             //byte code counter is incremented by delta.
             var iterator = stack.peek();
-            if (iterator instanceof this.types.PyObject) {
-              var codeObject = iterator.class.codeObject;
-              index = codeObject.co_varnames.indexOf("next");
-              stack.push(codeObject.co_locals[index]);
-              stack.newFrame(codeObject.co_nlocals+1,[iterator]);
-              if (!this.execute(codeObject.co_locals[index].codeObject)) {
-                stack.pop();
-                stack.pop();
-                pc += argument;
-              }
-            } else {
-              try {
+            try {
+              if (iterator instanceof this.types.PyObject) {
+                var codeObject = iterator.class.codeObject;
+                index = codeObject.co_varnames.indexOf("next");
+                stack.push(codeObject.co_locals[index]);
+                codeObject.co_locals[index].codeObject.co_locals[0] = iterator;
+                this.callFunction(0,stack,[],{});
+                //stack.push(this.execute(codeObject.co_locals[index].codeObject));
+              } else {
                 stack.push(iterator.next(iterator)());
-              } catch(e) {
-                stack.pop();
-                pc += argument;
               }
+            } catch(exception) {
+              if (exception instanceof this.types.PyObject && 
+                  exception.class.__name__ != "StopIteration") {
+                throw exception;   
+              }
+              stack.pop();
+              pc += argument;
             }
             break;
         case 95: //STORE_ATTR
@@ -459,7 +476,7 @@ PEJS.prototype = {
             var index = code_object.co_varnames.indexOf(name);
             if (index > -1) {
               if (index < code_object.nlocals) {
-                stack.push(stack.read(index));
+                stack.push(stack[index]);
               } else {
                 stack.push(code_object.co_locals[index]);
               }
@@ -550,7 +567,7 @@ PEJS.prototype = {
             var module = code_object.co_names[argument];
             var codeObj = eval(module);
             this.globals.add(codeObj.co_varnames, codeObj.co_locals);
-            this.execute(codeObj);
+            stack.push(this.execute(codeObj));
             var class = new this.types.PyClass(module, [], codeObj);
             var object = new this.types.PyObject(class);
     
@@ -620,16 +637,16 @@ PEJS.prototype = {
             break;
         case 124: //LOAD_FAST
             //Pushes a reference to the local co_varnames[var_num] onto the stack.
-            stack.push(stack.read(argument));
+            stack.push(stack[argument]);
             break;
         case 125: //STORE_FAST
             //Stores TOS into the local co_varnames[var_num].
             var value = stack.pop();
-            stack.write(argument, value);
+            stack[argument] = value;
             code_object.co_locals[argument] = value;
             break;
         case 126: //DELETE_FAST
-            stack.write(argument, undefined);
+            delete stack[argument];
             delete code_object.co_locals[argument];
             delete code_object.co_varnames[argument];
             break;
@@ -644,16 +661,12 @@ PEJS.prototype = {
             }
 
             if (parameters[0] instanceof this.types.PyObject) {
-              if (parameters[0].class.__name__ == "StopIteration") {
-                stack.removeFrame(code_object.co_nlocals, code_object.co_locals);
-                return false;
-              }
-              //Other exceptions should be handled here, but are not supported yet
+              throw parameters[0];
             }
             pc = this.blockStack.pop();
             break;
         case 131: //CALL_FUNCTION
-	    this.callFunction(argument, stack, [], []);
+            this.callFunction(argument, stack, [], {});
             break;
         case 132: //MAKE_FUNCTION
             //Pushes a new function object on the stack. TOS is the code
@@ -676,7 +689,7 @@ PEJS.prototype = {
         case 137: //STORE_DEREF
             throw "STORE_DEREF is not implemented yet!";
         case 140: //CALL_FUNCTION_VAR
-	    this.callFunction(argument, stack, stack.pop().store, []);
+            this.callFunction(argument, stack, stack.pop().store, {});
             break;
         case 141: //CALL_FUNTION_KW
 	    this.callFunction(argument, stack, [], stack.pop().store);
@@ -712,7 +725,7 @@ PEJS.prototype = {
       posParams.unshift(stack.pop());
     }
     if (stack.peek() instanceof this.types.PyFunction) {
-      this.callPyFunction(argc, posParams, kwParams, stack, stack.peek());
+      this.callPyFunction(argc, posParams, kwParams, stack, stack.pop());
     } else if (stack.peek() instanceof this.types.PyClass) {
       this.callPyClass(argc, posParams, kwParams, stack);
     } else if (stack.peek() instanceof Function) {
@@ -766,20 +779,13 @@ PEJS.prototype = {
     //codeObject.co_locals = posParams;
     for (var i=0; i<co_argc; i++) {
       locals[i] = posParams[i];
-    }
-    stack.newFrame(codeObject.co_nlocals, locals);
-    this.execute(codeObject);
+    }    
+    stack.push(this.execute(codeObject));
   },
-  
-  /*execafterinsparam: function(pyFunction) {
-    this.execute(pyFunction.codeObject);
-  },*/
-  
-
   
   callPyClass: function(actualArgc, posParams, kwParams, stack) {
     //Creation of new object
-    var object = new this.types.PyObject(stack.peek());
+    var object = new this.types.PyObject(stack.pop());
     //Find all fields that belong to this object
     function injectFields(object, class) {
       for (var i=class.__bases__.length-1; i>=0; i--) {
@@ -799,8 +805,8 @@ PEJS.prototype = {
     if (index > -1) {
       codeObject.co_locals[index].codeObject.co_locals[0] = object;
       this.callPyFunction(actualArgc, posParams, kwParams, stack, codeObject.co_locals[index]);
+      stack.pop(); //return value from init
     }
-    stack.pop();
     stack.push(object);
   },
   
@@ -838,7 +844,7 @@ PEJS.prototype = {
   }
 }
 
-PEJS.prototype.Stack = function() {
+/*PEJS.prototype.Stack = function() {
   var array = [];
   var sp = -1;
   var bp = -1;
@@ -906,7 +912,7 @@ PEJS.prototype.Stack = function() {
     }
     return res;
   };
-}
+}*/
 
 PEJS.prototype.Globals = function() {
   this.values = [[]]; //Initialized with a special array for new globals
@@ -1341,5 +1347,6 @@ function printInstruction(inst, arg, pc, stack) {
   res += "<td class=\"stack\">"+stack+"</td>";
   printDebug(res +"</tr>");
 }
+
 
 
