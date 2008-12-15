@@ -20,7 +20,7 @@ PEJS.prototype = {
       throw "PEJS standard library not found";
     }
     //this.stack = new this.Stack();
-    this.blockStack = new Array();
+    this.blockStack = [];
     var code_object = eval(progName);
     this.globals.add(code_object.co_varnames, code_object.co_locals);
     if (debug) { printfDebug("blue","Execution trace of "+progName); }
@@ -33,22 +33,19 @@ PEJS.prototype = {
     var bytecode, offset, argument;
     var prog = code_object.co_code;
     
-    var stack = new Array();
+    var stack = [];
     stack.peek = function() {
       return this[this.length-1];
     }    
     //push parameters on stack
+    var stackLocals = code_object.co_nlocals;
     if (code_object.co_varnames[0] == "self") {
-      stack.push(code_object.co_locals[0]);
-      for (var i=0; i<code_object.co_nlocals; i++) {
-        stack.push(code_object.co_locals[i+1]);
-      }
-    } else {
-      for (var i=0; i<code_object.co_nlocals; i++) {
-        stack.push(code_object.co_locals[i]);
-      }
+      stackLocals++;
     }
-    
+    for (var i=0; i<stackLocals; i++) {
+      stack.push(code_object.co_locals[i]);
+    }
+  
     var pc = 0;
     while(true) { //This is safe as long as the program returns by itself
       bytecode = prog[pc];
