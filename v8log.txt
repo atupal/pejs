@@ -163,6 +163,48 @@ Last Changed Date: 2008-12-10 13:19:52 +0100 (Wed, 10 Dec 2008)
 Total time spent: 26249ms
 Det bemærkes at benchmarken er betydeligt langsommere - men tilsyneladende uden gyldig grund.
 Eneste "betydelige" ændring er at CALL_FUNCTION er faktoriseret ud i en metode.
+
+Last Changed Author: rlfogh
+Last Changed Rev: 80
+Last Changed Date: 2008-12-15 16:30:10 +0100 (Mon, 15 Dec 2008)
+1    BenchmarkArithmeticSimpleFloatArithmetic      445
+2    BenchmarkArithmeticSimpleIntFloatArithmetic   433
+3    BenchmarkArithmeticSimpleIntegerArithmetic    433
+4    BenchmarkArithmeticSimpleLongArithmetic       464
+5    BenchmarkCallsBuiltinFunctionCalls            640
+6    BenchmarkCallsPythonFunctionCalls             185
+7    BenchmarkCallsPythonMethodCalls               155
+8    BenchmarkCallsRecursion                       176
+9    BenchmarkConstructFor                         84
+10   BenchmarkConstructIfThenElse                  138
+11   BenchmarkConstructNestedFor                   317
+12   BenchmarkDictDictCreation                     590
+13   BenchmarkDictDictWithFloatKeys                528
+14   BenchmarkDictDictWithIntegerKeys              591
+15   BenchmarkDictDictWithStringKeys               692
+16   BenchmarkDictSimpleDictManipulation           649
+17   BenchmarkExceptionsTryExcept                  512
+18   BenchmarkInstancesCreateInstances             584
+19   BenchmarkListsListSlicing                     2011
+20   BenchmarkListsSimpleListManipulation          811
+21   BenchmarkListsSmallLists                      667
+22   BenchmarkLookupsBuiltinMethodLookup           325
+23   BenchmarkLookupsNormalClassAttribute          410
+24   BenchmarkLookupsNormalInstanceAttribute       445
+25   BenchmarkLookupsSpecialClassAttribute         402
+26   BenchmarkLookupsSpecialInstanceAttribute      442
+27   BenchmarkNewInstancesCreateNewInstances       461
+28   BenchmarkNumbersCompareFloats                 251
+29   BenchmarkNumbersCompareFloatsIntegers         800
+30   BenchmarkNumbersCompareIntegers               155
+31   BenchmarkStringsCompareInternedStrings        265
+32   BenchmarkStringsCompareStrings                289
+33   BenchmarkStringsConcatStrings                 220
+34   BenchmarkStringsCreateStringsWithConcat       565
+35   BenchmarkTuplesSmallTuples                    297
+36   BenchmarkTuplesTupleSlicing                   714
+Total time spent: 17146ms
+
 Last Changed Author: jakobsen.jesper
 Last Changed Rev: 93
 Last Changed Date: 2008-12-15 14:43:30 +0100 (Mon, 15 Dec 2008)
@@ -203,3 +245,44 @@ Last Changed Date: 2008-12-15 14:43:30 +0100 (Mon, 15 Dec 2008)
 35   BenchmarkTuplesSmallTuples                    210
 36   BenchmarkTuplesTupleSlicing                   571
 Total time spent: 11728ms
+
+Last Changed Author: rlfogh
+Last Changed Rev: 95
+Last Changed Date: 2008-12-15 16:30:10 +0100 (Mon, 15 Dec 2008)
+1    BenchmarkArithmeticSimpleFloatArithmetic      174
+2    BenchmarkArithmeticSimpleIntFloatArithmetic   159
+3    BenchmarkArithmeticSimpleIntegerArithmetic    156
+4    BenchmarkArithmeticSimpleLongArithmetic       160
+5    BenchmarkCallsBuiltinFunctionCalls            681
+6    BenchmarkCallsPythonFunctionCalls             195
+7    BenchmarkCallsPythonMethodCalls               150
+8    BenchmarkCallsRecursion                       159
+9    BenchmarkConstructFor                         42
+10   BenchmarkConstructIfThenElse                  63
+11   BenchmarkConstructNestedFor                   234
+12   BenchmarkDictDictCreation                     663
+13   BenchmarkDictDictWithFloatKeys                322
+14   BenchmarkDictDictWithIntegerKeys              315
+15   BenchmarkDictDictWithStringKeys               413
+16   BenchmarkDictSimpleDictManipulation           423
+17   BenchmarkExceptionsTryExcept                  149
+18   BenchmarkInstancesCreateInstances             541
+19   BenchmarkListsListSlicing                     1966
+20   BenchmarkListsSimpleListManipulation          561
+21   BenchmarkListsSmallLists                      521
+22   BenchmarkLookupsBuiltinMethodLookup           195
+23   BenchmarkLookupsNormalClassAttribute          306
+24   BenchmarkLookupsNormalInstanceAttribute       299
+25   BenchmarkLookupsSpecialClassAttribute         287
+26   BenchmarkLookupsSpecialInstanceAttribute      306
+27   BenchmarkNewInstancesCreateNewInstances       419
+28   BenchmarkNumbersCompareFloats                 186
+29   BenchmarkNumbersCompareFloatsIntegers         552
+30   BenchmarkNumbersCompareIntegers               109
+31   BenchmarkStringsCompareInternedStrings        237
+32   BenchmarkStringsCompareStrings                269
+33   BenchmarkStringsConcatStrings                 112
+34   BenchmarkStringsCreateStringsWithConcat       342
+35   BenchmarkTuplesSmallTuples                    226
+36   BenchmarkTuplesTupleSlicing                   618
+Total time spent: 12510ms
