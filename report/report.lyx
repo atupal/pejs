@@ -273,9 +273,11 @@ Design of Virtual Machines for Object Oriented Languages
 \begin_inset Quotes srd
 \end_inset
 
- taught at Department of Computer Science at Aarhus University.
+ taught at Department of Computer Science at Aarhus University during the
+ fall semester 2008.
  The course has been taught by Lars Bak and Kasper Lund, assisted by teaching
  assistant Mathias Schwarz.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -283,6 +285,13 @@ It describes the design and implementation of a virtual machine for for
  the programming language Python done in JavaScript.
  The purpose of this report is to convey a description of our work process,
  the status of the project and the results obtained so far.
+ The deadline for this report was December 17th 2008.
+\end_layout
+
+\begin_layout Standard
+The project source code is available at 
+\family typewriter
+http://code.google.com/p/pejs.
 \end_layout
 
 \begin_layout Section
@@ -325,6 +334,11 @@ http://www.mozilla.org/js/spidermonkey
 
 \begin_layout Section
 Goals
+\begin_inset LatexCommand \label{Goals}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1329,7 +1343,7 @@ Objects
 
 \begin_layout Standard
 Python does, not surprisingly, use classes, objects and functions.
- We have choosen to implement these elements as objects.
+ We have choosen to implement these elements as JavaScript objects.
  The properties and relations of these is given in figure 
 \begin_inset LatexCommand \ref{python objects}
 
@@ -1343,7 +1357,7 @@ Python does, not surprisingly, use classes, objects and functions.
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Standard
 \align center
@@ -1399,8 +1413,7 @@ store
 Methods on lists and dictionaries are implemented in JavaScript only, which
  was chosen because it was the simplest approach at the time, although they
  possibly to a greater extent could be part of the standard library.
- iew of the directory structure and content and purpose of the various files
- in the project.
+ 
 \end_layout
 
 \begin_layout Subsection
@@ -1629,10 +1642,6 @@ xrange
  Both are implemented in the library, purely in Python.
 \end_layout
 
-\begin_layout Standard
-
-\end_layout
-
 \begin_layout Subsubsection
 Functions/methods
 \end_layout
@@ -1749,6 +1758,10 @@ raise
 Optimizations
 \end_layout
 
+\begin_layout Standard
+stack ?
+\end_layout
+
 \begin_layout Subsubsection
 Jumps
 \end_layout
@@ -1798,7 +1811,7 @@ When we started the implenentation many of the elements from figure
  This is obviously a poor choice and we desided to refactor and introduce
  the structure we have now.
  We expected to see a performance decrease since lookup of the elements
- would be more indirect, it turns out that the refactoring had an huge possitive
+ would be more indirect, it turns out that the refactoring had an huge positive
  impact on performance.
  We went from times around 3100ms to 1100ms to execute our benchmarks, we
  have discovered that this is because globals takes a very long time to
@@ -1812,6 +1825,96 @@ Benchmarks
 
 \begin_layout Subsection
 Compare with goals
+\end_layout
+
+\begin_layout Standard
+Here we reflect on our progress in comparison with our initial plan (
+\begin_inset LatexCommand \ref{Goals}
+
+\end_inset
+
+) and in relation to the course objectives.
+\end_layout
+
+\begin_layout Standard
+When planning implementation in JavaScript, it wasn't completely clear to
+ us how we would or should handle heap representation and garbage collection.
+ This turned out to be completely trivial because we chose to simply implement
+ Python objects and code objects as regular JavaScript objects.
+ The consequence of this was that no heap and no garbage collector was necessary
+, nor would they make any sense.
+ This has definitely been a great help in having time for implementing a
+ larger subset of our target language, but on other hand we have not gained
+ much experience with regard to heap design and garbage collection.
+\end_layout
+
+\begin_layout Standard
+We were pleasently surprised of how easy it was to establish a library.
+ When starting development, we were not at all sure how or if we would be
+ able to get a library running.
+ This turned out not to be a problem, but we have not had time for extending
+ it very much.
+\end_layout
+
+\begin_layout Standard
+The only thing we're not satisfied with is the fact that we have not really
+ applied any performance improving techniques, and that the performance
+ of our VM is significantly lower than that of CPython.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Course objectives
+\end_layout
+
+\begin_layout Standard
+Describe the challenges of implementing a virtual machine for a language
+ without classes
+\end_layout
+
+\begin_layout Standard
+*
+\end_layout
+
+\begin_layout Standard
+Explain 'inline caching' and other techniques for dynamic dispatching
+\end_layout
+
+\begin_layout Standard
+* 
+\end_layout
+
+\begin_layout Standard
+Explain techniques for optimization and deoptimization for supporting debugging
+\end_layout
+
+\begin_layout Standard
+* 
+\end_layout
+
+\begin_layout Standard
+Evaluate the pros and cons of the various types of JIT compilation
+\end_layout
+
+\begin_layout Standard
+* 
+\end_layout
+
+\begin_layout Standard
+Evaluate the pros and cons of various garbage collection algorithms
+\end_layout
+
+\begin_layout Standard
+* 
+\end_layout
+
+\begin_layout Standard
+Relate and apply this knowledge to construct solutions to performance problems
+ in virtual machines 
+\end_layout
+
+\begin_layout Standard
+*
 \end_layout
 
 \begin_layout Section
@@ -1877,10 +1980,6 @@ An option would be to just generate code between jumps and let jumps be
  handled in the interpreter.
  It is not clear whether this would yield any significant performance improvemen
 t, and unfortunately we didn't have the time for implementing it.
-\end_layout
-
-\begin_layout Subsubsection
-Stack as array
 \end_layout
 
 \begin_layout Subsubsection
@@ -1984,9 +2083,18 @@ This approach will introduce an extra function call and a conditional check
 
 \begin_layout Standard
 The approach has many resemblances to the threaded code approach, as described
- by [James R.
- Bell, 1973] but with larger overhead.
- !!!INSERT REFERENCE AND BIBTEX!!!
+ by [Bell, 1973]
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+Threaded Code, James R.
+ Bell, Communications of the ACM, June 1973
+\end_layout
+
+\end_inset
+
+, but with larger overhead.
 \end_layout
 
 \begin_layout Subsubsection
@@ -2142,17 +2250,22 @@ Python compiler
 Implementing a python compiler in JavaScript that outputs the codeObjects
  we need, would allow us to have python embedded in a html document.
  There is no technical obsacles in the way of doing this, and if PEJS is
- to have much use in the real world this would definately be needed.
+ to have much use in the real world this would definitely be needed.
  We have focused on the VM since that is what this course is about, but
  it could be a nice sparetime project.
 \end_layout
 
-\begin_layout Standard
-
-\end_layout
-
 \begin_layout Subsection
 Library extension (DOM extension)
+\end_layout
+
+\begin_layout Standard
+The library could be extended to implement a larger part of the standard
+ Python library.
+ More interestingly, it would be relevant to implement a library for interacting
+ with the DOM in the browser.
+ This would make it very feasible to use Python for writing web pages.
+ 
 \end_layout
 
 \begin_layout Subsection
@@ -2177,6 +2290,10 @@ Directory structure
 \begin_layout Standard
 For convenience we provide an overview of the directory structure and content
  and purpose of the various files in the project.
+ Note that unimportant folders and files have been omitted.
+ The project files are available at
+\family typewriter
+ http://code.google.com/p/pejs.
 \end_layout
 
 \begin_layout Standard
@@ -2184,7 +2301,7 @@ For convenience we provide an overview of the directory structure and content
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout LyX-Code
 
@@ -2446,7 +2563,7 @@ Benchmark results from V8.
 
 \begin_layout Caption
 Directory and file structure.
- Unimportant folders and files have been omitted.
+ 
 \end_layout
 
 \end_inset
@@ -2477,80 +2594,112 @@ Run tests
 In order to see the tests/benchmarks run:
 \end_layout
 
-\begin_layout Standard
-execute tools/createTest.py
+\begin_layout Enumerate
+execute 
+\family typewriter
+tools/createTest.py
 \end_layout
 
-\begin_layout Standard
-view test/test.html (click each test to see execution trace)
+\begin_layout Enumerate
+view 
+\family typewriter
+test/test.html
+\family default
+ (click each test to see execution trace)
 \end_layout
 
 \begin_layout Subsubsection*
 Add a test
 \end_layout
 
-\begin_layout Standard
-Create .py file in test/ (make sure it prints 42)
+\begin_layout Enumerate
+Create .py file in test/ (make sure it prints 42 at the end)
 \end_layout
 
-\begin_layout Standard
-execute tools/createTest.py
+\begin_layout Enumerate
+execute 
+\family typewriter
+tools/createTest.py
 \end_layout
 
-\begin_layout Standard
-view test/test.html
-\end_layout
-
-\begin_layout Standard
-Embed in html
-\end_layout
-
-\begin_layout Standard
-Create and write "myProgram.py" file
-\end_layout
-
-\begin_layout Standard
-Translate with "tools/compiler.py myProgram.py"
+\begin_layout Enumerate
+view 
+\family typewriter
+test/test.html
 \end_layout
 
 \begin_layout Subsubsection*
+Embed in html
+\end_layout
+
+\begin_layout Enumerate
+Create and write "
+\family typewriter
+myProgram.py
+\family default
+" file
+\end_layout
+
+\begin_layout Enumerate
+Translate with 
+\family typewriter
+"tools/compiler.py myProgram.py".
+ Make
+\end_layout
+
+\begin_layout Enumerate
 Put lines
 \end_layout
 
+\begin_deeper
 \begin_layout Standard
+
+\family typewriter
 <script type="text/javascript" src="pejs/src/interpreter.js"></script>
 \end_layout
 
 \begin_layout Standard
+
+\family typewriter
 <script type="text/javascript" src="pejs/src/lib/stdlib.js"></script>
 \end_layout
 
 \begin_layout Standard
+
+\family typewriter
 <script type="text/javascript" src="myProgram.js"></script>
 \end_layout
 
 \begin_layout Standard
-in head of an html file
+in the head of an html file.
 \end_layout
 
-\begin_layout Standard
-put
+\end_deeper
+\begin_layout Enumerate
+Put
 \end_layout
 
+\begin_deeper
 \begin_layout Standard
+
+\family typewriter
 <script type="text/javascript">
 \end_layout
 
 \begin_layout Standard
-(new PEJS()).interpret("ost");
+
+\family typewriter
+(new PEJS()).interpret("myProgram");
 \end_layout
 
 \begin_layout Standard
+
+\family typewriter
 </script>
 \end_layout
 
 \begin_layout Standard
-in body of html
+in body of html.
 \end_layout
 
 \end_body

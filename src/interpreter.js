@@ -36,7 +36,7 @@ PEJS.prototype = {
     var stack = [];
     stack.peek = function() {
       return this[this.length-1];
-    }    
+    }
     //push parameters on stack
     var stackLocals = code_object.co_nlocals;
     if (code_object.co_varnames[0] == "self") {
@@ -844,76 +844,6 @@ PEJS.prototype = {
     }
   }
 }
-
-/*PEJS.prototype.Stack = function() {
-  var array = [];
-  var sp = -1;
-  var bp = -1;
-
-  this.pop = function() { return array[sp--]; };
-
-  this.newFrame = function(argcount, localVars) {
-    this.push(bp);
-    bp = sp;
-    this.rotate2();
-    for (var i=0;i<argcount;i++) {
-      this.push(localVars[i]);
-    }
-  };
-
-  this.removeFrame = function(argcount, co_locals) {
-    var returnVal = array[sp];
-    for (var i=1; i<=argcount; i++) {
-      co_locals[i] = array[bp+i];
-    }
-    sp = bp-1;
-    bp = array[sp];
-    if (sp < 1) {
-      sp = 0;
-      bp = -1; 
-    }
-    array[sp] = returnVal;
-  };
-
-  this.push = function(val) { array[++sp] = val; };
-  this.peek = function(val) { return array[sp]; };
-  this.read = function(varNum) { return array[bp + 1 + varNum]; };
-  this.write = function(varNum, value) { array[bp + 1 + varNum] = value; };
-
-  this.rotate2 = function() {
-    var temp = array[sp];
-    array[sp] = array[sp-1];
-    array[sp-1] = temp;
-  };
-
-  this.rotate3 = function() {
-    var temp = array[sp];
-    array[sp] = array[sp-1];
-    array[sp-1] = array[sp-2];
-    array[sp-2] = temp;
-  };
-
-  this.rotate4 = function() {
-    var temp = array[sp];
-    array[sp] = array[sp-1];
-    array[sp-1] = array[sp-2];
-    array[sp-2] = array[sp-3];
-    array[sp-3] = temp;
-  };
-
-  this.duplicateTop = function() { this.push(array[sp]); };
-
-  this.toString = function() {
-    var res = "";
-    for (var i = 0; i <= sp; i++) {
-      res += array[i];
-      if (i == bp) { res += " (bp)"; }
-      if (i == sp) { res += " (sp)"; }
-      res += ", ";
-    }
-    return res;
-  };
-}*/
 
 PEJS.prototype.Globals = function() {
   this.values = [[]]; //Initialized with a special array for new globals
