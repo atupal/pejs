@@ -1,0 +1,9 @@
+V8 Interpreted 15817
+V8 Compiled 16387
+V8 Optimized 11870
+V8 Python 1274
+
+SpiderMoney Interpreted 25496
+SpiderMoney Compiled 13827
+SpiderMoney Optimized 5003
+SpiderMoney Python 142

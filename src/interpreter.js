@@ -1,24 +1,24 @@
 var PEJS = function() {
-  this.blockStack;
-  this.globals;
+  this.blockStack = [];
+  this.globals = new this.Globals();
+  this.initLibrary();
 }
 
 PEJS.prototype = {
   compareOps: ['<','<=','==','!=','>','>=','in','not in','is','is not','exception match','BAD'],
 
-  interpret: function(progName, debugEnabled) {
-    this.blockStack = [];
-    this.globals = new this.Globals();
-    if (debugEnabled) { this.debugPrinter.debug = true; }
+  initLibrary : function() {
     if (typeof(stdlib) != typeof(undefined)) {
       this.globals.add(stdlib.co_varnames, stdlib.co_locals);
-      if (this.Debugger.debug) {
-	this.Debugger.printDebug("blue","Execution trace of PEJS Library");
-      }
       this.execute(stdlib);
     } else {
       throw "PEJS standard library not found";
     }
+  },
+
+  interpret: function(progName, debugEnabled) {
+    this.Debugger.debug = debugEnabled;
+    this.globals.reset();
     this.blockStack = [];
     var code_object = eval(progName);
     this.globals.add(code_object.co_varnames, code_object.co_locals);
@@ -30,10 +30,10 @@ PEJS.prototype = {
 
   execute: function(code_object) {
     var debugEnabled = this.Debugger.debug;
-    if (debugEnabled) { printfDebug("blue","Execution trace of "+code_object.co_name); }
+    if (debugEnabled) { this.Debugger.printDebug("blue","Execution trace of "+code_object.co_name); }
     var bytecode, offset, argument;
     var prog = code_object.co_code;
-    
+
     var stack = [];
     stack.peek = function() {
       return this[this.length-1];
@@ -46,7 +46,25 @@ PEJS.prototype = {
     for (var i=0; i<stackLocals; i++) {
       stack.push(code_object.co_locals[i]);
     }
-  
+
+    if (typeof(code_object.compiled) == "undefined") {
+       try {
+	code_object.compiled_code = new Function(["code_object","stack"],this.optimize(this.compile(code_object)));
+	if (debugEnabled) { this.Debugger.printDebug("blue","Successfully compiled "+code_object.co_name); }
+	//Uncomment this line to print the compiled and optimized code.
+	//if (code_object.co_name == "test_compiled") this.printOut(code_object.compiled_code);
+	code_object.compiled = true;
+       } catch (exception) {
+	if (debugEnabled) { this.Debugger.printDebug("green","Compiler threw: "+exception); }
+ 	code_object.compiled = false;
+       }
+    }
+    if (code_object.compiled) {
+      if (debugEnabled) { this.Debugger.printDebug("blue","Running compiled code from "+code_object.co_name); }
+      code_object.compiled_code.call(this, code_object, stack);
+      return stack.pop();
+    }
+
     var pc = 0;
     while(true) { //This is safe as long as the program returns by itself
       bytecode = prog[pc];
@@ -57,7 +75,7 @@ PEJS.prototype = {
         pc++;
       }
     
-      if (debugEnabled) { printInstruction(bytecode, argument, pc, stack); }
+      if (debugEnabled) { this.Debugger.printInstruction(bytecode, argument, pc, stack); }
     
       switch(bytecode) {
         case 0: //STOP_CODE
@@ -674,7 +692,7 @@ PEJS.prototype = {
             //Pushes a new function object on the stack. TOS is the code
             //associated with the function. The function object is defined
             //to have argc default parameters, which are found below TOS. 
-            var pyFunction = new PEJS.prototype.types.PyFunction(argument, stack.pop());
+            var pyFunction = new this.types.PyFunction(argument, stack.pop());
             for (var j = argument-1; j >= 0; j--){
               pyFunction.addArg(j, stack.pop());
             }
@@ -699,6 +717,593 @@ PEJS.prototype = {
         case 142: //CALL_FUNCTION_VAR_KW
 	    var kwArgs = stack.pop().store;
 	    this.callFunction(argument, stack, stack.pop().store, kwArgs);
+            break;
+        case 143: //EXTENDED_ARG
+            throw "EXTENDED_ARG is not implemented yet!";
+        default:
+            throw "Unexpected bytecode:" + bytecode;
+      }
+    }
+  },
+
+  optimize: function(code) {
+    var tag = "//Optimizing: "+code.length;
+    //Found patterns are noted before suggested optimizations
+
+    //Remove var keyword where appropriate
+    code = code.replace(/([; }])var /g,"$1");
+
+    //stack.push(value);var value = stack.pop()
+    code = code.replace(/stack\.push\(value\);value = stack\.pop\(\)/g,"");
+
+    //stack.push(value);var value = stack.pop()
+    //stack.push(stack[3]);var temp = stack.pop();
+    //stack.push(stack.pop() / temp);var value = stack.pop();
+    //stack.push(stack.pop() + temp);var value = stack.pop()
+    code = code.replace(/stack\.push\((([\w. +*/-]|\(\)|\[\w*\])+)\);(\w+) = stack.pop\(\)/g,"$3 = $1");
+
+    //var temp = stack[2];var value = stack.pop() / temp;
+    code = code.replace(/temp = (([\w.]|\(\)|\[\w*\])+);(\w+) = stack\.pop\(\) ([+-/*]) temp;/g,"$3 = stack.pop() $4 $1;");
+
+    //GOOD TO RUN THIS ONCE MORE!!! :)
+    code = code.replace(/stack\.push\((([\w. +*/-]|\(\)|\[\w*\])+)\);(\w+) = stack.pop\(\)/g,"$3 = $1");
+
+    //value = stack[2] - stack[3];stack[3] = value;
+    code = code.replace(/value = (([\w. +*/-]|\(\)|\[\w*\])+);(([\w.]|\[\w*\])+) = value;/g,"$3 = value = $1;");
+
+    //stack[3] = value = stack[2] + stack[3];code_object.co_locals[3] = value;
+    code = code.replace(/(([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);(([\w.]|\[\w*\])+) = value;/g,"$5 = $1 = value = $3;");
+
+    //code_object.co_locals[3] = stack[3] = value = stack[3] - stack[1];code_object.co_locals[3] = stack[3] = value = stack[1] - stack[2];
+    while (/code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);(code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);)/.test(code)) {
+      code = code.replace(/code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);(code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);)/, "$1 = $3;$5");
+    }
+
+    code += tag +" to "+code.length+" lines";
+    return code;
+  },
+  
+  compile: function(code_object) {
+    var debugEnabled = this.Debugger.debug;
+    var bytecode, offset, argument;
+    var prog = code_object.co_code;
+    var pc = 0;
+    //var res = "code_object.compiled_code = function(code_object) {";
+    var res = "";
+    while(true) {
+      bytecode = prog[pc];
+      if (bytecode >= 90) {
+        argument = prog[pc+2];
+        pc += 3;
+      } else {
+        pc++;
+      }
+
+      if (debugEnabled) { res += "this.Debugger.printInstruction("+bytecode+", "+argument+", "+pc+", stack);"; }
+
+      switch(bytecode) {
+        case 0: //STOP_CODE
+            break;
+        case 1: //POP_TOP
+	    res += "stack.pop();";
+	    break;
+        case 2: //ROT_TWO
+            res += "stack.splice(-1, 0, stack.pop());";
+	    break;
+	case 3: //ROT_THREE
+            res += "stack.splice(-2, 0, stack.pop());";
+	    break;
+        case 4: //DUP_TOP
+            res += "stack.push(stack.peek());";
+	    break;
+        case 5: //ROT_FOUR
+            res += "stack.splice(-3, 0, stack.pop());";
+	    break;
+        case 9: //NOP
+            break;
+        case 10: //UNARY_POSITIVE
+            res += "stack.push(+stack.pop());";
+	    break;
+        case 11: //UNARY_NEGATIVE
+            res += "stack.push(-stack.pop());";
+	    break;
+        case 12: //UNARY_NOT
+            res += "stack.push(!stack.pop());";
+	    break;
+        case 13: //UNARY_CONVERT
+            throw "UNARY_CONVERT is not implemented yet!";
+        case 15: //UNARY_INVERT
+            res += "stack.push(~stack.pop());";
+	    break;
+        case 18: //LIST_APPEND
+            throw "LIST_APPEND is not implemented yet!";
+        case 19: //BINARY_POWER
+            res += "var temp = stack.pop();stack.push(Math.pow(stack.pop(), temp));";
+	    break;
+        case 20: //BINARY_MULTIPLY
+            res += "var temp = stack.pop();stack.push(stack.pop() * temp);";
+	    break;
+        case 21: //BINARY_DIVIDE
+            res += "var temp = stack.pop();stack.push(stack.pop() / temp);";
+	    break;
+        case 22: //BINARY_MODULO
+            res += "var temp = stack.pop();stack.push(stack.pop() % temp);";
+	    break;
+        case 23: //BINARY_ADD
+            res += "var temp = stack.pop();stack.push(stack.pop() + temp);";
+	    break;
+        case 24: //BINARY_SUBTRACT
+            res += "var temp = stack.pop();stack.push(stack.pop() - temp);";
+	    break;
+        case 25: //BINARY_SUBSCR
+            res += "var temp = stack.pop();stack.push(stack.pop().store[temp]);";
+	    break;
+        case 26: //BINARY_FLOOR_DIVIDE
+            throw "BINARY_FLOOR_DIVIDE is not implemented yet!";
+        case 27: //BINARY_TRUE_DIVIDE
+            throw "BINARY_TRUE_DIVIDE is not implemented yet!";
+        case 28: //INPLACE_FLOOR_DIVIDE
+            throw "INPLACE_FLOOR_DIVIDE is not implemented yet!";
+        case 29: //INPLACE_TRUE_DIVIDE
+            throw "INPLACE_TRUE_DIVIDE is not implemented yet!";
+        case 30: //SLICE+0
+            res += "stack.push(new this.types.PyList(stack.pop().store.slice(0)));";
+            break;
+        case 31: //SLICE+1
+            res += "var start = stack.pop();stack.push(new this.types.PyList(stack.pop().store.slice(start)));";
+            break;
+        case 32: //SLICE+2
+            res += "var end = stack.pop();stack.push(new this.types.PyList(stack.pop().store.slice(0,end)));";
+            break;
+        case 33: //SLICE+3
+            res += "var end = stack.pop();var start = stack.pop();stack.push(new this.types.PyList(stack.pop().store.slice(start,end)));";
+            break;
+        case 40: //STORE_SLICE+0
+            res += "var list = stack.pop().store;var args = [0,list.length].concat(stack.pop().store);Array.prototype.splice.apply(list,args);";
+            break;
+        case 41: //STORE_SLICE+1
+            res += "var start = stack.pop();var list = stack.pop().store;var args = [start,list.length].concat(stack.pop().store);Array.prototype.splice.apply(list,args);";
+            break;
+        case 42: //STORE_SLICE+2
+            res += "var end = stack.pop();var list = stack.pop().store;var args = [0,end].concat(stack.pop().store);Array.prototype.splice.apply(list,args);";
+            break;
+        case 43: //STORE_SLICE+3
+            res += "var end = stack.pop();var start = stack.pop();var list = stack.pop().store;var args = [start,end-start].concat(stack.pop().store);Array.prototype.splice.apply(list,args);";
+            break;
+        case 50: //DELETE_SLICE+0
+            res += "var list = stack.pop().store;list.splice(0,list.length);";
+            break;
+        case 51: //DELETE_SLICE+1
+            res += "var start = stack.pop();var list = stack.pop().store;list.splice(start,list.length-start);";
+            break;
+        case 52: //DELETE_SLICE+2
+            res += "var end = stack.pop();var list = stack.pop().store;list.splice(0,end);";
+            break;
+        case 53: //DELETE_SLICE+3
+            res += "var end = stack.pop();var start = stack.pop();var list = stack.pop().store;list.splice(start,end-start);";
+            break;
+        case 55: //INPLACE_ADD
+            res += "var temp = stack.pop();stack.push(stack.pop() + temp);";
+	    break;
+        case 56: //INPLACE_SUBTRACT
+            res += "var temp = stack.pop();stack.push(stack.pop() - temp);";
+            break;
+        case 57: //INPLACE_MULTIPLY
+            res += "var temp = stack.pop();stack.push(stack.pop() * temp);";
+            break;
+        case 58: //INPLACE_DIVIDE
+            throw "INPLACE_DIVIDE is not implemented yet!";
+        case 59: //INPLACE_MODULO
+            res += "var temp = stack.pop();stack.push(stack.pop() % temp);";
+            break;
+        case 60: //STORE_SUBSCR
+            res += "var temp = stack.pop();stack.pop().store[temp] = stack.pop();";
+            break;
+        case 61: //DELETE_SUBSCR
+          //Implements del TOS1[TOS].
+            res += "var temp = stack.pop();delete stack.pop().store[temp];";
+            break;
+        case 62: //BINARY_LSHIFT
+            res += "var temp = stack.pop();stack.push(stack.pop() << temp);";
+            break;
+        case 63: //BINARY_RSHIFT
+            res += "var temp = stack.pop();stack.push(stack.pop() >> temp);";
+            break;
+        case 64: //BINARY_AND
+            res += "var temp = stack.pop();stack.push(stack.pop() & temp);";
+            break;
+        case 65: //BINARY_XOR
+            res += "var temp = stack.pop();stack.push(stack.pop() ^ temp);";
+            break;
+        case 66: //BINARY_OR
+            res += "var temp = stack.pop();stack.push(stack.pop() | temp);";
+            break;
+        case 67: //INPLACE_POWER
+            res += "var temp = stack.pop();stack.push(Math.pow(stack.pop(), temp));";
+            break;
+        case 68: //GET_ITER
+            //Implements TOS = iter(TOS).
+            res += "var iterable = stack.pop();"+
+            "if (iterable instanceof this.types.PyObject) {"+
+              "var codeObject = iterable.class.codeObject;"+
+              "index = codeObject.co_varnames.indexOf(\"__iter__\");"+
+              "if (index > -1) {"+
+                "codeObject.co_locals[index].codeObject.co_locals[0] = iterable;"+
+                "stack.push(codeObject.co_locals[index]);"+
+                "this.callFunction(0, stack,[],{});"+
+              "} else {"+
+                "throw iterable +\" is not iterable!\";"+
+              "}"+
+            "} else {"+
+              "stack.push(new this.types.PyIterator(iterable));"+
+            "}";
+            break;
+        case 70: //PRINT_EXPR
+            throw "PRINT_EXPR is not implemented yet!";
+        case 71: //PRINT_ITEM
+            res += "this.printOut(stack.pop());";
+            break;
+        case 72: //PRINT_NEWLINE
+            res += "this.printNewline();";
+            break;
+        case 73: //PRINT_ITEM_TO
+            throw "PRINT_ITEM_TO is not implemented yet!";
+        case 74: //PRINT_NEWLINE_TO
+            throw "PRINT_NEWLINE_TO is not implemented yet!";
+        case 75: //INPLACE_LSHIFT
+            res += "var temp = stack.pop();stack.push(stack.pop() << temp);";
+            break;
+        case 76: //INPLACE_RSHIFT
+            res += "var temp = stack.pop();stack.push(stack.pop() >> temp);";
+            break;
+        case 77: //INPLACE_AND
+            res += "var temp = stack.pop();stack.push(stack.pop() & temp);";
+            break;
+        case 78: //INPLACE_XOR
+            res += "var temp = stack.pop();stack.push(stack.pop() ^ temp);";
+            break;
+        case 79: //INPLACE_OR
+            res += "var temp = stack.pop();stack.push(stack.pop() | temp);";
+            break;
+        case 80: //BREAK_LOOP
+            //Terminates a loop due to a break statement.
+	    throw "Break in loops is not supported by the compiler.";
+            break;
+        case 82: //LOAD_LOCALS
+            //Pushes a reference to the locals of the
+            //current scope on the stack.
+            //This is used in the code for a class definition:
+            // After the class body is evaluated,
+            //the locals are passed to the class definition. 
+            res += "stack.push(code_object);";
+            break;
+        case 83: //RETURN_VALUE
+	    //return res + "}"; //end of function
+	    return res + "";
+        case 84: //IMPORT_STAR
+            throw "IMPORT_STAR is not implemented yet!";
+        case 85: //EXEC_STMT
+	  //Implements exec TOS2,TOS1,TOS. The compiler fills
+	  //missing optional parameters with None.
+            res += "var varname = stack.pop();"+
+            "var lang = stack.pop();"+
+            "var stmt = stack.pop();";
+            if (lang == "JavaScript") {
+              res += "var value = eval(stmt);"+
+              "if (varname != \"None\") {"+
+                "var index = code_object.co_varnames.indexOf(varname);"+
+                "if (index > -1) {"+
+                  "if (index < code_object.co_nlocals) {"+
+                    "stack[index] = value;"+
+                  "}"+
+                  "code_object.co_locals[index] = value;"+
+                "} else if(this.globals.contains(varname)) {"+
+                  "this.globals.store(varname, value);"+
+                "} else {"+
+                  "var index = code_object.co_varnames.length;"+
+                  "code_object.co_varnames[index] = varname;"+
+                  "code_object.co_locals[index] = value;"+
+                "}"+
+              "}";
+            } else {
+              throw "EXEC_STMT is not implemented for Python statements yet!";
+            }
+            break;
+        case 86: //YIELD_VALUE
+            throw "YIELD_VALUE is not implemented yet!";
+        case 87: //POP_BLOCK
+            res += "this.blockStack.pop();";
+            break;
+        case 88: //END_FINALLY
+            //Terminates a finally clause. The interpreter recalls whether
+            //the exception has to be re-raised, or whether the function
+            //returns, and continues with the outer-next block. 
+            res += "this.blockStack.pop();";
+            break;
+        case 89: //BUILD_CLASS
+            //Creates a new class object. TOS is the methods dictionary,
+            // TOS1 the tuple of the names of the base classes, and TOS2
+            // the class name.
+            res += "var codeObj = stack.pop();var bases = stack.pop();var className = stack.pop();stack.push(new PEJS.prototype.types.PyClass(className, bases.store, codeObj));";
+            break;
+        case 90: //STORE_NAME --------------- HAVE_ARGUMENT ---------------
+            //Implements name = TOS. namei is the index of name in the attribute
+            //co_names of the code object.
+            //The compiler tries to use STORE_LOCAL or STORE_GLOBAL if possible
+            res += "var name = code_object.co_names["+argument+"];"+
+            "var index = code_object.co_varnames.indexOf(name);"+
+            "if (index > -1) {"+
+              "var value = stack.pop();"+
+              "if (index < code_object.co_nlocals) {"+
+                "stack[index] = value;"+
+              "}"+
+              "code_object.co_locals[index] = value;"+
+            "} else if (this.globals.contains(name)) {"+
+              "this.globals.store(name, stack.pop());"+
+            "} else {"+
+              "var index = code_object.co_varnames.length;"+
+              "code_object.co_varnames[index] = name;"+
+              "code_object.co_locals[index] = stack.pop();"+
+            "}";
+            break;
+        case 91: //DELETE_NAME
+            res += "var name = code_object.co_names["+argument+"];"+
+            "var index = code_object.co_varnames.indexOf(name);"+
+            "if (index > -1) {"+
+              "if (index < code_object.co_nlocals) {"+
+                "stack.remove(index, value);"+
+              "}"+
+              "delete code_object.co_locals[index];"+
+              "delete code_object.co_varnames[index];"+
+            "} else if (this.globals.contains(name)) {"+
+              "this.globals.remove(name);"+
+            "} else { throw \"Could not find name \\\"\"+name+\"\\\" to delete\"; }";
+            break;
+        case 92: //UNPACK_SEQUENCE
+            //Unpacks TOS into count individual values, which are put onto the
+            //stack right-to-left. 
+            res += "var seq = stack.pop().store;for (var i = 0; i < seq.length; i++) {stack.push(seq[i]);}";
+            break;
+        case 93: //FOR_ITER
+            //TOS is an iterator. Call its next() method. If this yields a new
+            //value, push it on the stack (leaving the iterator below it). If
+            //the iterator indicates it is exhausted TOS is popped, and the
+            //byte code counter is incremented by delta.
+	    throw "Iterator not supported by compiler";
+            break;
+        case 95: //STORE_ATTR
+            //Implements TOS.name = TOS1, where namei is
+            //the index of name in co_names.
+            res += "var object = stack.pop();"+
+            "var name = code_object.co_names["+argument+"];"+
+            "if (object instanceof this.types.PyClass){"+
+              "var index = object.codeObject.co_varnames.indexOf(name);"+
+              "if (index > -1) {"+
+                "object.codeObject.co_locals[index] = stack.pop();"+
+              "} else {"+
+                "var index = object.codeObject.co_varnames.length;"+
+                "object.codeObject.co_varnames[index] = name;"+
+                "object.codeObject.co_locals[index] = stack.pop();"+
+              "}"+
+            "} else {"+
+              "object.fields[name] = stack.pop();"+
+            "}";
+            break;
+        case 96: //DELETE_ATTR
+            throw "DELETE_ATTR is not implemented yet!";
+        case 97: //STORE_GLOBAL
+            res += "this.globals.store(code_object.co_names["+argument+"], stack.pop());";
+            break;
+        case 98: //DELETE_GLOBAL
+            res += "var name = code_object.co_names["+argument+"];delete code_object.co_names["+argument+"];if (this.globals.contains(name)) {this.globals.remove(name);}";
+            break;
+        case 99: //DUP_TOPX
+            throw "DUP_TOPX is not implemented yet!";
+        case 100: //LOAD_CONST
+            res += "var value = code_object.co_consts["+argument+"];"+
+            "if (typeof(value) == typeof(\"\") && value.match(/^CODEOBJ: \\w+$/)) {"+
+              "value = eval(value.substring(9, value.length));"+
+            "} else if (value instanceof Array) {"+
+              "value = new this.types.PyTuple(value);"+
+            "}"+
+            "stack.push(value);";
+            break;
+        case 101: //LOAD_NAME
+            //Pushes the value associated with "co_names[namei]" onto the stack.
+            //First we try to find the value in locals then in globals.
+            res += "var name = code_object.co_names["+argument+"];"+
+            "var index = code_object.co_varnames.indexOf(name);"+
+            "if (index > -1) {"+
+              "if (index < code_object.nlocals) {"+
+                "stack.push(stack[index]);"+
+              "} else {"+
+                "stack.push(code_object.co_locals[index]);"+
+              "}"+
+            "} else if (this.globals.contains(name)) {"+
+              "stack.push(this.globals.lookup(name));"+
+            "} else if (name == \"__name__\") {"+
+	      "if (typeof(stack.peek()) == typeof(undefined)) {"+
+		"stack.push(code_object.co_name);"+
+	      "} else {"+
+		"stack.push(stack.peek().codeObject.co_name);"+
+	      "}"+
+            "} else {"+
+              "throw \"LOAD_NAME attempted to load non-existing name \\\"\"+name+\"\\\"\";"+
+            "}";
+            break;
+        case 102: //BUILD_TUPLE
+            // Creates a tuple consuming count items from the stack,
+            // and pushes the resulting tuple onto the stack.
+            res += "var tuple = [];for(var j="+(argument-1)+"; j>=0; j--) {tuple[j] = stack.pop();}stack.push(new this.types.PyTuple(tuple));";
+            break;
+        case 103: //BUILD_LIST
+            //Works as BUILD_TUPLE, but creates a list.
+            res += "var list = [];for(var j="+(argument-1)+"; j>=0; j--) {list[j] = stack.pop();}stack.push(new this.types.PyList(list));";
+            break;
+        case 104: //BUILD_MAP
+            //Pushes a new empty dictionary object onto the stack.
+            //The argument is ignored and set to zero by the compiler.
+            res += "stack.push(new this.types.PyDict());";
+            break;
+        case 105: //LOAD_ATTR
+            //Replaces TOS with getattr(TOS, co_names[namei])
+            res += "var object = stack.pop();"+
+            "var name = code_object.co_names["+argument+"];"+
+            "if (object instanceof this.types.PyList || "+
+                "object instanceof this.types.PyDict || "+
+                "object instanceof this.types.PyIterator) {"+
+              "stack.push(object[name](object));"+
+            "} else if (object instanceof this.types.PyObject) {"+
+              "if (object.fields[name] != undefined) {"+
+                "stack.push(object.fields[name]);"+
+              "} else {"+
+                "function lookup(class,name) {"+
+                  "index = class.codeObject.co_varnames.indexOf(name);"+
+                  "if (index > -1)"+
+                    "return class.codeObject.co_locals[index];"+
+                  "var result;"+
+                  "for (var i=0;i<class.__bases__.length;i++) {"+
+                    "var result = lookup(class.__bases__[i],name);"+
+                    "if (result) { return result; }"+
+                  "}"+
+                "}"+
+                "var attrObject = lookup(object.class,name);"+
+                "if (attrObject instanceof PEJS.prototype.types.PyFunction) {"+
+                  "attrObject.codeObject.co_varnames[0] = \"self\";"+
+                  "attrObject.codeObject.co_locals[0] = object;"+
+                "} else {"+
+                  "throw \"LOAD_ATTR tried to load non-function \"+ name +"+
+                      "\" from class \"+ object.class.__name__;"+
+                "}"+
+                "stack.push(attrObject);"+
+              "}"+
+            "} else if(object instanceof this.types.PyClass) {"+
+              "index = object.codeObject.co_varnames.indexOf(name);"+
+              "stack.push(object.codeObject.co_locals[index]);"+
+            "} else {"+
+              "throw \"LOAD_ATTR tried to load \"+ name +"+
+                  "\" from \"+ typeof(object) +\" \"+ object;"+
+            "}";
+            break;
+        case 106: //COMPARE_OP
+            res += "var temp1 = stack.pop();var temp2 = stack.pop();if(typeof(temp1) == typeof(\"\") || typeof(temp2) == typeof(\"\")) {temp1 = \"\\\"\" + temp1 + \"\\\"\";temp2 = \"\\\"\" + temp2 + \"\\\"\";}stack.push(eval(temp2 + this.compareOps["+argument+"] + temp1));";
+            break;
+        case 107: //IMPORT_NAME
+            //Imports the module co_names[namei]. The module object is pushed
+            //onto the stack. The current namespace is not affected: for a
+            //proper import statement, a subsequent STORE_FAST instruction
+            //modifies the namespace.
+            res += "var module = code_object.co_names["+argument+"];"+
+            "var codeObj = eval(module);"+
+            "this.globals.add(codeObj.co_varnames, codeObj.co_locals);"+
+            "stack.push(this.execute(codeObj));"+
+            "var class = new this.types.PyClass(module, [], codeObj);"+
+            "var object = new this.types.PyObject(class);"+
+            "for (var j=0; j<codeObj.co_locals.length; j++) {"+
+              "if (/__\w+__/.test(codeObj.co_varnames[j])) { continue; }"+
+              "if (codeObj.co_locals[j] instanceof PEJS.prototype.types.PyFunction) { continue; }"+
+              "object.fields[codeObj.co_varnames[j]] = codeObj.co_locals[j];"+
+            "}"+
+            "stack.pop();"+
+            "stack.push(object);";
+            break;
+        case 108: //IMPORT_FROM
+            //Loads the attribute co_names[namei] from the module found in TOS. 
+            //The resulting object is pushed onto the stack, to be subsequently 
+            //stored by a STORE_FAST instruction.
+            res += "var codeObject = stack.pop().class.codeObject;"+
+            "var attrname = code_object.co_names["+argument+"];"+
+            "var attr = codeObject.co_locals[codeObject.co_varnames.indexOf(attrname)];"+
+            "stack.push(attr);";
+            break;
+        case 110: //JUMP_FORWARD
+            throw "Jumps not supported by compiler";
+            break;
+        case 111: //JUMP_IF_FALSE
+            //If TOS is false, increment the byte code counter by delta.
+            //TOS is not changed.
+            throw "Jumps not supported by compiler";
+            break;
+        case 112: //JUMP_IF_TRUE
+            //If TOS is true, increment the byte code counter by delta.
+            //TOS is left on the stack
+            throw "Jumps not supported by compiler";
+            break;
+        case 113: //JUMP_ABSOLUTE
+            throw "Jumps not supported by compiler";
+            break;
+        case 116: //LOAD_GLOBAL
+            // Loads the global named co_names[namei] onto the stack.
+            res += "var name = code_object.co_names["+argument+"];"+
+            "if (name == \"__name__\") {"+
+              "stack.push(code_object.co_name);"+
+            "} else {"+
+              "stack.push(this.globals.lookup(name));"+
+            "}";
+            break;
+        case 119: //CONTINUE_LOOP
+            throw "CONTINUE_LOOP is not implemented yet!";
+        case 120: //SETUP_LOOP
+            //Pushes a block for a loop onto the block stack.
+            //The block spans from the current instruction with
+            //a size of delta bytes.
+            res += "this.blockStack.push("+(pc+argument)+");";
+            break;
+        case 121: //SETUP_EXCEPT
+	    //Pushes a try block from a try-except clause onto the block
+	    //stack. delta points to the first except block.
+            res += "this.blockStack.push("+(pc+argument)+");";
+            break;
+        case 122: //SETUP_FINALLY
+	    //Pushes a try block from a try-except clause onto the block
+	    //stack. delta points to the finally block.
+            res += "this.blockStack.push("+(pc+argument)+");";
+            break;
+        case 124: //LOAD_FAST
+            //Pushes a reference to the local co_varnames[var_num] onto the stack.
+            res += "stack.push(stack["+argument+"]);";
+            break;
+        case 125: //STORE_FAST
+            //Stores TOS into the local co_varnames[var_num].
+            res += "var value = stack.pop();stack["+argument+"] = value;code_object.co_locals["+argument+"] = value;";
+            break;
+        case 126: //DELETE_FAST
+            res += "delete stack["+argument+"];delete code_object.co_locals["+argument+"];delete code_object.co_varnames["+argument+"];";
+            break;
+        case 130: //RAISE_VARARGS
+	    //Raises an exception. argc indicates the number of parameters
+	    //to the raise statement, ranging from 0 to 3. The handler will
+	    //find the traceback as TOS2, the parameter as TOS1, and the
+	    //exception as TOS.
+	    throw "Exceptions not supported by compiler.";
+	    break;
+        case 131: //CALL_FUNCTION
+            res += "this.callFunction("+argument+", stack, [], {});";
+            break;
+        case 132: //MAKE_FUNCTION
+            //Pushes a new function object on the stack. TOS is the code
+            //associated with the function. The function object is defined
+            //to have argc default parameters, which are found below TOS. 
+            res += "var pyFunction = new this.types.PyFunction("+argument+", stack.pop());for (var j="+(argument-1)+"; j>=0; j--){pyFunction.addArg(j, stack.pop());}stack.push(pyFunction);";
+            break;
+        case 133: //BUILD_SLICE
+            throw "BUILD_SLICE is not implemented yet!";
+        case 134: //MAKE_CLOSURE
+            throw "MAKE_CLOSURE is not implemented yet!";
+        case 135: //LOAD_CLOSURE
+            throw "LOAD_CLOSURE is not implemented yet!";
+        case 136: //LOAD_DEREF
+            throw "LOAD_DEREF is not implemented yet!";
+        case 137: //STORE_DEREF
+            throw "STORE_DEREF is not implemented yet!";
+        case 140: //CALL_FUNCTION_VAR
+            res += "this.callFunction("+argument+", stack, stack.pop().store, {});";
+            break;
+        case 141: //CALL_FUNTION_KW
+	    res += "this.callFunction("+argument+", stack, [], stack.pop().store);";
+            break;
+        case 142: //CALL_FUNCTION_VAR_KW
+	    res += "var kwArgs = stack.pop().store;this.callFunction("+argument+", stack, stack.pop().store, kwArgs);";
             break;
         case 143: //EXTENDED_ARG
             throw "EXTENDED_ARG is not implemented yet!";
@@ -849,6 +1454,11 @@ PEJS.prototype = {
 PEJS.prototype.Globals = function() {
   this.values = [[]]; //Initialized with a special array for new globals
   this.names = [[]];
+
+  this.reset = function() {
+    this.values.length = 2;
+    this.names.length = 2;
+  };
 
   this.add = function(nameArray, valueArray) {
     this.names[this.names.length] = nameArray;
@@ -1119,9 +1729,13 @@ PEJS.prototype.Debugger = {
   bytecodes: ["STOP_CODE", "POP_TOP", "ROT_TWO", "ROT_THREE", "DUP_TOP", "ROT_FOUR",,,, "NOP", "UNARY_POSITIVE", "UNARY_NEGATIVE", "UNARY_NOT", "UNARY_CONVERT",, "UNARY_INVERT",,, "LIST_APPEND", "BINARY_POWER", "BINARY_MULTIPLY", "BINARY_DIVIDE", "BINARY_MODULO", "BINARY_ADD", "BINARY_SUBTRACT", "BINARY_SUBSCR", "BINARY_FLOOR_DIVIDE", "BINARY_TRUE_DIVIDE", "INPLACE_FLOOR_DIVIDE", "INPLACE_TRUE_DIVIDE", "SLICE+0", "SLICE+1", "SLICE+2", "SLICE+3",,,,,,, "STORE_SLICE+0", "STORE_SLICE+1", "STORE_SLICE+2", "STORE_SLICE+3",,,,,,, "DELETE_SLICE+0", "DELETE_SLICE+1", "DELETE_SLICE+2", "DELETE_SLICE+3",, "INPLACE_ADD", "INPLACE_SUBTRACT", "INPLACE_MULTIPLY", "INPLACE_DIVIDE", "INPLACE_MODULO", "STORE_SUBSCR", "DELETE_SUBSCR", "BINARY_LSHIFT", "BINARY_RSHIFT", "BINARY_AND", "BINARY_XOR", "BINARY_OR", "INPLACE_POWER", "GET_ITER",, "PRINT_EXPR", "PRINT_ITEM", "PRINT_NEWLINE", "PRINT_ITEM_TO", "PRINT_NEWLINE_TO", "INPLACE_LSHIFT", "INPLACE_RSHIFT", "INPLACE_AND", "INPLACE_XOR", "INPLACE_OR", "BREAK_LOOP",, "LOAD_LOCALS", "RETURN_VALUE", "IMPORT_STAR", "EXEC_STMT", "YIELD_VALUE", "POP_BLOCK", "END_FINALLY", "BUILD_CLASS", "STORE_NAME", "DELETE_NAME", "UNPACK_SEQUENCE", "FOR_ITER",, "STORE_ATTR", "DELETE_ATTR", "STORE_GLOBAL", "DELETE_GLOBAL", "DUP_TOPX", "LOAD_CONST", "LOAD_NAME", "BUILD_TUPLE", "BUILD_LIST", "BUILD_MAP", "LOAD_ATTR", "COMPARE_OP", "IMPORT_NAME", "IMPORT_FROM",, "JUMP_FORWARD", "JUMP_IF_FALSE", "JUMP_IF_TRUE", "JUMP_ABSOLUTE",,, "LOAD_GLOBAL",,, "CONTINUE_LOOP", "SETUP_LOOP", "SETUP_EXCEPT", "SETUP_FINALLY",, "LOAD_FAST", "STORE_FAST", "DELETE_FAST",,,, "RAISE_VARARGS", "CALL_FUNCTION", "MAKE_FUNCTION", "BUILD_SLICE", "MAKE_CLOSURE", "LOAD_CLOSURE", "LOAD_DEREF", "STORE_DEREF",,, "CALL_FUNCTION_VAR", "CALL_FUNTION_KW", "CALL_FUNCTION_VAR_KW", "EXTENDED_ARG"],
 
   printDebug: function(color, str) {
+      this.printOut("<tr><td colspan=\"7\" class=\""+color+
+		    "\">"+str+"</td></tr>");
+  },
+
+  printOut: function(str) {
     if (this.debug) {
-      PEJS.prototype.printOut("<tr><td colspan=\"7\" class=\""+color+"\">"+
-			      str+"</td></tr>");
+      PEJS.prototype.printOut(str);
     }
   },
   
@@ -1129,21 +1743,21 @@ PEJS.prototype.Debugger = {
     var res = "<tr>";
     if (inst < 90) {
       res += "<td class=\"offset\">"+pc+"</td>"+
-	  "<td class=\"inst\">"+bytecodes[inst]+"</td>"+
+	  "<td class=\"inst\">"+this.bytecodes[inst]+"</td>"+
 	    "<td></td>"+
 	    "<td></td>"+
 	    "<td class=\"code\">"+inst+"</td>"+
 	    "<td></td>";
     } else {
       res += "<td class=\"offset\">"+pc+"</td>"+
-	    "<td class=\"inst\">"+bytecodes[inst]+"</td>"+
+	    "<td class=\"inst\">"+this.bytecodes[inst]+"</td>"+
 	    "<td class=\"value\"></td>"+
 	    "<td class=\"type\"></td>"+
 	    "<td class=\"code\">"+inst+"</td>"+
 	    "<td class=\"arg\">"+arg+"</td>";
     }
     res += "<td class=\"stack\">"+stack+"</td>";
-    this.printDebug(res +"</tr>");
+    this.printOut(res +"</tr>");
   },
 
   printObject: function(object) {

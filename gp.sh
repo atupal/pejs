@@ -38,3 +38,13 @@ plot "benchv8-57-1.txt" using 4:xtic(2) title "Revision 57",\
      "benchv8-61-1.txt" using 4:xtic(2) title "Revision 61",\
      "benchv8-85-1.txt" using 4:xtic(2) title "Revision 85",\
      "benchV8final-1.txt" using 4:xtic(2) title "Revision 95"
+
+set title "Optimizations: JIT-compilation and peephole-optimizations\nNote: V8 ran benchmarks 10 times more than SpiderMonkey"
+set term postscript color enhanced font ", 14"
+set output "BenchV8optimized.eps"
+set ylabel "Milliseconds"
+set yrange [0:27000]
+plot "benchCompiler_int.txt" using 3:xtic(1) title "Interpreted",\
+     "benchCompiler_com.txt" using 3:xtic(1) title "Compiled",\
+     "benchCompiler_opt.txt" using 3:xtic(1) title "Optimized",\
+     "benchCompiler_pyt.txt" using 3:xtic(1) title "Python"
