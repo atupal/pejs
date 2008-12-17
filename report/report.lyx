@@ -275,14 +275,14 @@ Design of Virtual Machines for Object Oriented Languages
 
  taught at Department of Computer Science at Aarhus University during the
  fall semester 2008.
- The course has been taught by Lars Bak and Kasper Lund, assisted by teaching
- assistant Mathias Schwarz.
+ The course has been taught by Lars Bak and Kasper Lund, assisted by Mathias
+ Schwarz.
  
 \end_layout
 
 \begin_layout Standard
-It describes the design and implementation of a virtual machine for for
- the programming language Python done in JavaScript.
+It describes the design and implementation of a virtual machine for the
+ programming language Python done in JavaScript.
  The purpose of this report is to convey a description of our work process,
  the status of the project and the results obtained so far.
  The deadline for this report was December 17th 2008.
@@ -300,14 +300,15 @@ Motivation
 
 \begin_layout Standard
 Virtual machines for JavaScript exist in all modern browsers and since browsers
- exist on most operating systems JavaScript is practicaly platform independent.
- So if we could make a virtual machine in JavaScript that takes a python
+ exist on most operating systems JavaScript is virtually platform independent.
+ So if we could build a virtual machine in JavaScript that takes a python
  program we can make python platform independent.
 \end_layout
 
 \begin_layout Standard
-Further the groving use of JavaScript on the internet has pushed the need
- for an efficient virtual machine, the work by Google
+Further, the groving use of JavaScript on the internet has pushed the need
+ for an efficient virtual machine.
+ The work by Google
 \begin_inset Foot
 status collapsed
 
@@ -328,7 +329,7 @@ http://www.mozilla.org/js/spidermonkey
 \end_inset
 
  has made it interesting to investigate if it is viable to build a virtual
- machine on top of a JavaScript virtual machinal which is known for having
+ machine on top of a JavaScript virtual machine, which is known for having
  poor performance.
 \end_layout
 
@@ -366,7 +367,7 @@ This was broken down into smaller goals, or milestones, as follows:
 \end_layout
 
 \begin_layout Enumerate
-Get simple interpreter operating on a stack up and running
+Get a simple interpreter operating on a stack up and running
 \end_layout
 
 \begin_layout Enumerate
@@ -390,7 +391,7 @@ Handle calls to Python library somehow
 \end_layout
 
 \begin_layout Enumerate
-Do performance evaluation and improvement
+Do performance evaluation and improvements
 \end_layout
 
 \begin_layout Standard
@@ -401,7 +402,7 @@ As we only had around 8 weeks for the project, we decided that points 1-4
 \end_layout
 
 \begin_layout Section
-Description
+Implementation
 \end_layout
 
 \begin_layout Subsection
@@ -419,7 +420,7 @@ The project consists of two parts, compiling the python code to python opcodes
  The focus of this course is to make a VM so naturally we focus on the interpret
 ation part rather than the compilation part.
  In order to save time we use the python compiler to get the opcodes and
- other information we need at print it as needed.
+ other relevant information and output it as needed.
 \end_layout
 
 \begin_layout Standard
@@ -467,8 +468,11 @@ Overview of PEJS
 \end_layout
 
 \begin_layout Standard
-We compile the python file with tools/compile.py which outputs a js file
- with the code object.
+We compile the python file with 
+\family typewriter
+tools/compile.py
+\family default
+ which outputs a JavaScript file with the code object.
  To illustrate this here is an example of a py file and the corresponding
  codeObject.
 \end_layout
@@ -680,10 +684,20 @@ Helloworld.js
 
 \begin_layout Standard
 In order to run the python code in a browser you need to import the interpreter(
-src/interpreter.js), the standard library(src/lib/stdlib.py) and the codeObject
- file, in this example Helloworld.js.
+\family typewriter
+src/interpreter.js
+\family default
+), the standard library(
+\family typewriter
+src/lib/stdlib.js
+\family default
+) and the codeObject file, in this example 
+\family typewriter
+Helloworld.js
+\family default
+.
  In a html file you then need to execute the interpret method with the name
- of the file as a string.
+ of the module as a string.
 \end_layout
 
 \begin_layout LyX-Code
@@ -691,8 +705,9 @@ src/interpreter.js), the standard library(src/lib/stdlib.py) and the codeObject
 \end_layout
 
 \begin_layout Standard
-This implies that the creator of the website needs a python compiler to
- generate codeObjects but not the users of the website.
+This implies that the author of the website needs a Python compiler to generate
+ codeObjects.
+ That does not apply to the users of the website.
  It is possible to make a Python compiler in JavaScript which could be imported
  in the html file.
  That would allow Python directly embedded in the html.
@@ -711,9 +726,10 @@ Compiler
 
 \begin_layout Standard
 As our main focus of this project has been implementing a VM, the compiler
- has been made quick and dirty in Python.
- The main purpose of the compiler is to compile Python code to Python byte
- code and present it in a JavaScript format.
+ has been built quick and dirty in Python and actually just uses Pythons
+ own compiler.
+ The main purpose of the compiler is to compile Python source code to Python
+ byte code and present it in a JavaScript format.
  We wanted to make our VM run Python byte code, so in that respect, the
  format was settled, but at the same time, we wanted to experiment with
  the way we represented the byte code in JavaScript.
@@ -721,8 +737,7 @@ As our main focus of this project has been implementing a VM, the compiler
 
 \begin_layout Standard
 In practice, the compiler compiles .py files to .pyc and decompiles them into
- Python objects representing code objects, from which our code objects are
- generated.
+ Python code objects objects, from which our code objects are generated.
 \end_layout
 
 \begin_layout Subsection
@@ -733,10 +748,10 @@ Code objects
 Python has a notion of code objects as containers of code.
  We have code objects for classes, functions, methods and the main program,
  in Python known as a module.
- The compiler resolves, whether a code object is for instantiating a class
- or is a function and calls the proper byte codes afterwards.
+ The compiler compiles and decompiles the Python source code and generates
+ the proper JavaScript code.
  Besides containing the actual byte codes, code objects also contain several
- properties resolved during compilation.
+ properties discovered during compilation.
  At first in the project, we represented all properties from Python code
  objects in our JavaScript representation, but since we haven't seen any
  use for some of them so far, we decided to remove the unused properties.
@@ -985,8 +1000,14 @@ The byte codes have been represented in two different ways during the project.
  Later in the project, when we settled on the basic structure and most of
  our VM worked as in the current state, we changed this to a more effective
  representation, where each byte code is one or three entries in an array
- instead of one an entire array by itself.
- The optimization benefits of this change is discussed later in the report.
+ instead of each instruction being an array by itself.
+ The optimization benefits of this change is discussed later in section
+ 
+\begin_inset LatexCommand \ref{sub:Jumps}
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsection
@@ -997,7 +1018,7 @@ Interpreter
 The interpreter is designed as a simple fetch-decode-execute cycle.
  The main structure of the interpreter is a while-loop with a switch-case
  that executes code objects.
- As shown the example in figure 
+ As shown in the example in figure 
 \begin_inset LatexCommand \ref{fetch-decode-execute}
 
 \end_inset
@@ -1030,7 +1051,8 @@ pc
 \family typewriter
 bytecode
 \family default
- is switched to get the correct case, and the contents of the case is executed.
+ is switched over to get the correct case, and the contents of the case
+ is executed.
 \end_layout
 
 \begin_layout Standard
@@ -1152,7 +1174,7 @@ namespace
 \family typewriter
 prototype
 \family default
- object, contains the constructors for all built-in types.
+ object contains the constructors for all built-in types.
 \end_layout
 
 \begin_layout Standard
@@ -1208,73 +1230,6 @@ Stack
 \end_layout
 
 \begin_layout Standard
-We have implemented the stack as a JavaScript object with an array containing
- containing the elements of the stack.
- The stack object also has a bottom pointer(BP) and a stack pointer(SP)
- pointing to the top and bottom of the current stackframe respectively.
- When we call and return from functions we call the removeFrame and newFrame
- methods, these modify the stack as shown in figure 
-\begin_inset LatexCommand \ref{stack}
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-placement H
-wide false
-sideways false
-status open
-
-\begin_layout Standard
-\align center
-\begin_inset Graphics
-	filename stack.eps
-	lyxscale 30
-	scale 24
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Caption
-\begin_inset LatexCommand \label{stack}
-
-\end_inset
-
-Stack example
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-On removeFrame we syncronize the localvariables with the arguments on the
- stack and sets TOS to the return value.
- From figure 
-\begin_inset LatexCommand \ref{stack}
-
-\end_inset
-
- it shows that we don't delete things from the stack again, we just overwrite
- the contents when pushing data onto the stack.
- It could be advantageous to delete data over the SP when returning from
- a method this would allow the JavaScript VM to garbage collect the used
- data.
-\end_layout
-
-\begin_layout Standard
-
-\series bold
------------New Stack----------------
-\end_layout
-
-\begin_layout Standard
 The stack is represented by a separate stack frame for each code object
  that is run.
  Each frame is simple: A regular array where we utilize the 
@@ -1321,12 +1276,7 @@ co_locals
 \family default
 .
  When a function is called, a new stack frame is created, with space allocated
- for the local variables as described in section 
-\begin_inset LatexCommand \ref{description_memory-model_Stack}
-
-\end_inset
-
-.
+ for the local variables.
 \end_layout
 
 \begin_layout Standard
@@ -1385,7 +1335,7 @@ Python does, not surprisingly, use classes, objects and functions.
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Standard
 \align center
@@ -1428,20 +1378,20 @@ Python has three basic collection types, namely tuples, lists and dictionaries.
  Dictionaries are a mutable collection of key-value pairs, similar to a
  Javascript object.
  The obvious approach was therefore to represent dictionaries as JavaScript
- object and lists and tuples as JavaScript arrays.
+ objects and lists and tuples as JavaScript arrays.
  The three collection types are represented as PyTuple, PyList and PyDict,
  which each has a 
 \family typewriter
 store
 \family default
- property, that contain an array or an object, respectively.
+ property, that contains an array or an object, respectively.
 \end_layout
 
 \begin_layout Standard
 Methods on lists and dictionaries are implemented in JavaScript only, which
  was chosen because it was the simplest approach at the time, although they
- possibly to a greater extent could be part of the standard library.
- 
+ possibly to a greater extent could be part of the standard library which
+ is mostly implemented in Python.
 \end_layout
 
 \begin_layout Subsection
@@ -1471,20 +1421,23 @@ return result
 \end_layout
 
 \begin_layout Standard
-In the EXEC_STMT case in the interpreter (case 85) we test if the second
- parameter is "JavaScript", in which case we evaluate the given statement
- and store the result in the named variable, which is then accessible in
- Python.
+In the EXEC_STMT case in the interpreter we test if the second parameter
+ is "JavaScript", in which case we evaluate the given statement and store
+ the result in the named variable, which is then accessible in Python.
  This clearly enables arbitrary extensions of the library, as it is always
- possible to bail out to JavaScript implementation when Python is not sufficient.
- It is also easy to add new implementation.
- One just writes the code in the right place, and everything works automatically.
+ possible to switch to JavaScript implementation when Python is not sufficient.
+ It is also easy to add new implementation: One just writes the code in
+ the right place, and everything works automatically.
 \end_layout
 
 \begin_layout Standard
 The library .py-files are translated and the generated JavaScript file is
  then referenced in the HTML, just like the interpreter itself.
- Writing "import time" then works exactly as it should.
+ Writing "import <module>
+\begin_inset Quotes srd
+\end_inset
+
+ then works exactly as it should.
  The standard library is imported automatically, as it should be.
 \end_layout
 
@@ -1499,9 +1452,14 @@ During our development of our VM, it became obvious that we needed to establish
  Thus, we set up a few scripts to automatically translate tests written
  in Python into our JavaScript representation.
  We could then benefit from the fact that our VM runs in a browser in that
- we pretty quickly had a nice HTML interface (test/test.html) working in
- which we could run all tests and also see detailed runs of single tests.
+ we pretty quickly had a nice HTML interface (
+\family typewriter
+test/test.html
+\family default
+) working in which we could run all tests and also see detailed runs of
+ single tests.
  We used this for running benchmarks as well.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -1524,13 +1482,34 @@ status collapsed
 \end_layout
 
 \begin_layout Caption
+\begin_inset LatexCommand \label{fig:Screenshot-of-full}
+
+\end_inset
+
 Screenshot of full test.
- Each test can be clicked in order to run a trace of that particular case.
+ 
 \end_layout
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:Screenshot-of-full}
+
+\end_inset
+
+, each test can be clicked in order to run a trace of that particular case.
+ In figure 
+\begin_inset LatexCommand \ref{fig:Screenshot-of-single}
+
+\end_inset
+
+, each blue headline indicates that control has been transferred to another
+ code object.
+ The stack grows to the right.
 \end_layout
 
 \begin_layout Standard
@@ -1553,10 +1532,12 @@ status collapsed
 \end_layout
 
 \begin_layout Caption
+\begin_inset LatexCommand \label{fig:Screenshot-of-single}
+
+\end_inset
+
 Screenshot of single test.
- Each blue headline indicates that control has been transferred to another
- code object.
- The stack grows to the right.
+ 
 \end_layout
 
 \end_inset
@@ -1572,7 +1553,11 @@ In addition to the HTML interface, we set up scripts for running the tests
 
 \begin_layout Standard
 The setup was fairly slick so tests could be added just by adding the file
- containing the test code and running a single script (tools/createTest.py).
+ containing the test code and running a single script (
+\family typewriter
+tools/createTest.py
+\family default
+).
  
 \end_layout
 
@@ -1612,6 +1597,7 @@ Everything described here is assured to some degree with testcases, but
  it should be noted that there is lots of room for more thorough testing.
  This also means that our claims of supported features below only holds
  to the extent ensured by our tests.
+ At the deadline, we had 69 testcases and 36 benchmarks.
  Examples of unsupported features can be seen in 
 \family typewriter
 test/unsupported.
@@ -1650,9 +1636,9 @@ Conditionals and loops are supported fully, and especially loops have been
 \family typewriter
 range
 \family default
- and 
+ and the
 \family typewriter
-the xrange 
+ xrange 
 \family default
 constructs which are typically used in 
 \family typewriter
@@ -1682,8 +1668,11 @@ We implemented functions before classes, in order to be ready to implement
  Functions and methods are fully supported, including nesting and recursion.
  Keyword arguments and default arguments are working, and so is optional
  parameters.
- That is, both * and ** work, and can be used both when defining functions
- and when calling them.
+ That is, both * and ** work and can be used.
+ When defining functions, * creates lists out of actual parameters while
+ ** creates dictionaries out of keyword parameters.
+ When calling functions, * is used for unfolding a list into parameters,
+ while ** unfolds a dictionary.
 \end_layout
 
 \begin_layout Subsubsection
@@ -1691,7 +1680,7 @@ Classes and objects
 \end_layout
 
 \begin_layout Standard
-Classes and objects are of course supported.
+Classes and objects are supported.
  We don't fully support the correct semantics when dynamically injecting
  fields on classes.
  In Python, update or addition of a field on a class is automatically pushed
@@ -1714,8 +1703,8 @@ on, as Python's inheritance rules are reasonably simple.
 
 \begin_layout Standard
 It should be noted that we have by no means examined every corner of the
- language, and therefore there probably are subtle (and less subtle) features
- we don't handle.
+ language, and therefore there probably are subtle (and less subtle) object
+ related features we don't handle.
 \end_layout
 
 \begin_layout Subsubsection
@@ -1744,11 +1733,19 @@ In Python, any object may be
 iterable, 
 \emph default
 meaning that it can return an iterator that can enumerate the object in
- some sensible way, using the methods next() and getItem(...).
+ some sensible way, using the methods 
+\family typewriter
+next()
+\family default
+ and 
+\family typewriter
+getItem(...)
+\family default
+.
  We've implemented the iterator for lists and tuples which works as it should.
  In principle it also works for general objects, where the object itself
  is responsible for implementing the actual iterator somehow.
- This has not been tested though.
+ This has not been tested.
 \end_layout
 
 \begin_layout Subsubsection
@@ -1788,30 +1785,119 @@ raise
 Optimizations
 \end_layout
 
+\begin_layout Subsubsection
+Stack
+\begin_inset LatexCommand \label{sub:Stack}
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
-stack ?
+In order to allow JavaScript to garbage collect, we implemented a new stack
+ described in 
+\begin_inset LatexCommand \ref{description_memory-model_Stack}
+
+\end_inset
+
+, the old one is described in the following.
+\end_layout
+
+\begin_layout Standard
+We implemented the stack as a JavaScript object with an array containing
+ the elements of the stack.
+ The stack object also has a bottom pointer(BP) and a stack pointer(SP)
+ pointing to the top and bottom of the current stackframe respectively.
+ When we call and return from functions we call the removeFrame and newFrame
+ methods, these modify the stack as shown in figure 
+\begin_inset LatexCommand \ref{stack}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename stack.eps
+	lyxscale 30
+	scale 24
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{stack}
+
+\end_inset
+
+Stack example
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+On removeFrame we syncronize the localvariables with the arguments on the
+ stack and sets TOS to the return value.
+ From figure 
+\begin_inset LatexCommand \ref{stack}
+
+\end_inset
+
+ it shows that we don't delete things from the stack again, we just overwrite
+ the contents when pushing data onto the stack.
+ It could be advantageous to delete data over the SP when returning from
+ a method this would allow the JavaScript VM to garbage collect the used
+ data.
 \end_layout
 
 \begin_layout Subsubsection
 Jumps
+\begin_inset LatexCommand \label{sub:Jumps}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
 A jump bytecode has an argument telling where to jump to.
- In the first version of our codeObject the co_code array, which contains
- the opcodes and arguments, contained each instruction as a sub-array.
+ In the first version of our codeObject the 
+\family typewriter
+co_code
+\family default
+ array, which contains the opcodes and arguments, contained each instruction
+ as a nested array.
  This meant that we could not jump directly to that index since we had obscured
  the instruction array.
- Instead we needed to search through the each instruction array to se if
- this had the offset we were looking for.
+ Instead we needed to search through each instruction in the array to see
+ if this had the offset we were looking for.
  This original approach had the advantage that we could have the instruction
- name and other information available, this helped us understand the programs,
+ name and other information available, which helped us understand the programs,
  but we wanted to make it fast so we optimized it.
 \end_layout
 
 \begin_layout Standard
-The approach was to create a single array with the opcodes and arguments
- an example of the co_code array can be seen in figure 
+The approach was to create a single array with the opcodes and arguments.
+ An example of the 
+\family typewriter
+co_code 
+\family default
+array can be seen in figure 
 \begin_inset LatexCommand \ref{Helloworld.js codeObject}
 
 \end_inset
@@ -1820,163 +1906,47 @@ The approach was to create a single array with the opcodes and arguments
  This allowed us to jump directly to the instruction given by the argument
  to the jump bytecode.
  We were expecting a big improvement in performance as jumping directly
- must be way faster than looking through an array, in practice we only saw
- a slight increase in performance based on the bencmarks in the test suite.
- From about 3200ms to 3100ms we think thats due to the structure of the
- tests where we don't need to jump very far and therefore don't need to
- scan for the right offset very long.
+ must be way faster than looking through an array.
+ In practice we only saw a slight increase in performance based on the bencmarks
+ in the test suite, from around 3200ms to 3100ms.
+ We think that is due to the structure of the tests where we don't need
+ to jump very far and therefore don't need to scan for the right offset
+ for very long.
 \end_layout
 
 \begin_layout Subsubsection
 Refactoring
+\begin_inset LatexCommand \label{sub:Refactoring}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-When we started the implenentation many of the elements from figure 
+When we started the implementation many of the elements from figure 
 \begin_inset LatexCommand \ref{static-structure}
 
 \end_inset
 
  was implemented as globals.
- This is obviously a poor choice and we desided to refactor and introduce
+ This was obviously a poor choice and we desided to refactor and introduce
  the structure we have now.
  We expected to see a performance decrease since lookup of the elements
- would be more indirect, it turns out that the refactoring had an huge positive
- impact on performance.
- We went from times around 3100ms to 1100ms to execute our benchmarks, we
- have discovered that this is because globals takes a very long time to
+ would be more indirect.
+ It turned out that the refactoring had a huge positive impact on performance.
+ We went from times around 3100ms to 1100ms to execute our benchmarks.
+ We have discovered that this is because globals take a very long time to
  resolve.
  
 \end_layout
 
-\begin_layout Subsection
-Benchmarks
-\end_layout
-
-\begin_layout Standard
-Here we provide performance measurements of execution times.
-\end_layout
-
-\begin_layout Subsection
-Compare with goals
-\end_layout
-
-\begin_layout Standard
-Here we reflect on our progress in comparison with our initial plan (
-\begin_inset LatexCommand \ref{Goals}
-
-\end_inset
-
-) and in relation to the course objectives.
-\end_layout
-
-\begin_layout Standard
-When planning implementation in JavaScript, it wasn't completely clear to
- us how we would or should handle heap representation and garbage collection.
- This turned out to be completely trivial because we chose to simply implement
- Python objects and code objects as regular JavaScript objects.
- The consequence of this was that no heap and no garbage collector was necessary
-, nor would they make any sense.
- This has definitely been a great help in having time for implementing a
- larger subset of our target language, but on other hand we have not gained
- much experience with regard to heap design and garbage collection.
-\end_layout
-
-\begin_layout Standard
-We were pleasently surprised of how easy it was to establish a library.
- When starting development, we were not at all sure how or if we would be
- able to get a library running.
- This turned out not to be a problem, but we have not had time for extending
- it very much.
-\end_layout
-
-\begin_layout Standard
-The only thing we're not satisfied with is the fact that we have not really
- applied any performance improving techniques, and that the performance
- of our VM is significantly lower than that of CPython.
- We would have liked to optimize our code som more, but we were not able
- to find a decent profiler for JavaScript.
- FireBug for Firefox apparently worked and provided very useful information,
- but on closer inspection it wasn't always able to correctly distunguish
- between time spent in a function's own code and in calls to subprocedures.
- This made the results unusable.
- V8's profiler wasn't really useful as it provided information mostly on
- the level of opcodes which wasn't high level enough to extract snesible
- information on where time was spent in our code.
- Thus we could not identify time consuming code any better than we could
- manually.
- 
-\end_layout
-
 \begin_layout Subsubsection
-Course objectives
+JIT compilation and peephole optimization
 \end_layout
 
 \begin_layout Standard
-Describe the challenges of implementing a virtual machine for a language
- without classes
-\end_layout
-
-\begin_layout Standard
-*
-\end_layout
-
-\begin_layout Standard
-Explain 'inline caching' and other techniques for dynamic dispatching
-\end_layout
-
-\begin_layout Standard
-* 
-\end_layout
-
-\begin_layout Standard
-Explain techniques for optimization and deoptimization for supporting debugging
-\end_layout
-
-\begin_layout Standard
-* 
-\end_layout
-
-\begin_layout Standard
-Evaluate the pros and cons of the various types of JIT compilation
-\end_layout
-
-\begin_layout Standard
-* 
-\end_layout
-
-\begin_layout Standard
-Evaluate the pros and cons of various garbage collection algorithms
-\end_layout
-
-\begin_layout Standard
-* 
-\end_layout
-
-\begin_layout Standard
-Relate and apply this knowledge to construct solutions to performance problems
- in virtual machines 
-\end_layout
-
-\begin_layout Standard
-*
-\end_layout
-
-\begin_layout Section
-Future work
-\begin_inset LatexCommand \label{future work}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Optimizations
-\end_layout
-
-\begin_layout Subsubsection
-JIT Compilation
+TODO
 \end_layout
 
 \begin_layout Standard
@@ -2027,13 +1997,300 @@ An option would be to just generate code between jumps and let jumps be
 t, and unfortunately we didn't have the time for implementing it.
 \end_layout
 
+\begin_layout Subsection
+Benchmarks
+\end_layout
+
+\begin_layout Standard
+Here we provide performance measurements of execution times.
+ We used V8 0.4.5 (candidate) and Firefox 3.0.4 with SpiderMonkey 1.8.1.13.
+\end_layout
+
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:Selected-benchmarks-on}
+
+\end_inset
+
+.
+ The first coloumn is the original unoptimized version, second coloumn is
+ refactoring, see 
+\begin_inset LatexCommand \ref{sub:Refactoring}
+
+\end_inset
+
+.
+ Third coloumn is refactoring of a debug variable to be local instead of
+ global.
+ The last column is after the new stack is implemented see 
+\begin_inset LatexCommand \ref{sub:Stack}
+
+\end_inset
+
+.
+ for simplicity we have included a graph with selected benchmarks, the full
+ benchmark is in appendix 
+\begin_inset LatexCommand \ref{sec:Additional-benchmark}
+
+\end_inset
+
+.
+ We note that the new stack doesn't improve performance in all cases, the
+ cases with many method calls is penitalized by having to create new stacks
+ every methodcall.
+\end_layout
+
+\begin_layout Standard
+\align left
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename BenchV8highlights.eps
+	scale 55
+	rotateAngle -90
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:Selected-benchmarks-on}
+
+\end_inset
+
+Selected benchmarks on PEJS revisions
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:PEJS-compared-to}
+
+\end_inset
+
+ we benchmark PEJS against CPython, it shows that we are approximately a
+ factor 2 to 10 slower.
+\end_layout
+
+\begin_layout Standard
+\align left
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename BenchPEJSonV8vsCPython.eps
+	scale 55
+	rotateAngle -90
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:PEJS-compared-to}
+
+\end_inset
+
+PEJS compared to CPython
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:V8-vs.-SpiderMonkey}
+
+\end_inset
+
+ we run PEJS on SpiderMonkey an V8, it shows that V8 is much faster in the
+ general case, except in ListListSlicing where SpiderMonkey is twice as
+ fast.
+ This is probably due to a slow implementation of slice and splice in V8.
+\end_layout
+
+\begin_layout Standard
+\align left
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename BenchV8vsSpiderMonkey.eps
+	scale 55
+	rotateAngle -90
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:V8-vs.-SpiderMonkey}
+
+\end_inset
+
+V8 vs.
+ SpiderMonkey
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:JIT-Compilation}
+
+\end_inset
+
+, we present the benchmarks for JIT compiling a specialy generated benchmark.
+ First column is without JIT.
+ Second coloumn is with JIT.
+ Thisrd coloumn is with JIT and peephole optimization.
+ Note that the peephole patterns is designed specificly for this case.
+ SpiderMonkey earns by the JIT-compilation while it seems that V8 is doing
+ something simular already.
+ Offcourse the optimizations is helping both.
+\end_layout
+
+\begin_layout Standard
+\align left
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename BenchV8optimized.eps
+	scale 55
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:JIT-Compilation}
+
+\end_inset
+
+JIT compilation benchmark
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Alignment with goals
+\end_layout
+
+\begin_layout Standard
+Here we reflect on our progress in comparison with our initial plan (
+\begin_inset LatexCommand \ref{Goals}
+
+\end_inset
+
+) and in relation to the course objectives.
+\end_layout
+
+\begin_layout Standard
+When planning implementation in JavaScript, it wasn't completely clear to
+ us how we would or should handle heap representation and garbage collection.
+ This turned out to be completely trivial because we chose to simply implement
+ Python objects and code objects as regular JavaScript objects.
+ The consequence of this was that no heap and no garbage collector was necessary
+, nor would they make any sense.
+ This has definitely been a great help in having time for implementing a
+ larger subset of our target language, but on other hand we have not gained
+ much experience with regard to heap design and garbage collection.
+\end_layout
+
+\begin_layout Standard
+We were pleasently surprised of how easy it was to establish a library.
+ When starting development, we were not at all sure how or if we would be
+ able to get a library running.
+ This turned out not to be a problem, but we have not had time for extending
+ it very much.
+\end_layout
+
+\begin_layout Standard
+The only thing we're not satisfied with is the fact that the performance
+ of our VM is significantly lower than that of CPython.
+ We would have liked to optimize our code som more, but we were not able
+ to find a decent profiler for JavaScript.
+ FireBug for Firefox provided information in a useful format, but the results
+ were unreliable.
+ V8's profiler wasn't really useful as it provided information mostly on
+ the level of opcodes which wasn't high level enough to extract sensible
+ information on where time was spent in our code.
+ Thus we could not identify time consuming code any better than by examining
+ the code manually.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Course objectives
+\end_layout
+
+\begin_layout Standard
+The only aspect of our project that relates directly to any of the course
+ objectives is the fact that we have implemented a variant of a JIT compiler.
+ Other than that we have gained a lot of experience on how to implement
+ a VM, allthough the project doesn't match the very specific course objectives
+ precisely.
+\end_layout
+
+\begin_layout Section
+Future work
+\begin_inset LatexCommand \label{future work}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this section we outline possibilities for future work on our VM.
+ 
+\end_layout
+
+\begin_layout Subsection
+Optimizations
+\end_layout
+
 \begin_layout Subsubsection
 Switch-case as array
 \end_layout
 
 \begin_layout Standard
-Another attempt to minimize the interpreter overhead, could be to replace
- the switch-case with an array containing JavaScript functions corresponding
+An attempt to minimize the interpreter overhead, could be to replace the
+ switch-case with an array containing JavaScript functions corresponding
  to the code executed in each case.
  The array indexes should match the case number, so a fetch-decode-execute
  cycle would look like sketched in 
@@ -2087,19 +2344,11 @@ while(true) {
 \end_layout
 
 \begin_layout LyX-Code
-  
+
 \end_layout
 
 \begin_layout LyX-Code
-  if (functions[bytecode](argument)) {
-\end_layout
-
-\begin_layout LyX-Code
-    return true; //Simple way of returning from execute
-\end_layout
-
-\begin_layout LyX-Code
-  }
+  functions[bytecode](argument);
 \end_layout
 
 \begin_layout LyX-Code
@@ -2120,15 +2369,14 @@ Outline of the switch-case as array approach
 \end_layout
 
 \begin_layout Standard
-This approach will introduce an extra function call and a conditional check
- per fetch-decode-execute cycle, but assuming constant-time lookup in the
- array, it might be feasible.
- The actual impact will have to be benchmarked.
+This approach will introduce an extra function call per fetch-decode-execute
+ cycle, but assuming constant-time lookup in the array, it might be feasible.
+ The actual impact should be benchmarked.
 \end_layout
 
 \begin_layout Standard
 The approach has many resemblances to the threaded code approach, as described
- by [Bell, 1973]
+ by Bell
 \begin_inset Foot
 status collapsed
 
@@ -2147,8 +2395,8 @@ Optimizations on byte code order and format
 \end_layout
 
 \begin_layout Standard
-Throughout the project, we have relied on the order, in which the Python
- compiler output byte codes.
+Throughout the project, we have relied on the order in which the Python
+ compiler outputs byte codes.
  In some cases, the way we handle byte codes does not correspond to the
  optimal order, in which elements could be placed on the stack.
  In the example shown as algorithm 
@@ -2280,10 +2528,10 @@ Library snapshot
 \begin_layout Standard
 Upon startup of an execution we interpret the standard library every time.
  Since the library is pretty static it could be advantageous to create a
- snapshot of the library that could just be executed everytime instead of
- interpretted.
- This would decrease load time, especially as the library increases.
- In the current state the library is not that big so the penalty is not
+ snapshot of the library that could just be loaded instead of interpreting
+ the library declarations every time.
+ This would decrease load time, especially as the library's size increases.
+ In the current state the library is fairly small so the penalty is not
  that big.
 \end_layout
 
@@ -2293,7 +2541,7 @@ Python compiler
 
 \begin_layout Standard
 Implementing a python compiler in JavaScript that outputs the codeObjects
- we need, would allow us to have python embedded in a html document.
+ we need would allow us to have python embedded in a html document.
  There is no technical obsacles in the way of doing this, and if PEJS is
  to have much use in the real world this would definitely be needed.
  We have focused on the VM since that is what this course is about, but
@@ -2301,7 +2549,7 @@ Implementing a python compiler in JavaScript that outputs the codeObjects
 \end_layout
 
 \begin_layout Subsection
-Library extension (DOM extension)
+Library extension
 \end_layout
 
 \begin_layout Standard
@@ -2310,15 +2558,18 @@ The library could be extended to implement a larger part of the standard
  More interestingly, it would be relevant to implement a library for interacting
  with the DOM in the browser.
  This would make it very feasible to use Python for writing web pages.
- It would obviously have to be done mostly in JavaScript.
-\end_layout
-
-\begin_layout Subsection
-Debugger
+ It would have to be done mostly in JavaScript, in order to utilize JavaScript's
+ DOM functionality.
 \end_layout
 
 \begin_layout Section
 Conclusions
+\end_layout
+
+\begin_layout Standard
+We have done a project.
+ We are happy.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -2346,7 +2597,7 @@ For convenience we provide an overview of the directory structure and content
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout LyX-Code
 
@@ -2745,6 +2996,27 @@ Put
 
 \begin_layout Standard
 in body of html.
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Additional benchmark
+\begin_inset LatexCommand \label{sec:Additional-benchmark}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename BenchV8revisions.eps
+	scale 75
+
+\end_inset
+
+
 \end_layout
 
 \end_body
