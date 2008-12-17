@@ -284,7 +284,7 @@ PEJS.prototype = {
             //Implements TOS = iter(TOS).
             var iterable = stack.pop();
             if (iterable instanceof this.types.PyObject) {
-              var codeObject = iterable.class.codeObject;
+              var codeObject = iterable.pyClass.codeObject;
               index = codeObject.co_varnames.indexOf("__iter__");
               if (index > -1) {
                 //Set self object on __iter__ method
@@ -452,7 +452,7 @@ PEJS.prototype = {
             var iterator = stack.peek();
             try {
               if (iterator instanceof this.types.PyObject) {
-                var codeObject = iterator.class.codeObject;
+                var codeObject = iterator.pyClass.codeObject;
                 index = codeObject.co_varnames.indexOf("next");
                 stack.push(codeObject.co_locals[index]);
 		//Set self before calling.
@@ -463,7 +463,7 @@ PEJS.prototype = {
               }
             } catch(exception) {
               if (exception instanceof this.types.PyObject && 
-                  exception.class.__name__ != "StopIteration") {
+                  exception.pyClass.__name__ != "StopIteration") {
                 throw exception;   
               }
               stack.pop();
@@ -571,23 +571,23 @@ PEJS.prototype = {
               if (object.fields[name] != undefined) {
                 stack.push(object.fields[name]);
               } else {
-                function lookup(class,name) {
-                  index = class.codeObject.co_varnames.indexOf(name);
+                function lookup(pyClass,name) {
+                  index = pyClass.codeObject.co_varnames.indexOf(name);
                   if (index > -1)
-                    return class.codeObject.co_locals[index];
+                    return pyClass.codeObject.co_locals[index];
                   var result;
-                  for (var i=0;i<class.__bases__.length;i++) {
-                    var result = lookup(class.__bases__[i],name);
+                  for (var i=0;i<pyClass.__bases__.length;i++) {
+                    var result = lookup(pyClass.__bases__[i],name);
                     if (result) { return result; }
                   }
                 }
-                var attrObject = lookup(object.class,name);
+                var attrObject = lookup(object.pyClass,name);
                 if (attrObject instanceof PEJS.prototype.types.PyFunction) {
                   attrObject.codeObject.co_varnames[0] = "self";
                   attrObject.codeObject.co_locals[0] = object;
                 } else {
                   throw "LOAD_ATTR tried to load non-function "+ name +
-                      " from class "+ object.class.__name__;
+                      " from class "+ object.pyClass.__name__;
                 }
                 stack.push(attrObject);
               }
@@ -617,8 +617,8 @@ PEJS.prototype = {
             var codeObj = eval(module); //Gets the code object
             this.globals.add(codeObj.co_varnames, codeObj.co_locals);
             stack.push(this.execute(codeObj));
-            var class = new this.types.PyClass(module, [], codeObj);
-            var object = new this.types.PyObject(class);
+            var pyClass = new this.types.PyClass(module, [], codeObj);
+            var object = new this.types.PyObject(pyClass);
             for (var j=0; j<codeObj.co_locals.length; j++) {
               if (/__\w+__/.test(codeObj.co_varnames[j])) { continue; }
               if (codeObj.co_locals[j] instanceof PEJS.prototype.types.PyFunction) { continue; }
@@ -631,7 +631,7 @@ PEJS.prototype = {
             //Loads the attribute co_names[namei] from the module found in TOS. 
             //The resulting object is pushed onto the stack, to be subsequently 
             //stored by a STORE_FAST instruction.
-            var codeObject = stack.pop().class.codeObject; 
+            var codeObject = stack.pop().pyClass.codeObject; 
             var attrname = code_object.co_names[argument];           
             var attr = codeObject.co_locals[codeObject.co_varnames.indexOf(attrname)];
             stack.push(attr);
@@ -1103,23 +1103,23 @@ PEJS.prototype = {
               "if (object.fields[name] != undefined) {"+
                 "stack.push(object.fields[name]);"+
               "} else {"+
-                "function lookup(class,name) {"+
-                  "index = class.codeObject.co_varnames.indexOf(name);"+
+                "function lookup(pyClass,name) {"+
+                  "index = pyClass.codeObject.co_varnames.indexOf(name);"+
                   "if (index > -1)"+
-                    "return class.codeObject.co_locals[index];"+
+                    "return pyClass.codeObject.co_locals[index];"+
                   "var result;"+
-                  "for (var i=0;i<class.__bases__.length;i++) {"+
-                    "var result = lookup(class.__bases__[i],name);"+
+                  "for (var i=0;i<pyClass.__bases__.length;i++) {"+
+                    "var result = lookup(pyClass.__bases__[i],name);"+
                     "if (result) { return result; }"+
                   "}"+
                 "}"+
-                "var attrObject = lookup(object.class,name);"+
+                "var attrObject = lookup(object.pyClass,name);"+
                 "if (attrObject instanceof PEJS.prototype.types.PyFunction) {"+
                   "attrObject.codeObject.co_varnames[0] = \"self\";"+
                   "attrObject.codeObject.co_locals[0] = object;"+
                 "} else {"+
                   "throw \"LOAD_ATTR tried to load non-function \"+ name +"+
-                      "\" from class \"+ object.class.__name__;"+
+                      "\" from class \"+ object.pyClass.__name__;"+
                 "}"+
                 "stack.push(attrObject);"+
               "}"+
@@ -1139,8 +1139,8 @@ PEJS.prototype = {
             "var codeObj = eval(module);"+
             "this.globals.add(codeObj.co_varnames, codeObj.co_locals);"+
             "stack.push(this.execute(codeObj));"+
-            "var class = new this.types.PyClass(module, [], codeObj);"+
-            "var object = new this.types.PyObject(class);"+
+            "var pyClass = new this.types.PyClass(module, [], codeObj);"+
+            "var object = new this.types.PyObject(pyClass);"+
             "for (var j=0; j<codeObj.co_locals.length; j++) {"+
               "if (/__\w+__/.test(codeObj.co_varnames[j])) { continue; }"+
               "if (codeObj.co_locals[j] instanceof PEJS.prototype.types.PyFunction) { continue; }"+
@@ -1150,7 +1150,7 @@ PEJS.prototype = {
             "stack.push(object);";
             break;
         case 108: //IMPORT_FROM
-            res += "var codeObject = stack.pop().class.codeObject;"+
+            res += "var codeObject = stack.pop().pyClass.codeObject;"+
             "var attrname = code_object.co_names["+argument+"];"+
             "var attr = codeObject.co_locals[codeObject.co_varnames.indexOf(attrname)];"+
             "stack.push(attr);";
@@ -1367,20 +1367,20 @@ PEJS.prototype = {
   callPyClass: function(actualArgc, posParams, kwParams, stack) {
     var object = new this.types.PyObject(stack.pop());
     //Find all fields that belong to this object
-    function injectFields(object, class) {
-      for (var i=class.__bases__.length-1; i>=0; i--) {
-        injectFields(object, class.__bases__[i]);
+    function injectFields(object, pyClass) {
+      for (var i=pyClass.__bases__.length-1; i>=0; i--) {
+        injectFields(object, pyClass.__bases__[i]);
       }
-      var codeObj = class.codeObject;
+      var codeObj = pyClass.codeObject;
       for (var j=0; j<codeObj.co_locals.length; j++) {
         if (codeObj.co_locals[j] instanceof PEJS.prototype.types.PyFunction) { continue; }
         if (/__\w+__/.test(codeObj.co_varnames[j])) { continue; }
         object.fields[codeObj.co_varnames[j]] = codeObj.co_locals[j];
       }
     }
-    injectFields(object, object.class);
+    injectFields(object, object.pyClass);
     //Execute the __init__ method if it exists
-    var codeObject = object.class.codeObject;
+    var codeObject = object.pyClass.codeObject;
     var index = codeObject.co_varnames.indexOf("__init__");
     if (index > -1) {
       codeObject.co_locals[index].codeObject.co_locals[0] = object;
@@ -1519,9 +1519,9 @@ PEJS.prototype.types = {
   },
   
   PyObject: function(clss) {
-    this.class = clss;
+    this.pyClass = clss;
     this.fields = new Object();
-    this.toString = function() { return "PyObject:"+this.class.__name__; };
+    this.toString = function() { return "PyObject:"+this.pyClass.__name__; };
   },
 
   PyFunction: function(defaultArgc, codeObj) {
@@ -1548,8 +1548,8 @@ PEJS.prototype.types = {
       throw "Iterator not implemented for dictionaries.";
     } else if (iterable instanceof PEJS.prototype.types.PyObject) {
       this.next = function(it) {
-        var index = it.class.codeObject.co_varnames.indexOf("next");
-        if (index > -1) { return it.class.codeObject.co_locals[index]; }
+        var index = it.pyClass.codeObject.co_varnames.indexOf("next");
+        if (index > -1) { return it.pyClass.codeObject.co_locals[index]; }
         throw "Object is not iterable.";
       }
     } else {
