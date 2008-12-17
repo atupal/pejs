@@ -1017,6 +1017,12 @@ The byte codes have been represented in two different ways during the project.
 .
 \end_layout
 
+\begin_layout Standard
+
+\newpage
+
+\end_layout
+
 \begin_layout Subsection
 Interpreter
 \end_layout
@@ -1556,11 +1562,16 @@ In addition to the html interface, we set up scripts for running the tests
 \end_layout
 
 \begin_layout Standard
-The setup was fairly slick so tests could be added just by adding the file
- containing the test code and running a single script (
+The setup was fairly elegant, so tests could be added just by adding the
+ file containing the test code and running a single script (
 \family typewriter
 tools/createTest.py
 \family default
+ - see section 
+\begin_inset LatexCommand \ref{sec:How-to-run}
+
+\end_inset
+
 ).
  
 \end_layout
@@ -1575,6 +1586,8 @@ After having established this small test framework, our development was
  figuring out if it would work in every situation.
  Finally it was also quicker for us to correct errors, as the test overview
  and especially the single test trace made it easy to identify problems.
+\newpage
+
 \end_layout
 
 \begin_layout Section
@@ -1586,8 +1599,7 @@ Supported language
 \end_layout
 
 \begin_layout Standard
-In this section we describe roughly what parts of the Python language our
- VM supports.
+In this section we describe what parts of the Python language our VM supports.
  
 \end_layout
 
@@ -1597,18 +1609,18 @@ We decided on implementing Python 2.4.3, as that was the version installed
 \end_layout
 
 \begin_layout Standard
-Everything described here is assured to some degree with testcases, but
+Everything described here is assured to some degree with test cases, but
  it should be noted that there is lots of room for more thorough testing.
  This also means that our claims of supported features below only holds
  to the extent ensured by our tests.
- At the deadline, we had 69 testcases and 36 benchmarks.
+ At the deadline, we had 69 test cases and 36 benchmarks.
  Examples of unsupported features can be seen in 
 \family typewriter
 test/unsupported.
 \end_layout
 
 \begin_layout Standard
-It should also be mentioned that we have no negative testcases and have
+It should also be mentioned that we have no negative test cases and have
  not attempted to catch illegal programs in our implementation.
  Thus, running an illegal program will cause undefined behavior.
 \end_layout
@@ -1624,8 +1636,8 @@ Basic arithmetic operations were fairly easily implemented, as we just used
  what is specified in the test cases.
  Longs are not supported, but floats are.
  The implementation doesn't quite match Python's apparent intention of making
- everything objects, which would imply that even the basic arithmetic operators
- should be implemented as functions or methods.
+ objects out of everything, which would imply that even the basic arithmetic
+ operators should be implemented as functions or methods.
  
 \end_layout
 
@@ -1701,7 +1713,7 @@ Classes and objects are supported.
 Inheritance was fairly easy to add on top of the basic class/object implementati
 on, as Python's inheritance rules are reasonably simple.
  They simply state that the ordered list of base classes should be traversed
- in order and the first field/method with matching name should be chosen.
+ and the first field/method with matching name should be chosen.
  This is working as it should which is ensured by a couple of tests.
 \end_layout
 
@@ -1747,9 +1759,8 @@ getItem(...)
 \family default
 .
  We've implemented the iterator for lists and tuples which works as it should.
- In principle it also works for general objects, where the object itself
- is responsible for implementing the actual iterator somehow.
- This has not been tested.
+ It also works for general objects, where the object itself is responsible
+ for implementing the actual iterator.
 \end_layout
 
 \begin_layout Subsubsection
@@ -1805,7 +1816,8 @@ In order to allow JavaScript to garbage collect, we implemented a new stack
 
 \end_inset
 
-, the old one is described in the following.
+.
+ The old one is described in the following.
 \end_layout
 
 \begin_layout Standard
@@ -1864,9 +1876,9 @@ On removeFrame we syncronize the localvariables with the arguments on the
 
  it shows that we don't delete things from the stack again, we just overwrite
  the contents when pushing data onto the stack.
- It could be advantageous to delete data over the SP when returning from
- a method this would allow the JavaScript VM to garbage collect the used
- data.
+ It would have been advantageous to delete data over the SP when returning
+ from a method.
+ This would allow the JavaScript VM to garbage collect the used data.
 \end_layout
 
 \begin_layout Subsubsection
@@ -1886,13 +1898,13 @@ co_code
 \family default
  array, which contains the opcodes and arguments, contained each instruction
  as a nested array.
- This meant that we could not jump directly to that index since we had obscured
- the instruction array.
+ This meant that we could not jump directly to that index calculated by
+ the compiler, since we had obscured the instruction array.
  Instead we needed to search through each instruction in the array to see
  if this had the offset we were looking for.
  This original approach had the advantage that we could have the instruction
  name and other information available, which helped us understand the programs,
- but we wanted to make it fast so we optimized it.
+ but in an attempt to make it faster, we changed it.
 \end_layout
 
 \begin_layout Standard
@@ -1901,7 +1913,7 @@ The approach was to create a single array with the opcodes and arguments.
 \family typewriter
 co_code 
 \family default
-array can be seen in figure 
+array can be seen in algorithm 
 \begin_inset LatexCommand \ref{Helloworld.js codeObject}
 
 \end_inset
@@ -1912,10 +1924,11 @@ array can be seen in figure
  We were expecting a big improvement in performance as jumping directly
  must be way faster than looking through an array.
  In practice we only saw a slight increase in performance based on the bencmarks
- in the test suite, from around 3200ms to 3100ms.
- We think that is due to the structure of the tests where we don't need
- to jump very far and therefore don't need to scan for the right offset
- for very long.
+ in the test suite, from around 32 seconds to 31 seconds.
+ We think that is partly due to the structure of the tests where we don't
+ need to jump very far and therefore don't need to scan for the right offset
+ for very long, and partly because we have introduced a check in each fetch-deco
+de-execute cycle.
 \end_layout
 
 \begin_layout Subsubsection
@@ -1928,18 +1941,18 @@ Refactoring
 \end_layout
 
 \begin_layout Standard
-When we started the implementation many of the elements from figure 
+When we started the implementation, many of the elements from figure 
 \begin_inset LatexCommand \ref{static-structure}
 
 \end_inset
 
  was implemented as globals.
- This was obviously a poor choice and we desided to refactor and introduce
+ This was obviously a poor choice and we decided to refactor and introduce
  the structure we have now.
  We expected to see a performance decrease since lookup of the elements
  would be more indirect.
  It turned out that the refactoring had a huge positive impact on performance.
- We went from times around 3100ms to 1100ms to execute our benchmarks.
+ We went from times around 31 seconds to 11 seconds to execute our benchmarks.
  We have discovered that this is because globals take a very long time to
  resolve.
  
@@ -1979,6 +1992,12 @@ An improvement would be a more finegrained compilation, where we just generate
  We have not had time for trying this.
 \end_layout
 
+\begin_layout Standard
+
+\newpage
+
+\end_layout
+
 \begin_layout Subsection
 Benchmarks
 \end_layout
@@ -1986,40 +2005,8 @@ Benchmarks
 \begin_layout Standard
 Here we provide performance measurements of execution times.
  We used V8 0.4.5 (candidate) and Firefox 3.0.4 with SpiderMonkey 1.8.1.13.
-\end_layout
-
-\begin_layout Standard
-In figure 
-\begin_inset LatexCommand \ref{fig:Selected-benchmarks-on}
-
-\end_inset
-
-.
- The first coloumn is the original unoptimized version, second coloumn is
- refactoring, see 
-\begin_inset LatexCommand \ref{sub:Refactoring}
-
-\end_inset
-
-.
- Third coloumn is refactoring of a debug variable to be local instead of
- global.
- The last column is after the new stack is implemented see 
-\begin_inset LatexCommand \ref{sub:Stack}
-
-\end_inset
-
-.
- for simplicity we have included a graph with selected benchmarks, the full
- benchmark is in appendix 
-\begin_inset LatexCommand \ref{sec:Additional-benchmark}
-
-\end_inset
-
-.
- We note that the new stack doesn't improve performance in all cases, the
- cases with many method calls is penitalized by having to create new stacks
- every methodcall.
+ The benchmarks are taken from the pybench benchmark suite.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -2056,16 +2043,38 @@ Selected benchmarks on PEJS revisions
 
 \begin_layout Standard
 In figure 
-\begin_inset LatexCommand \ref{fig:PEJS-compared-to}
+\begin_inset LatexCommand \ref{fig:Selected-benchmarks-on}
 
 \end_inset
 
- we benchmark PEJS against CPython, it shows that we are approximately a
- factor 2 to 10 slower.
+.
+ Revision 57 is the original unoptimized version, revision 61 is refactoring,
+ see 
+\begin_inset LatexCommand \ref{sub:Refactoring}
+
+\end_inset
+
+.
+ Revision 85 is refactoring of a debug variable to be local instead of global.
+ revision 95 is after the new stack was implemented, see 
+\begin_inset LatexCommand \ref{sub:Stack}
+
+\end_inset
+
+.
+ For simplicity we have included a graph with selected benchmarks, the full
+ benchmark is in appendix 
+\begin_inset LatexCommand \ref{sec:Additional-benchmark}
+
+\end_inset
+
+.
+ We note that the new stack doesn't improve performance in all cases.
+ The cases with many method calls are penalized by having to create a new
+ stack frame for every method invocation.
 \end_layout
 
 \begin_layout Standard
-\align left
 \begin_inset Float figure
 wide false
 sideways false
@@ -2098,14 +2107,12 @@ PEJS compared to CPython
 
 \begin_layout Standard
 In figure 
-\begin_inset LatexCommand \ref{fig:V8-vs.-SpiderMonkey}
+\begin_inset LatexCommand \ref{fig:PEJS-compared-to}
 
 \end_inset
 
- we run PEJS on SpiderMonkey an V8, it shows that V8 is much faster in the
- general case, except in ListListSlicing where SpiderMonkey is twice as
- fast.
- This is probably due to a slow implementation of slice and splice in V8.
+ we benchmark PEJS against CPython, it shows that we are approximately a
+ factor 2 to 20 slower.
 \end_layout
 
 \begin_layout Standard
@@ -2120,6 +2127,7 @@ status collapsed
 \begin_inset Graphics
 	filename BenchV8vsSpiderMonkey.eps
 	scale 55
+	BoundingBox 50bp 50bp 554bp 770bp
 	rotateAngle -90
 
 \end_inset
@@ -2143,18 +2151,22 @@ V8 vs.
 
 \begin_layout Standard
 In figure 
-\begin_inset LatexCommand \ref{fig:JIT-Compilation}
+\begin_inset LatexCommand \ref{fig:V8-vs.-SpiderMonkey}
 
 \end_inset
 
-, we present the benchmarks for JIT compiling a specialy generated benchmark.
- First column is without JIT.
- Second coloumn is with JIT.
- Thisrd coloumn is with JIT and peephole optimization.
- Note that the peephole patterns is designed specificly for this case.
- SpiderMonkey earns by the JIT-compilation while it seems that V8 is doing
- something simular already.
- Offcourse the optimizations is helping both.
+ we run PEJS on SpiderMonkey an V8, it shows that V8 is much faster in the
+ general case, except in ListListSlicing where SpiderMonkey is twice as
+ fast.
+ This is probably due to a slow implementation of 
+\family typewriter
+Array.slice(...)
+\family default
+ and 
+\family typewriter
+Array.splice(...)
+\family default
+ in V8.
 \end_layout
 
 \begin_layout Standard
@@ -2188,6 +2200,22 @@ JIT compilation benchmark
 
 \end_layout
 
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:JIT-Compilation}
+
+\end_inset
+
+, we present the benchmarks for JIT compiling a specially generated benchmark.
+ First column is without JIT.
+ Second coloumn is with JIT.
+ Third coloumn is with JIT and peephole optimization.
+ Note that the peephole patterns is designed specifically for this case.
+ SpiderMonkey earns by the JIT compilation while it seems that V8 is doing
+ something similarly clever already.
+ Of course, the optimizations help both.
+\end_layout
+
 \begin_layout Subsection
 Alignment with goals
 \end_layout
@@ -2204,7 +2232,7 @@ Here we reflect on our progress in comparison with our initial plan (
 \begin_layout Standard
 When planning implementation in JavaScript, it wasn't completely clear to
  us how we would or should handle heap representation and garbage collection.
- This turned out to be completely trivial because we chose to simply implement
+ This turned out to be completely trivial as we chose to simply implement
  Python objects and code objects as regular JavaScript objects.
  The consequence of this was that no heap and no garbage collector was necessary
 , nor would they make any sense.
@@ -2224,12 +2252,12 @@ We were pleasently surprised of how easy it was to establish a library.
 \begin_layout Standard
 The only thing we're not satisfied with is the fact that the performance
  of our VM is significantly lower than that of CPython.
- We would have liked to optimize our code som more, but we were not able
+ We would have liked to optimize our code some more, but we were not able
  to find a decent profiler for JavaScript.
  FireBug for Firefox provided information in a useful format, but the results
  were unreliable.
  V8's profiler wasn't really useful as it provided information mostly on
- the level of opcodes which wasn't high level enough to extract sensible
+ the level of opcodes, which wasn't high level enough to extract sensible
  information on where time was spent in our code.
  Thus we could not identify time consuming code any better than by examining
  the code manually.
@@ -2271,11 +2299,11 @@ Switch-case as array
 \end_layout
 
 \begin_layout Standard
-An attempt to minimize the interpreter overhead, could be to replace the
+One attempt to minimize the interpreter overhead could be to replace the
  switch-case with an array containing JavaScript functions corresponding
  to the code executed in each case.
  The array indexes should match the case number, so a fetch-decode-execute
- cycle would look like sketched in 
+ cycle would look like sketched in algorithm 
 \begin_inset LatexCommand \ref{alg:switch-case_as_array}
 
 \end_inset
@@ -2497,7 +2525,7 @@ Stack in present an optimized state before a SLICE+3 byte code
 \end_layout
 
 \begin_layout Standard
-As JavaScript being a high-level language, the impact of this suggested
+Becuase JavaScript is a high-level language, the impact of this suggested
  optimization is hard to predict, as a JavaScript compiler could optimize
  the present implementation to be as performant as the suggested, optimized
  implementation.
@@ -2581,6 +2609,11 @@ This project has shown that it actually is possible to make a simple VM
 \begin_layout Section
 \start_of_appendix
 Directory structure
+\begin_inset LatexCommand \label{sec:Directory-structure}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -2886,6 +2919,21 @@ How to run
 Note: Our VM has been tested on SpiderMonkey and V8 (both standalone and
  in Firefox/Chrome).
  It doesn't run in Internet Explorer.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+Prerequisites
+\end_layout
+
+\begin_layout Itemize
+The py-files should be run with Python 2.4.3 installed.
+ In the zip-file provided, it is not necessary to run the createTest-script,
+ we have already translated the tests.
+\end_layout
+
+\begin_layout Itemize
+The bash scripts should be run in a Linux console.
 \end_layout
 
 \begin_layout Subsubsection*
@@ -2946,7 +2994,6 @@ myProgram.py
 Translate with 
 \family typewriter
 "tools/compiler.py myProgram.py".
- Make
 \end_layout
 
 \begin_layout Enumerate
