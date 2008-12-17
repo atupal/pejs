@@ -9,7 +9,7 @@ set boxwidth 0.9
 set xtics rotate by -90
 set style line 1
 
-set title "PEJS on V8 vs. CPython"
+set title "PEJS on V8 vs. CPython\nNote: ListListSlicing exceeds the graph. The actual value is 1881 milliseconds."
 set output "BenchPEJSonV8vsCPython.eps"
 set yrange [0:700]
 plot "benchV8final.txt" using 3:xtic(2) ls 1 title "PEJS on V8",\

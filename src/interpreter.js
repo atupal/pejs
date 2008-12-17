@@ -7,6 +7,13 @@ var PEJS = function() {
 PEJS.prototype = {
   compareOps: ['<','<=','==','!=','>','>=','in','not in','is','is not','exception match','BAD'],
 
+  /**
+    *  Initializes the library. The primary objective of this
+    *  is to register the relevant global variables.
+    *
+    *  TODO: Make a snapshot of the compiled library and load
+    *  this instead, as well as register a fixed array as globals.
+    */
   initLibrary : function() {
     if (typeof(stdlib) != typeof(undefined)) {
       this.globals.add(stdlib.co_varnames, stdlib.co_locals);
@@ -16,9 +23,12 @@ PEJS.prototype = {
     }
   },
 
+  /**
+    *  Main entry method. progName is evaluated and handed to execute().
+    */
   interpret: function(progName, debugEnabled) {
     this.Debugger.debug = debugEnabled;
-    this.globals.reset();
+    this.globals.reset(); //Reset global variables (keeps library in globals)
     this.blockStack = [];
     var code_object = eval(progName);
     this.globals.add(code_object.co_varnames, code_object.co_locals);
@@ -28,17 +38,25 @@ PEJS.prototype = {
     this.execute(code_object);
   },
 
+
+  /**
+    *  Main loop. The switch-case interpreter is placed here.
+    *  Returns whatever the Python code object returns.
+    *  Throws an exception if Python raises an exception.
+    */
   execute: function(code_object) {
     var debugEnabled = this.Debugger.debug;
     if (debugEnabled) { this.Debugger.printDebug("blue","Execution trace of "+code_object.co_name); }
-    var bytecode, offset, argument;
+    var bytecode, argument;
     var prog = code_object.co_code;
 
+    //Initialize a new stack frame
     var stack = [];
+    //We want to avoid injecting new methods on the Array prototype.
     stack.peek = function() {
       return this[this.length-1];
     }
-    //push parameters on stack
+    //Push parameters on stack
     var stackLocals = code_object.co_nlocals;
     if (code_object.co_varnames[0] == "self") {
       stackLocals++;
@@ -47,26 +65,28 @@ PEJS.prototype = {
       stack.push(code_object.co_locals[i]);
     }
 
-    if (typeof(code_object.compiled) == "undefined") {
-       try {
+    //Tries to JIT-compile the code object, if it haven't been tried before.
+    if (typeof(code_object.isCompiled) == "undefined") {
+      try {
 	code_object.compiled_code = new Function(["code_object","stack"],this.optimize(this.compile(code_object)));
 	if (debugEnabled) { this.Debugger.printDebug("blue","Successfully compiled "+code_object.co_name); }
 	//Uncomment this line to print the compiled and optimized code.
 	//if (code_object.co_name == "test_compiled") this.printOut(code_object.compiled_code);
-	code_object.compiled = true;
-       } catch (exception) {
+	code_object.isCompiled = true;
+      } catch (exception) {
+	//The compiler bails out because of jumps.
 	if (debugEnabled) { this.Debugger.printDebug("green","Compiler threw: "+exception); }
- 	code_object.compiled = false;
-       }
+	code_object.isCompiled = false;
+      }
     }
-    if (code_object.compiled) {
+    if (code_object.isCompiled) {
       if (debugEnabled) { this.Debugger.printDebug("blue","Running compiled code from "+code_object.co_name); }
-      code_object.compiled_code.call(this, code_object, stack);
-      return stack.pop();
+      return code_object.compiled_code.call(this, code_object, stack);
     }
 
     var pc = 0;
-    while(true) { //This is safe as long as the program returns by itself
+    //Starting loop. Terminated by method return.
+    while(true) {
       bytecode = prog[pc];
       if (bytecode >= 90) {
         argument = prog[pc+2];
@@ -232,7 +252,7 @@ PEJS.prototype = {
             stack.pop().store[temp] = stack.pop();
             break;
         case 61: //DELETE_SUBSCR
-          //Implements del TOS1[TOS].
+	    //Implements del TOS1[TOS].
             var temp = stack.pop();
             delete stack.pop().store[temp];
             break;
@@ -315,11 +335,10 @@ PEJS.prototype = {
             pc = this.blockStack.pop();
             break;
         case 82: //LOAD_LOCALS
-            //Pushes a reference to the locals of the
-            //current scope on the stack.
-            //This is used in the code for a class definition:
-            // After the class body is evaluated,
-            //the locals are passed to the class definition. 
+            //Pushes a reference to the locals of the current scope
+	    //on the stack. This is used in the code for a class
+	    //definition: After the class body is evaluated, the
+	    //locals are passed to the class definition. 
             stack.push(code_object);
             break;
         case 83: //RETURN_VALUE
@@ -327,13 +346,19 @@ PEJS.prototype = {
         case 84: //IMPORT_STAR
             throw "IMPORT_STAR is not implemented yet!";
         case 85: //EXEC_STMT
-	  //Implements exec TOS2,TOS1,TOS. The compiler fills
-	  //missing optional parameters with None.
+	    //Implements exec TOS2,TOS1,TOS. The compiler fills
+	    //missing optional parameters with None.
             var varname = stack.pop();
             var lang = stack.pop();
             var stmt = stack.pop();
+	    //We need to execute JavaScript to make some of the
+	    //library functions, and this way both looks kinda
+	    //pretty in Python and passes the Python compiler.
+	    //TODO: Insert JavaScript code directly when JIT-compiling.
             if (lang == "JavaScript") {
               var value = eval(stmt);
+	      //If a varname is passed, the value of evaluating stmt
+              //will be assigned to var.
               if (varname != "None") {
                 var index = code_object.co_varnames.indexOf(varname);
                 if (index > -1) {
@@ -344,7 +369,7 @@ PEJS.prototype = {
                 } else if(this.globals.contains(varname)) {
                   this.globals.store(varname, value);
                 } else {
-                    //new variable
+                  //new variable
                   var index = code_object.co_varnames.length;
                   code_object.co_varnames[index] = varname;
                   code_object.co_locals[index] = value;
@@ -374,10 +399,11 @@ PEJS.prototype = {
             var className = stack.pop();
             stack.push(new PEJS.prototype.types.PyClass(className, bases.store, codeObj));
             break;
-        case 90: //STORE_NAME --------------- HAVE_ARGUMENT ---------------
-            //Implements name = TOS. namei is the index of name in the attribute
-            //co_names of the code object.
-            //The compiler tries to use STORE_LOCAL or STORE_GLOBAL if possible
+        case 90: //STORE_NAME ---------- HAVE_ARGUMENT ----------
+            //Implements name = TOS. namei is the index of name in
+	    //the attribute co_names of the code object.
+            //The Python compiler tries to use STORE_LOCAL or
+	    //STORE_GLOBAL if possible.
             var name = code_object.co_names[argument];
             var index = code_object.co_varnames.indexOf(name);
             if (index > -1) {
@@ -396,6 +422,8 @@ PEJS.prototype = {
             }
             break;
         case 91: //DELETE_NAME
+	    //Implements del name, where namei is the index
+	    //into co_names attribute of the code object. 
             var name = code_object.co_names[argument];
             var index = code_object.co_varnames.indexOf(name);
             if (index > -1) {
@@ -409,9 +437,9 @@ PEJS.prototype = {
             } else { throw "Could not find name \""+name+"\" to delete"; }
             break;
         case 92: //UNPACK_SEQUENCE
-            //Unpacks TOS into count individual values, which are put onto the
-            //stack right-to-left. 
-            var seq = stack.pop().store; //Assumes tuple
+            //Unpacks TOS into count individual values, which are
+	    //put onto the stack right-to-left. 
+            var seq = stack.pop().store; //Assumes tuple.
             for (var i = 0; i < seq.length; i++) {
               stack.push(seq[i]);
             }
@@ -427,9 +455,9 @@ PEJS.prototype = {
                 var codeObject = iterator.class.codeObject;
                 index = codeObject.co_varnames.indexOf("next");
                 stack.push(codeObject.co_locals[index]);
+		//Set self before calling.
                 codeObject.co_locals[index].codeObject.co_locals[0] = iterator;
                 this.callFunction(0,stack,[],{});
-                //stack.push(this.execute(codeObject.co_locals[index].codeObject));
               } else {
                 stack.push(iterator.next(iterator)());
               }
@@ -537,6 +565,7 @@ PEJS.prototype = {
             if (object instanceof this.types.PyList || 
                 object instanceof this.types.PyDict || 
                 object instanceof this.types.PyIterator) {
+	      //Push a JavaScript function on stack
               stack.push(object[name](object));
             } else if (object instanceof this.types.PyObject) {
               if (object.fields[name] != undefined) {
@@ -585,12 +614,11 @@ PEJS.prototype = {
             //proper import statement, a subsequent STORE_FAST instruction
             //modifies the namespace.
             var module = code_object.co_names[argument];
-            var codeObj = eval(module);
+            var codeObj = eval(module); //Gets the code object
             this.globals.add(codeObj.co_varnames, codeObj.co_locals);
             stack.push(this.execute(codeObj));
             var class = new this.types.PyClass(module, [], codeObj);
             var object = new this.types.PyObject(class);
-    
             for (var j=0; j<codeObj.co_locals.length; j++) {
               if (/__\w+__/.test(codeObj.co_varnames[j])) { continue; }
               if (codeObj.co_locals[j] instanceof PEJS.prototype.types.PyFunction) { continue; }
@@ -679,7 +707,6 @@ PEJS.prototype = {
             for (var j=0; j<argument; j++){
               parameters[j] = stack.pop();
             }
-
             if (parameters[0] instanceof this.types.PyObject) {
               throw parameters[0];
             }
@@ -726,49 +753,17 @@ PEJS.prototype = {
     }
   },
 
-  optimize: function(code) {
-    var tag = "//Optimizing: "+code.length;
-    //Found patterns are noted before suggested optimizations
-
-    //Remove var keyword where appropriate
-    code = code.replace(/([; }])var /g,"$1");
-
-    //stack.push(value);var value = stack.pop()
-    code = code.replace(/stack\.push\(value\);value = stack\.pop\(\)/g,"");
-
-    //stack.push(value);var value = stack.pop()
-    //stack.push(stack[3]);var temp = stack.pop();
-    //stack.push(stack.pop() / temp);var value = stack.pop();
-    //stack.push(stack.pop() + temp);var value = stack.pop()
-    code = code.replace(/stack\.push\((([\w. +*/-]|\(\)|\[\w*\])+)\);(\w+) = stack.pop\(\)/g,"$3 = $1");
-
-    //var temp = stack[2];var value = stack.pop() / temp;
-    code = code.replace(/temp = (([\w.]|\(\)|\[\w*\])+);(\w+) = stack\.pop\(\) ([+-/*]) temp;/g,"$3 = stack.pop() $4 $1;");
-
-    //GOOD TO RUN THIS ONCE MORE!!! :)
-    code = code.replace(/stack\.push\((([\w. +*/-]|\(\)|\[\w*\])+)\);(\w+) = stack.pop\(\)/g,"$3 = $1");
-
-    //value = stack[2] - stack[3];stack[3] = value;
-    code = code.replace(/value = (([\w. +*/-]|\(\)|\[\w*\])+);(([\w.]|\[\w*\])+) = value;/g,"$3 = value = $1;");
-
-    //stack[3] = value = stack[2] + stack[3];code_object.co_locals[3] = value;
-    code = code.replace(/(([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);(([\w.]|\[\w*\])+) = value;/g,"$5 = $1 = value = $3;");
-
-    //code_object.co_locals[3] = stack[3] = value = stack[3] - stack[1];code_object.co_locals[3] = stack[3] = value = stack[1] - stack[2];
-    while (/code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);(code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);)/.test(code)) {
-      code = code.replace(/code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);(code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);)/, "$1 = $3;$5");
-    }
-
-    code += tag +" to "+code.length+" lines";
-    return code;
-  },
-  
+  /**
+    *  More or less a copy of execute(). Instead of executing
+    *  JavaScript right away, the code is collected in a string
+    *  and returned. Throws an exception if the code object
+    *  contains jumps, iterators or exceptions.
+    */
   compile: function(code_object) {
     var debugEnabled = this.Debugger.debug;
-    var bytecode, offset, argument;
+    var bytecode, argument;
     var prog = code_object.co_code;
     var pc = 0;
-    //var res = "code_object.compiled_code = function(code_object) {";
     var res = "";
     while(true) {
       bytecode = prog[pc];
@@ -900,7 +895,6 @@ PEJS.prototype = {
             res += "var temp = stack.pop();stack.pop().store[temp] = stack.pop();";
             break;
         case 61: //DELETE_SUBSCR
-          //Implements del TOS1[TOS].
             res += "var temp = stack.pop();delete stack.pop().store[temp];";
             break;
         case 62: //BINARY_LSHIFT
@@ -922,22 +916,7 @@ PEJS.prototype = {
             res += "var temp = stack.pop();stack.push(Math.pow(stack.pop(), temp));";
             break;
         case 68: //GET_ITER
-            //Implements TOS = iter(TOS).
-            res += "var iterable = stack.pop();"+
-            "if (iterable instanceof this.types.PyObject) {"+
-              "var codeObject = iterable.class.codeObject;"+
-              "index = codeObject.co_varnames.indexOf(\"__iter__\");"+
-              "if (index > -1) {"+
-                "codeObject.co_locals[index].codeObject.co_locals[0] = iterable;"+
-                "stack.push(codeObject.co_locals[index]);"+
-                "this.callFunction(0, stack,[],{});"+
-              "} else {"+
-                "throw iterable +\" is not iterable!\";"+
-              "}"+
-            "} else {"+
-              "stack.push(new this.types.PyIterator(iterable));"+
-            "}";
-            break;
+	    throw "Iterators are not supported by the compiler.";
         case 70: //PRINT_EXPR
             throw "PRINT_EXPR is not implemented yet!";
         case 71: //PRINT_ITEM
@@ -970,21 +949,14 @@ PEJS.prototype = {
 	    throw "Break in loops is not supported by the compiler.";
             break;
         case 82: //LOAD_LOCALS
-            //Pushes a reference to the locals of the
-            //current scope on the stack.
-            //This is used in the code for a class definition:
-            // After the class body is evaluated,
-            //the locals are passed to the class definition. 
             res += "stack.push(code_object);";
             break;
         case 83: //RETURN_VALUE
-	    //return res + "}"; //end of function
-	    return res + "";
+	    res += "return stack.pop();";
+	    return res;
         case 84: //IMPORT_STAR
             throw "IMPORT_STAR is not implemented yet!";
         case 85: //EXEC_STMT
-	  //Implements exec TOS2,TOS1,TOS. The compiler fills
-	  //missing optional parameters with None.
             res += "var varname = stack.pop();"+
             "var lang = stack.pop();"+
             "var stmt = stack.pop();";
@@ -1015,21 +987,12 @@ PEJS.prototype = {
             res += "this.blockStack.pop();";
             break;
         case 88: //END_FINALLY
-            //Terminates a finally clause. The interpreter recalls whether
-            //the exception has to be re-raised, or whether the function
-            //returns, and continues with the outer-next block. 
             res += "this.blockStack.pop();";
             break;
         case 89: //BUILD_CLASS
-            //Creates a new class object. TOS is the methods dictionary,
-            // TOS1 the tuple of the names of the base classes, and TOS2
-            // the class name.
             res += "var codeObj = stack.pop();var bases = stack.pop();var className = stack.pop();stack.push(new PEJS.prototype.types.PyClass(className, bases.store, codeObj));";
             break;
         case 90: //STORE_NAME --------------- HAVE_ARGUMENT ---------------
-            //Implements name = TOS. namei is the index of name in the attribute
-            //co_names of the code object.
-            //The compiler tries to use STORE_LOCAL or STORE_GLOBAL if possible
             res += "var name = code_object.co_names["+argument+"];"+
             "var index = code_object.co_varnames.indexOf(name);"+
             "if (index > -1) {"+
@@ -1060,20 +1023,11 @@ PEJS.prototype = {
             "} else { throw \"Could not find name \\\"\"+name+\"\\\" to delete\"; }";
             break;
         case 92: //UNPACK_SEQUENCE
-            //Unpacks TOS into count individual values, which are put onto the
-            //stack right-to-left. 
             res += "var seq = stack.pop().store;for (var i = 0; i < seq.length; i++) {stack.push(seq[i]);}";
             break;
         case 93: //FOR_ITER
-            //TOS is an iterator. Call its next() method. If this yields a new
-            //value, push it on the stack (leaving the iterator below it). If
-            //the iterator indicates it is exhausted TOS is popped, and the
-            //byte code counter is incremented by delta.
-	    throw "Iterator not supported by compiler";
-            break;
+	    throw "Iterators are not supported by the compiler.";
         case 95: //STORE_ATTR
-            //Implements TOS.name = TOS1, where namei is
-            //the index of name in co_names.
             res += "var object = stack.pop();"+
             "var name = code_object.co_names["+argument+"];"+
             "if (object instanceof this.types.PyClass){"+
@@ -1109,8 +1063,6 @@ PEJS.prototype = {
             "stack.push(value);";
             break;
         case 101: //LOAD_NAME
-            //Pushes the value associated with "co_names[namei]" onto the stack.
-            //First we try to find the value in locals then in globals.
             res += "var name = code_object.co_names["+argument+"];"+
             "var index = code_object.co_varnames.indexOf(name);"+
             "if (index > -1) {"+
@@ -1132,21 +1084,15 @@ PEJS.prototype = {
             "}";
             break;
         case 102: //BUILD_TUPLE
-            // Creates a tuple consuming count items from the stack,
-            // and pushes the resulting tuple onto the stack.
             res += "var tuple = [];for(var j="+(argument-1)+"; j>=0; j--) {tuple[j] = stack.pop();}stack.push(new this.types.PyTuple(tuple));";
             break;
         case 103: //BUILD_LIST
-            //Works as BUILD_TUPLE, but creates a list.
             res += "var list = [];for(var j="+(argument-1)+"; j>=0; j--) {list[j] = stack.pop();}stack.push(new this.types.PyList(list));";
             break;
         case 104: //BUILD_MAP
-            //Pushes a new empty dictionary object onto the stack.
-            //The argument is ignored and set to zero by the compiler.
             res += "stack.push(new this.types.PyDict());";
             break;
         case 105: //LOAD_ATTR
-            //Replaces TOS with getattr(TOS, co_names[namei])
             res += "var object = stack.pop();"+
             "var name = code_object.co_names["+argument+"];"+
             "if (object instanceof this.types.PyList || "+
@@ -1189,10 +1135,6 @@ PEJS.prototype = {
             res += "var temp1 = stack.pop();var temp2 = stack.pop();if(typeof(temp1) == typeof(\"\") || typeof(temp2) == typeof(\"\")) {temp1 = \"\\\"\" + temp1 + \"\\\"\";temp2 = \"\\\"\" + temp2 + \"\\\"\";}stack.push(eval(temp2 + this.compareOps["+argument+"] + temp1));";
             break;
         case 107: //IMPORT_NAME
-            //Imports the module co_names[namei]. The module object is pushed
-            //onto the stack. The current namespace is not affected: for a
-            //proper import statement, a subsequent STORE_FAST instruction
-            //modifies the namespace.
             res += "var module = code_object.co_names["+argument+"];"+
             "var codeObj = eval(module);"+
             "this.globals.add(codeObj.co_varnames, codeObj.co_locals);"+
@@ -1208,9 +1150,6 @@ PEJS.prototype = {
             "stack.push(object);";
             break;
         case 108: //IMPORT_FROM
-            //Loads the attribute co_names[namei] from the module found in TOS. 
-            //The resulting object is pushed onto the stack, to be subsequently 
-            //stored by a STORE_FAST instruction.
             res += "var codeObject = stack.pop().class.codeObject;"+
             "var attrname = code_object.co_names["+argument+"];"+
             "var attr = codeObject.co_locals[codeObject.co_varnames.indexOf(attrname)];"+
@@ -1218,22 +1157,13 @@ PEJS.prototype = {
             break;
         case 110: //JUMP_FORWARD
             throw "Jumps not supported by compiler";
-            break;
         case 111: //JUMP_IF_FALSE
-            //If TOS is false, increment the byte code counter by delta.
-            //TOS is not changed.
             throw "Jumps not supported by compiler";
-            break;
         case 112: //JUMP_IF_TRUE
-            //If TOS is true, increment the byte code counter by delta.
-            //TOS is left on the stack
             throw "Jumps not supported by compiler";
-            break;
         case 113: //JUMP_ABSOLUTE
             throw "Jumps not supported by compiler";
-            break;
         case 116: //LOAD_GLOBAL
-            // Loads the global named co_names[namei] onto the stack.
             res += "var name = code_object.co_names["+argument+"];"+
             "if (name == \"__name__\") {"+
               "stack.push(code_object.co_name);"+
@@ -1244,46 +1174,30 @@ PEJS.prototype = {
         case 119: //CONTINUE_LOOP
             throw "CONTINUE_LOOP is not implemented yet!";
         case 120: //SETUP_LOOP
-            //Pushes a block for a loop onto the block stack.
-            //The block spans from the current instruction with
-            //a size of delta bytes.
             res += "this.blockStack.push("+(pc+argument)+");";
             break;
         case 121: //SETUP_EXCEPT
-	    //Pushes a try block from a try-except clause onto the block
-	    //stack. delta points to the first except block.
             res += "this.blockStack.push("+(pc+argument)+");";
             break;
         case 122: //SETUP_FINALLY
-	    //Pushes a try block from a try-except clause onto the block
-	    //stack. delta points to the finally block.
             res += "this.blockStack.push("+(pc+argument)+");";
             break;
         case 124: //LOAD_FAST
-            //Pushes a reference to the local co_varnames[var_num] onto the stack.
             res += "stack.push(stack["+argument+"]);";
             break;
         case 125: //STORE_FAST
-            //Stores TOS into the local co_varnames[var_num].
             res += "var value = stack.pop();stack["+argument+"] = value;code_object.co_locals["+argument+"] = value;";
             break;
         case 126: //DELETE_FAST
             res += "delete stack["+argument+"];delete code_object.co_locals["+argument+"];delete code_object.co_varnames["+argument+"];";
             break;
         case 130: //RAISE_VARARGS
-	    //Raises an exception. argc indicates the number of parameters
-	    //to the raise statement, ranging from 0 to 3. The handler will
-	    //find the traceback as TOS2, the parameter as TOS1, and the
-	    //exception as TOS.
 	    throw "Exceptions not supported by compiler.";
 	    break;
         case 131: //CALL_FUNCTION
             res += "this.callFunction("+argument+", stack, [], {});";
             break;
         case 132: //MAKE_FUNCTION
-            //Pushes a new function object on the stack. TOS is the code
-            //associated with the function. The function object is defined
-            //to have argc default parameters, which are found below TOS. 
             res += "var pyFunction = new this.types.PyFunction("+argument+", stack.pop());for (var j="+(argument-1)+"; j>=0; j--){pyFunction.addArg(j, stack.pop());}stack.push(pyFunction);";
             break;
         case 133: //BUILD_SLICE
@@ -1313,6 +1227,57 @@ PEJS.prototype = {
     }
   },
   
+  /**
+    *  Optimizes code using the peephole patterns in the
+    *  method.
+    *  TODO: The optimizations are written to be extremely
+    *  aggressive for one specific benchmark as a proof of
+    *  concept. The peephole patterns aren't all sound in
+    *  all cases, and should be redone.
+    *  Code patterns are noted before suggested peepholes.
+    */
+  optimize: function(code) {
+    var tag = "//Optimizing: "+code.length;
+
+    //Remove var keyword to ease optimization.
+    code = code.replace(/([; }])var /g,"$1");
+
+    //stack.push(value);var value = stack.pop()
+    code = code.replace(/stack\.push\(value\);value = stack\.pop\(\)/g,"");
+
+    //stack.push(value);var value = stack.pop()
+    //stack.push(stack[3]);var temp = stack.pop();
+    //stack.push(stack.pop() / temp);var value = stack.pop();
+    //stack.push(stack.pop() + temp);var value = stack.pop()
+    code = code.replace(/stack\.push\((([\w. +*/-]|\(\)|\[\w*\])+)\);(\w+) = stack.pop\(\)/g,"$3 = $1");
+
+    //var temp = stack[2];var value = stack.pop() / temp;
+    code = code.replace(/temp = (([\w.]|\(\)|\[\w*\])+);(\w+) = stack\.pop\(\) ([+-/*]) temp;/g,"$3 = stack.pop() $4 $1;");
+
+    //Good to run this once more :)
+    code = code.replace(/stack\.push\((([\w. +*/-]|\(\)|\[\w*\])+)\);(\w+) = stack.pop\(\)/g,"$3 = $1");
+
+    //value = stack[2] - stack[3];stack[3] = value;
+    code = code.replace(/value = (([\w. +*/-]|\(\)|\[\w*\])+);(([\w.]|\[\w*\])+) = value;/g,"$3 = value = $1;");
+
+    //stack[3] = value = stack[2] + stack[3];code_object.co_locals[3] = value;
+    code = code.replace(/(([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);(([\w.]|\[\w*\])+) = value;/g,"$5 = $1 = value = $3;");
+
+    //TODO: UNSOUND!!!
+    //code_object.co_locals[3] = stack[3] = value = stack[3] - stack[1];code_object.co_locals[3] = stack[3] = value = stack[1] - stack[2];
+    while (/code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);(code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);)/.test(code)) {
+      code = code.replace(/code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);(code_object\.co_locals\[3\] = (([\w.]|\[\w*\])+) = value = (([\w. +*/-]|\(\)|\[\w*\])+);)/, "$1 = $3;$5");
+    }
+
+    code += tag +" to "+code.length+" lines";
+    return code;
+  },
+  
+  /**
+    *  Handles all function calls.
+    *  Parameters are resolved and prepared, and the
+    *  appropriate functions are called.
+    */
   callFunction: function(argc, stack, varArgs, kwArgs) {
     var kwargc = argc >> 8;
     argc &= 255;
@@ -1342,6 +1307,11 @@ PEJS.prototype = {
     }
   },
   
+  /**
+    *  Handles Python function calls.
+    *  Resolves default arguments, keyword arguments
+    *  and the special constructs *list and **dict.
+    */
   callPyFunction: function(argc, posParams, kwParams, stack, pyFunction) {
     var codeObject = pyFunction.codeObject;    
     var locals = codeObject.co_locals;
@@ -1383,15 +1353,18 @@ PEJS.prototype = {
     } else {
       locals[co_argc] = kwDict;
     }
-    //codeObject.co_locals = posParams;
     for (var i=0; i<co_argc; i++) {
       locals[i] = posParams[i];
     }    
     stack.push(this.execute(codeObject));
   },
   
+  /**
+    *  Handles Python object initialization.
+    *  Creates a new PyObject and calls the __init__
+    *  method if it exists.
+    */
   callPyClass: function(actualArgc, posParams, kwParams, stack) {
-    //Creation of new object
     var object = new this.types.PyObject(stack.pop());
     //Find all fields that belong to this object
     function injectFields(object, class) {
@@ -1417,6 +1390,10 @@ PEJS.prototype = {
     stack.push(object);
   },
   
+  /**
+    *  Handles the differences in printing,
+    *  depending on environment.
+    */
   printOut: function(str) {
     switch(this.getEnvironment()) {
       case "browser":
@@ -1442,6 +1419,10 @@ PEJS.prototype = {
     }
   },
   
+  /**
+    *  Resolves the environment based on the existence of
+    *  the alert() method that exists in browsers.
+    */
   getEnvironment: function() {
     if(typeof(alert) == typeof(undefined)) {
       return "standalone";
@@ -1451,6 +1432,11 @@ PEJS.prototype = {
   }
 }
 
+/**
+  *  The Globals object contains the outermost
+  *  local variables from the library, the running
+  *  program and all imports.
+  */
 PEJS.prototype.Globals = function() {
   this.values = [[]]; //Initialized with a special array for new globals
   this.names = [[]];
@@ -1520,13 +1506,14 @@ PEJS.prototype.Globals = function() {
   };
 }
 
-
+/**
+  *  Namespace for the built-in types
+  */	
 PEJS.prototype.types = {
   
   PyClass: function(name, bases, codeObj) {
     this.__name__ = name;
     this.__bases__ = bases;
-    //this.__methods__ = ;
     this.codeObject = codeObj;
     this.toString = function() { return "PyClass:"+this.__name__; };
   },
@@ -1722,7 +1709,10 @@ PEJS.prototype.types = {
   }
 }
 
-
+/**
+  *  The name is a little ambitious, as Debuggers current
+  *  role is to trace the execution of byte codes.
+  */
 PEJS.prototype.Debugger = {
   debug: false,
 
@@ -1768,5 +1758,3 @@ PEJS.prototype.Debugger = {
     this.printDebug("green",res);
   }
 }  
-
-
