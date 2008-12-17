@@ -274,15 +274,15 @@ Design of Virtual Machines for Object Oriented Languages
 \end_inset
 
  taught at Department of Computer Science at Aarhus University during the
- fall semester 2008.
+ fall semester of 2008.
  The course has been taught by Lars Bak and Kasper Lund, assisted by Mathias
  Schwarz.
  
 \end_layout
 
 \begin_layout Standard
-It describes the design and implementation of a virtual machine for the
- programming language Python done in JavaScript.
+The report describes the design and implementation of a virtual machine
+ for the programming language Python done in JavaScript.
  The purpose of this report is to convey a description of our work process,
  the status of the project and the results obtained so far.
  The deadline for this report was December 17th 2008.
@@ -301,12 +301,12 @@ Motivation
 \begin_layout Standard
 Virtual machines for JavaScript exist in all modern browsers and since browsers
  exist on most operating systems JavaScript is virtually platform independent.
- So if we could build a virtual machine in JavaScript that takes a python
- program we can make python platform independent.
+ So if we could build a virtual machine in JavaScript that executes a Python
+ program we can make Python platform independent.
 \end_layout
 
 \begin_layout Standard
-Further, the groving use of JavaScript on the internet has pushed the need
+Further, the growing use of JavaScript on the internet has pushed the need
  for an efficient virtual machine.
  The work by Google
 \begin_inset Foot
@@ -329,8 +329,8 @@ http://www.mozilla.org/js/spidermonkey
 \end_inset
 
  has made it interesting to investigate if it is viable to build a virtual
- machine on top of a JavaScript virtual machine, which is known for having
- poor performance.
+ machine on top of a JavaScript virtual machine, which is historically known
+ for having poor performance.
 \end_layout
 
 \begin_layout Section
@@ -391,14 +391,14 @@ Handle calls to Python library somehow
 \end_layout
 
 \begin_layout Enumerate
-Do performance evaluation and improvements
+Do performance evaluation and optimizations
 \end_layout
 
 \begin_layout Standard
 As we only had around 8 weeks for the project, we decided that points 1-4
  were required while 5 and 6 could be omitted if necessary.
- Performance evaluation was naturally a must, and improvement was also something
- we definitely aimed at working with.
+ Performance evaluation was naturally a must, and optimization was also
+ something we definitely aimed at working with.
 \end_layout
 
 \begin_layout Section
@@ -415,19 +415,18 @@ Overview
 \end_layout
 
 \begin_layout Standard
-The project consists of two parts, compiling the python code to python opcodes
+The project consists of two parts, compiling the Python code to Python opcodes
  in a format we can interpret, and interpreting the opcodes in JavaScript.
- The focus of this course is to make a VM so naturally we focus on the interpret
-ation part rather than the compilation part.
- In order to save time we use the python compiler to get the opcodes and
+ The focus of this course is to make a VM, so naturally we focus on the
+ interpretation part rather than the compilation part.
+ In order to save time we use the Python compiler to get the opcodes and
  other relevant information and output it as needed.
 \end_layout
 
 \begin_layout Standard
-The intermediary opcode format is formed as a JavaScript object we call
- codeObject.
+The opcode format is formed as a JavaScript object we call a code object.
  This is illustrated by figure 
-\begin_inset LatexCommand \ref{overview}
+\begin_inset LatexCommand \ref{fig: overview}
 
 \end_inset
 
@@ -455,7 +454,7 @@ status collapsed
 \end_layout
 
 \begin_layout Caption
-\begin_inset LatexCommand \label{overview}
+\begin_inset LatexCommand \label{fig: overview}
 
 \end_inset
 
@@ -468,13 +467,13 @@ Overview of PEJS
 \end_layout
 
 \begin_layout Standard
-We compile the python file with 
+We compile the Python file with 
 \family typewriter
 tools/compile.py
 \family default
  which outputs a JavaScript file with the code object.
  To illustrate this here is an example of a py file and the corresponding
- codeObject.
+ code object.
 \end_layout
 
 \begin_layout LyX-Code
@@ -683,21 +682,25 @@ Helloworld.js
 \end_layout
 
 \begin_layout Standard
-In order to run the python code in a browser you need to import the interpreter(
+In order to run the Python code in a browser you need to import the interpreter
+ (
 \family typewriter
 src/interpreter.js
 \family default
-), the standard library(
+), the standard library (
 \family typewriter
 src/lib/stdlib.js
 \family default
-) and the codeObject file, in this example 
+) and the code object file, in this example 
 \family typewriter
 Helloworld.js
 \family default
 .
- In a html file you then need to execute the interpret method with the name
- of the module as a string.
+ In an html file you then need to execute the 
+\family typewriter
+interpret 
+\family default
+method with the name of the module as a string:
 \end_layout
 
 \begin_layout LyX-Code
@@ -705,19 +708,23 @@ Helloworld.js
 \end_layout
 
 \begin_layout Standard
-This implies that the author of the website needs a Python compiler to generate
- codeObjects.
- That does not apply to the users of the website.
- It is possible to make a Python compiler in JavaScript which could be imported
- in the html file.
- That would allow Python directly embedded in the html.
- This is not in the scope of the course and therefore not implemented.
- See appendix 
+See appendix 
 \begin_inset LatexCommand \ref{sec:How-to-run}
 
 \end_inset
 
  for more details on running PEJS.
+\end_layout
+
+\begin_layout Standard
+The above implies that the author of the website needs a Python compiler
+ to generate code objects.
+ That does not apply to the users of the website.
+ It is possible to make a Python compiler in JavaScript which could be imported
+ in the html file.
+ That would allow Python directly embedded in the html.
+ This is not in the scope of the course and therefore not implemented.
+ 
 \end_layout
 
 \begin_layout Subsection
@@ -735,11 +742,6 @@ As our main focus of this project has been implementing a VM, the compiler
  the way we represented the byte code in JavaScript.
 \end_layout
 
-\begin_layout Standard
-In practice, the compiler compiles .py files to .pyc and decompiles them into
- Python code objects objects, from which our code objects are generated.
-\end_layout
-
 \begin_layout Subsection
 Code objects
 \end_layout
@@ -749,7 +751,12 @@ Python has a notion of code objects as containers of code.
  We have code objects for classes, functions, methods and the main program,
  in Python known as a module.
  The compiler compiles and decompiles the Python source code and generates
- the proper JavaScript code.
+ the proper JavaScript code (figure 
+\begin_inset LatexCommand \ref{fig: overview}
+
+\end_inset
+
+).
  Besides containing the actual byte codes, code objects also contain several
  properties discovered during compilation.
  At first in the project, we represented all properties from Python code
@@ -967,7 +974,7 @@ co_locals
 \begin_inset Text
 
 \begin_layout Standard
-Empty Array used to store local variable values
+Empty array used to store local variable values
 \end_layout
 
 \end_inset
@@ -995,7 +1002,7 @@ Our Javascript representation of Python code objects.
 
 \begin_layout Standard
 The byte codes have been represented in two different ways during the project.
- At first, we represented each byte code as an Array in order to carry a
+ At first, we represented each byte code as an array in order to carry a
  lot of debugging information along with the byte codes.
  Later in the project, when we settled on the basic structure and most of
  our VM worked as in the current state, we changed this to a more effective
@@ -1047,12 +1054,8 @@ bytecode
 pc
 \family default
  incremented correspondingly.
- Then 
-\family typewriter
-bytecode
-\family default
- is switched over to get the correct case, and the contents of the case
- is executed.
+ A switch tests the current bytecode to get the correct case, and the contents
+ of the case is executed.
 \end_layout
 
 \begin_layout Standard
@@ -1099,14 +1102,14 @@ The fetch-decode-execute cycle is initiated when a new function is called
 \family typewriter
 RETURN_VALUE
 \family default
- or when an exception is raised without being catched in the current cycle
- (At the moment, exceptions is not fully supported.
+ or when an exception is raised without being catched in the current cycle.
+ At the moment, exceptions are not fully supported.
  See more in section 
 \begin_inset LatexCommand \ref{current status - exceptions}
 
 \end_inset
 
-).
+.
 \end_layout
 
 \begin_layout Standard
@@ -1121,7 +1124,7 @@ At the moment, we pay the full penalty of the switch-case, but we have some
 \end_layout
 
 \begin_layout Subsection
-Architecture
+Static structure
 \end_layout
 
 \begin_layout Standard
@@ -1140,20 +1143,16 @@ prototype
 PEJS
 \family default
  constructor.
- Two constructors are also implemented on the 
+ Another constructor is also implemented on the 
 \family typewriter
 prototype
 \family default
  object, namely 
 \family typewriter
-Stack
-\family default
- and 
-\family typewriter
 Globals
 \family default
-, which are described in more details in section 
-\begin_inset LatexCommand \ref{description_memory-model}
+, which is described in more details in section 
+\begin_inset LatexCommand \ref{sub:Local-and-global}
 
 \end_inset
 
@@ -1232,7 +1231,7 @@ Stack
 \begin_layout Standard
 The stack is represented by a separate stack frame for each code object
  that is run.
- Each frame is simple: A regular array where we utilize the 
+ Each frame is simple: A regular JavaScript array where we utilize the 
 \family typewriter
 push
 \family default
@@ -1253,6 +1252,11 @@ peek()
 
 \begin_layout Subsubsection
 Local and global variables
+\begin_inset LatexCommand \label{sub:Local-and-global}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1322,7 +1326,7 @@ Objects
 \begin_layout Standard
 Python does, not surprisingly, use classes, objects and functions.
  We have choosen to implement these elements as JavaScript objects.
- The properties and relations of these is given in figure 
+ The properties and relations of these are given in figure 
 \begin_inset LatexCommand \ref{python objects}
 
 \end_inset
@@ -1406,7 +1410,7 @@ We have started an implementation of the Python library in order to support
 \end_layout
 
 \begin_layout Standard
-The library is primaily implemented in Python which seemed most elegant,
+The library is primarily implemented in Python which seemed most elegant,
  but we still had to establish some way of calling into JavaScript which
  is done as in the following example: 
 \end_layout
@@ -1421,7 +1425,7 @@ return result
 \end_layout
 
 \begin_layout Standard
-In the EXEC_STMT case in the interpreter we test if the second parameter
+In the EXEC_STMT case in the interpreter, we test if the second parameter
  is "JavaScript", in which case we evaluate the given statement and store
  the result in the named variable, which is then accessible in Python.
  This clearly enables arbitrary extensions of the library, as it is always
@@ -1432,7 +1436,7 @@ In the EXEC_STMT case in the interpreter we test if the second parameter
 
 \begin_layout Standard
 The library .py-files are translated and the generated JavaScript file is
- then referenced in the HTML, just like the interpreter itself.
+ then referenced in the html, just like the interpreter itself.
  Writing "import <module>
 \begin_inset Quotes srd
 \end_inset
@@ -1446,19 +1450,19 @@ Test framework
 \end_layout
 
 \begin_layout Standard
-During our development of our VM, it became obvious that we needed to establish
+During the development of our VM, it became obvious that we needed to establish
  some kind of systematic testing in order to make sure that we didn't break
  existing functionality when refactoring and adding new features.
  Thus, we set up a few scripts to automatically translate tests written
  in Python into our JavaScript representation.
  We could then benefit from the fact that our VM runs in a browser in that
- we pretty quickly had a nice HTML interface (
+ we pretty quickly had a html interface (
 \family typewriter
 test/test.html
 \family default
 ) working in which we could run all tests and also see detailed runs of
  single tests.
- We used this for running benchmarks as well.
+ We used the html interface for running benchmarks as well.
  
 \end_layout
 
@@ -1501,7 +1505,7 @@ In figure
 
 \end_inset
 
-, each test can be clicked in order to run a trace of that particular case.
+, each test can be clicked in order to run a trace of that particular test.
  In figure 
 \begin_inset LatexCommand \ref{fig:Screenshot-of-single}
 
@@ -1546,7 +1550,7 @@ Screenshot of single test.
 \end_layout
 
 \begin_layout Standard
-In addition to the HTML interface, we set up scripts for running the tests
+In addition to the html interface, we set up scripts for running the tests
  and benchmarks in the console using Google's V8 to run our VM, as well
  as directly in Python.
 \end_layout
@@ -1876,7 +1880,7 @@ Jumps
 
 \begin_layout Standard
 A jump bytecode has an argument telling where to jump to.
- In the first version of our codeObject the 
+ In the first version of our code object the 
 \family typewriter
 co_code
 \family default
@@ -1946,55 +1950,33 @@ JIT compilation and peephole optimization
 \end_layout
 
 \begin_layout Standard
-TODO
+Shortly before the deadline, we tried, as an experiment, to implement a
+ sort of JIT compilation.
+ This works as follows.
 \end_layout
 
 \begin_layout Standard
-An interesting optimization would be adding a kind of JIT compilation.
- In the interpreter switch, it is clearly possible just generating and saving
+In the interpreter switch, it is clearly possible just generating and saving
  JavaScript code as a string instead of actually executing it.
- This way, the Python bytecodes could be parsed, resulting in an equivalent
- JavaScript program which could then be executed without the interpreting
- overhead between each operation.
- This is an improvement in itself, but it would probably result in an additional
- performance gain when running on V8, which would be able to compile the
- entire program in one chunk.
- Generating code in this way would also enable us to do peephole optimization
- on our generated code, though it may be somewhat heavy to parse and modify
- a large program string.
- 
+ This way, the Python bytecodes are parsed, resulting in an equivalent JavaScrip
+t program which is then evaluated.
+ This should be somewhat faster because the program string only is generated
+ once - subsequent calls to the same object are evaluated immediately.
+ Generating code this way would also enable us to do peephole optimization
+ on our generated code, using string parsing.
 \end_layout
 
 \begin_layout Standard
 The obstructing complication is jumps.
- When generating the JavaScript code, it seems obvious to use gotos and
- labels whenever we encounter Python bytecodes that jump.
- The only problem is that JavaScript doesn't have have labels and gotos
- in the normal sense, which at first seems a complete showstopper for this
- approach.
+ JavaScript doesn't have have labels and gotos, and therefore we are forced
+ to bail out to interpret mode whenever a code object contains jumps.
  
 \end_layout
 
 \begin_layout Standard
-A possible workaround would be to slice the entire program, dividing it
- into functions in every place a label is needed.
- A goto can then be done as a call to the correct function, and the semantics
- of the sequential program could be maintained by letting each function
- end by calling the next.
- This would probably generate an unreasonably high call stack, but this
- could be avoided by just calling the functions in sequence.
- Unfortunately, every jump would still cause a nested function call.
- That could be avoided by letting functions return a value indicating what
- they want to be called next, but then we've more or less introduced the
- interpreting overhead again which makes it all seem futile.
- 
-\end_layout
-
-\begin_layout Standard
-An option would be to just generate code between jumps and let jumps be
- handled in the interpreter.
- It is not clear whether this would yield any significant performance improvemen
-t, and unfortunately we didn't have the time for implementing it.
+An improvement would be a more finegrained compilation, where we just generate
+ code between jumps and let jumps be handled in the interpreter.
+ We have not had time for trying this.
 \end_layout
 
 \begin_layout Subsection
@@ -2540,8 +2522,8 @@ Python compiler
 \end_layout
 
 \begin_layout Standard
-Implementing a python compiler in JavaScript that outputs the codeObjects
- we need would allow us to have python embedded in a html document.
+Implementing a Python compiler in JavaScript that outputs the code objects
+ we need would allow us to have Python embedded in a html document.
  There is no technical obsacles in the way of doing this, and if PEJS is
  to have much use in the real world this would definitely be needed.
  We have focused on the VM since that is what this course is about, but
@@ -2567,9 +2549,27 @@ Conclusions
 \end_layout
 
 \begin_layout Standard
-We have done a project.
- We are happy.
- 
+We can see that the our goal of being able to embed Python directly in html
+ and use it for implementing web pages is actually realistic.
+ We only need a Python compiler written in JavaScript and a Python library
+ for interacting with the browser DOM.
+ It is definitely possible to build a Python compiler in JavaScript, and
+ implementing a DOM library is also feasible.
+ It can simply be written as wrapper code on the JavaScript functions.
+\end_layout
+
+\begin_layout Standard
+This project has shown that it actually is possible to make a simple VM
+ and it's not that difficult.
+ This was a bit surprising for us, as we didn't expect the development to
+ go so smoothly as it has.
+ Also, building a VM on top of JavaScript is beginning to be feasible as
+ Javascript VM's improve.
+ The current V8 actually runs the code in a relatively acceptable speed,
+ depending on demands.
+ The benchmarks showing differences between V8 and SpiderMonkey clearly
+ illustrates that the speed of the underlying VM has a big impact on PEJS
+ performance, so as JavaScript VM's improve so will PEJS.
 \end_layout
 
 \begin_layout Standard
@@ -2880,6 +2880,12 @@ How to run
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+Note: Our VM has been tested on SpiderMonkey and V8 (both standalone and
+ in Firefox/Chrome).
+ It doesn't run in Internet Explorer.
 \end_layout
 
 \begin_layout Subsubsection*
