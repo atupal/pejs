@@ -1,0 +1,2 @@
+"V8 (120.000 iterations)" Optimized 11870
+"SpiderMonkey (12.000 iterations)" Optimized 5003

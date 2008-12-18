@@ -1,0 +1,1 @@
+exec "PEJS.prototype.printOut(42);" in "JavaScript"

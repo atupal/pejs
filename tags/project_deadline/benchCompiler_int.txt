@@ -1,0 +1,2 @@
+"V8 (120.000 iterations)" Interpreted 15817
+"SpiderMonkey (12.000 iterations)" Interpreted 25496

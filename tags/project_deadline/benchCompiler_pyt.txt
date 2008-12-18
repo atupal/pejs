@@ -1,0 +1,2 @@
+"V8 (120.000 iterations)" Python 1274
+"SpiderMonkey (12.000 iterations)" Python 142

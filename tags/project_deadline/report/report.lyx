@@ -1,0 +1,3076 @@
+#LyX 1.4.5.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass article
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\float_placement H
+\paperfontsize default
+\spacing single
+\papersize a4paper
+\use_geometry true
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 2
+\paragraph_separation indent
+\defskip medskip
+\quotes_language swedish
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+date{}
+\end_layout
+
+\end_inset
+
+
+\series bold
+\size giant
+PEJS
+\series default
+\size default
+
+\newline
+Python Executed in JavaScript
+\end_layout
+
+\begin_layout Standard
+\align center
+
+\series bold
+\size giant
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+setcounter{page}{-1}
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+thispagestyle{empty}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename logo.png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float table
+placement b
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="3" columns="3">
+<features>
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Jesper Jakobsen
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Rune Fogh
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Ubbe Welling
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+20052904
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+20052251
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+20052275
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+u052904@daimi.au.dk
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+rfogh@daimi.au.dk
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+ubbe@daimi.au.dk
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\newpage
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset LatexCommand \tableofcontents{}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+thispagestyle{empty}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\newpage
+
+\end_layout
+
+\begin_layout Section
+
+\series bold
+Introduction
+\end_layout
+
+\begin_layout Standard
+This report is the final handin in the course 
+\begin_inset Quotes sld
+\end_inset
+
+Design of Virtual Machines for Object Oriented Languages
+\begin_inset Quotes srd
+\end_inset
+
+ taught at Department of Computer Science at Aarhus University during the
+ fall semester of 2008.
+ The course has been taught by Lars Bak and Kasper Lund, assisted by Mathias
+ Schwarz.
+ 
+\end_layout
+
+\begin_layout Standard
+The report describes the design and implementation of a virtual machine
+ for the programming language Python done in JavaScript.
+ The purpose of this report is to convey a description of our work process,
+ the status of the project and the results obtained so far.
+ The deadline for this report was December 17th 2008.
+\end_layout
+
+\begin_layout Standard
+The project source code is available at 
+\family typewriter
+http://code.google.com/p/pejs.
+\end_layout
+
+\begin_layout Section
+Motivation
+\end_layout
+
+\begin_layout Standard
+Virtual machines for JavaScript exist in all modern browsers and since browsers
+ exist on most operating systems JavaScript is virtually platform independent.
+ So if we could build a virtual machine in JavaScript that executes a Python
+ program we can make Python platform independent.
+\end_layout
+
+\begin_layout Standard
+Further, the growing use of JavaScript on the internet has pushed the need
+ for an efficient virtual machine.
+ The work by Google
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+http://code.google.com/p/v8
+\end_layout
+
+\end_inset
+
+ and Mozilla
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+http://www.mozilla.org/js/spidermonkey
+\end_layout
+
+\end_inset
+
+ has made it interesting to investigate if it is viable to build a virtual
+ machine on top of a JavaScript virtual machine, which is historically known
+ for having poor performance.
+\end_layout
+
+\begin_layout Section
+Goals
+\begin_inset LatexCommand \label{Goals}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Here we briefly state our initial goals and milestones for the project.
+\end_layout
+
+\begin_layout Standard
+Our main goal was:
+\newline
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+In JavaScript, implement a VM for a subset of the Python language.
+\series default
+
+\newline
+
+\end_layout
+
+\begin_layout Standard
+This was broken down into smaller goals, or milestones, as follows:
+\end_layout
+
+\begin_layout Enumerate
+Get a simple interpreter operating on a stack up and running
+\end_layout
+
+\begin_layout Enumerate
+Implement basic constructs: Jumps and loops
+\end_layout
+
+\begin_layout Enumerate
+Decide on object representation and heap layout
+\end_layout
+
+\begin_layout Enumerate
+Implement classes and objects
+\end_layout
+
+\begin_layout Enumerate
+Implement simple garbage collector if necessary
+\end_layout
+
+\begin_layout Enumerate
+Handle calls to Python library somehow
+\end_layout
+
+\begin_layout Enumerate
+Do performance evaluation and optimizations
+\end_layout
+
+\begin_layout Standard
+As we only had around 8 weeks for the project, we decided that points 1-4
+ were required while 5 and 6 could be omitted if necessary.
+ Performance evaluation was naturally a must, and optimization was also
+ something we definitely aimed at working with.
+\end_layout
+
+\begin_layout Section
+Implementation
+\end_layout
+
+\begin_layout Subsection
+Overview
+\begin_inset LatexCommand \label{sub:Overview}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The project consists of two parts, compiling the Python code to Python opcodes
+ in a format we can interpret, and interpreting the opcodes in JavaScript.
+ The focus of this course is to make a VM, so naturally we focus on the
+ interpretation part rather than the compilation part.
+ In order to save time we use the Python compiler to get the opcodes and
+ other relevant information and output it as needed.
+\end_layout
+
+\begin_layout Standard
+The opcode format is formed as a JavaScript object we call a code object.
+ This is illustrated by figure 
+\begin_inset LatexCommand \ref{fig: overview}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename overview.eps
+	lyxscale 50
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig: overview}
+
+\end_inset
+
+Overview of PEJS
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We compile the Python file with 
+\family typewriter
+tools/compile.py
+\family default
+ which outputs a JavaScript file with the code object.
+ To illustrate this here is an example of a py file and the corresponding
+ code object.
+\end_layout
+
+\begin_layout LyX-Code
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+class Greet:
+\end_layout
+
+\begin_layout LyX-Code
+  def printGreeting(self):
+\end_layout
+
+\begin_layout LyX-Code
+    print "Hello world!"
+\end_layout
+
+\begin_layout LyX-Code
+Greet().printGreeting()
+\end_layout
+
+\begin_layout Caption
+Helloworld.py
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+//This file was automatically created with compiler.py
+\newline
+
+\newline
+
+\end_layout
+
+\begin_layout LyX-Code
+var Helloworld = {
+\end_layout
+
+\begin_layout LyX-Code
+  co_name: "?",
+\end_layout
+
+\begin_layout LyX-Code
+  co_argcount: 0,
+\end_layout
+
+\begin_layout LyX-Code
+  co_nlocals: 0,
+\end_layout
+
+\begin_layout LyX-Code
+  co_varnames: ["Greet"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_code: [100,0,0,102,0,0,100,0,1,132,0,0,131,0,0,89,90,0,0,101,0,0,
+\end_layout
+
+\begin_layout LyX-Code
+            131,0,0,105,0,1,131,0,0,1,100,0,2,83],
+\end_layout
+
+\begin_layout LyX-Code
+  co_consts: ["Greet", "CODEOBJ: Helloworld_Greet", "None"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_names: ["Greet", "printGreeting"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_locals: [],
+\end_layout
+
+\begin_layout LyX-Code
+  toString: function() { return "CodeObject:Helloworld"} 
+\end_layout
+
+\begin_layout LyX-Code
+};
+\newline
+
+\newline
+
+\end_layout
+
+\begin_layout LyX-Code
+var Helloworld_Greet = {
+\end_layout
+
+\begin_layout LyX-Code
+  co_name: "Greet",
+\end_layout
+
+\begin_layout LyX-Code
+  co_argcount: 0,
+\end_layout
+
+\begin_layout LyX-Code
+  co_nlocals: 0,
+\end_layout
+
+\begin_layout LyX-Code
+  co_varnames: [],
+\end_layout
+
+\begin_layout LyX-Code
+  co_code: [116,0,0,90,0,1,100,0,1,132,0,0,90,0,2,82,83],
+\end_layout
+
+\begin_layout LyX-Code
+  co_consts: ["None", "CODEOBJ: Helloworld_Greet_printGreeting"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_names: ["__name__", "__module__", "printGreeting"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_locals: [],
+\end_layout
+
+\begin_layout LyX-Code
+  toString: function() { return "CodeObject:Helloworld_Greet"} 
+\end_layout
+
+\begin_layout LyX-Code
+};
+\newline
+
+\newline
+
+\end_layout
+
+\begin_layout LyX-Code
+var Helloworld_Greet_printGreeting = {
+\end_layout
+
+\begin_layout LyX-Code
+  co_name: "printGreeting",
+\end_layout
+
+\begin_layout LyX-Code
+  co_argcount: 1,
+\end_layout
+
+\begin_layout LyX-Code
+  co_nlocals: 1,
+\end_layout
+
+\begin_layout LyX-Code
+  co_varnames: ["self"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_code: [100,0,1,71,72,100,0,0,83],
+\end_layout
+
+\begin_layout LyX-Code
+  co_consts: ["None", "Hello world!"],
+\end_layout
+
+\begin_layout LyX-Code
+  co_names: [],
+\end_layout
+
+\begin_layout LyX-Code
+  co_locals: [],
+\end_layout
+
+\begin_layout LyX-Code
+  toString: function() { return "CodeObject:Helloworld_Greet_printGreeting"}
+ 
+\end_layout
+
+\begin_layout LyX-Code
+};
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{Helloworld.js codeObject}
+
+\end_inset
+
+Helloworld.js
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to run the Python code in a browser you need to import the interpreter
+ (
+\family typewriter
+src/interpreter.js
+\family default
+), the standard library (
+\family typewriter
+src/lib/stdlib.js
+\family default
+) and the code object file, in this example 
+\family typewriter
+Helloworld.js
+\family default
+.
+ In an html file you then need to execute the 
+\family typewriter
+interpret 
+\family default
+method with the name of the module as a string:
+\end_layout
+
+\begin_layout LyX-Code
+(new PEJS()).interpret("Helloworld");
+\end_layout
+
+\begin_layout Standard
+See appendix 
+\begin_inset LatexCommand \ref{sec:How-to-run}
+
+\end_inset
+
+ for more details on running PEJS.
+\end_layout
+
+\begin_layout Standard
+The above implies that the author of the website needs a Python compiler
+ to generate code objects.
+ That does not apply to the users of the website.
+ It is possible to make a Python compiler in JavaScript which could be imported
+ in the html file.
+ That would allow Python directly embedded in the html.
+ This is not in the scope of the course and therefore not implemented.
+ 
+\end_layout
+
+\begin_layout Subsection
+Compiler
+\end_layout
+
+\begin_layout Standard
+As our main focus of this project has been implementing a VM, the compiler
+ has been built quick and dirty in Python and actually just uses Pythons
+ own compiler.
+ The main purpose of the compiler is to compile Python source code to Python
+ byte code and present it in a JavaScript format.
+ We wanted to make our VM run Python byte code, so in that respect, the
+ format was settled, but at the same time, we wanted to experiment with
+ the way we represented the byte code in JavaScript.
+\end_layout
+
+\begin_layout Subsection
+Code objects
+\end_layout
+
+\begin_layout Standard
+Python has a notion of code objects as containers of code.
+ We have code objects for classes, functions, methods and the main program,
+ in Python known as a module.
+ The compiler compiles and decompiles the Python source code and generates
+ the proper JavaScript code (figure 
+\begin_inset LatexCommand \ref{fig: overview}
+
+\end_inset
+
+).
+ Besides containing the actual byte codes, code objects also contain several
+ properties discovered during compilation.
+ At first in the project, we represented all properties from Python code
+ objects in our JavaScript representation, but since we haven't seen any
+ use for some of them so far, we decided to remove the unused properties.
+ The properties being used are described in table 
+\begin_inset LatexCommand \ref{tab:code-objects}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="9" columns="2">
+<features>
+<column alignment="left" valignment="top" leftline="true" width="0">
+<column alignment="left" valignment="top" leftline="true" rightline="true" width="0">
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Property
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Explanation
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+co_name
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Name of the class or function
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+co_argcount
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Number of arguments expected by function
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+co_nlocals
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Number of local variables used in the code object
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+co_varnames
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Array of local variable names
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+co_code
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Array of byte codes, represented as integers
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+co_consts
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Array of constants such as string, integers and other code objects
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+co_names
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Array of names of functions, classes and/or properties
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row topline="true" bottomline="true">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+
+\family typewriter
+co_locals
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Standard
+Empty array used to store local variable values
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{tab:code-objects}
+
+\end_inset
+
+Our Javascript representation of Python code objects.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The byte codes have been represented in two different ways during the project.
+ At first, we represented each byte code as an array in order to carry a
+ lot of debugging information along with the byte codes.
+ Later in the project, when we settled on the basic structure and most of
+ our VM worked as in the current state, we changed this to a more effective
+ representation, where each byte code is one or three entries in an array
+ instead of each instruction being an array by itself.
+ The optimization benefits of this change is discussed later in section
+ 
+\begin_inset LatexCommand \ref{sub:Jumps}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+
+\newpage
+
+\end_layout
+
+\begin_layout Subsection
+Interpreter
+\end_layout
+
+\begin_layout Standard
+The interpreter is designed as a simple fetch-decode-execute cycle.
+ The main structure of the interpreter is a while-loop with a switch-case
+ that executes code objects.
+ As shown in the example in figure 
+\begin_inset LatexCommand \ref{fetch-decode-execute}
+
+\end_inset
+
+, the interpreter maintains a program counter (
+\family typewriter
+pc
+\family default
+), which is an array index in the code objects 
+\family typewriter
+co_code
+\family default
+ property.
+ The byte code indexed by 
+\family typewriter
+pc
+\family default
+ is read out to the 
+\family typewriter
+bytecode
+\family default
+ variable.
+ In Python, all byte codes of value 90 or larger has an argument as well,
+ so if this is the case, the argument is read out as well, and 
+\family typewriter
+pc
+\family default
+ incremented correspondingly.
+ A switch tests the current bytecode to get the correct case, and the contents
+ of the case is executed.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename interpreter.eps
+	lyxscale 50
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fetch-decode-execute}
+
+\end_inset
+
+Fetch-decode-execute cycle for byte code 
+\family typewriter
+116
+\family default
+, 
+\family typewriter
+LOAD_GLOBAL
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The fetch-decode-execute cycle is initiated when a new function is called
+ and terminates with the byte code 
+\family typewriter
+RETURN_VALUE
+\family default
+ or when an exception is raised without being catched in the current cycle.
+ At the moment, exceptions are not fully supported.
+ See more in section 
+\begin_inset LatexCommand \ref{current status - exceptions}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+At the moment, we pay the full penalty of the switch-case, but we have some
+ suggestions on how to improve performance of the cycle.
+ These suggestions can be found in section 
+\begin_inset LatexCommand \ref{future work}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Static structure
+\end_layout
+
+\begin_layout Standard
+The virtual machine is structured as shown in figure 
+\begin_inset LatexCommand \ref{static-structure}
+
+\end_inset
+
+.
+ The interpreter has been implemented on the 
+\family typewriter
+prototype
+\family default
+ object of the 
+\family typewriter
+PEJS
+\family default
+ constructor.
+ Another constructor is also implemented on the 
+\family typewriter
+prototype
+\family default
+ object, namely 
+\family typewriter
+Globals
+\family default
+, which is described in more details in section 
+\begin_inset LatexCommand \ref{sub:Local-and-global}
+
+\end_inset
+
+.
+ Furthermore, the 
+\family typewriter
+types
+\family default
+ 
+\begin_inset Quotes sld
+\end_inset
+
+namespace
+\begin_inset Quotes srd
+\end_inset
+
+ (implemented as an object) on the 
+\family typewriter
+prototype
+\family default
+ object contains the constructors for all built-in types.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename static_structure.eps
+	lyxscale 50
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{static-structure}
+
+\end_inset
+
+Static structure of 
+\family typewriter
+interpret.js
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Memory model
+\begin_inset LatexCommand \label{description_memory-model}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Stack
+\begin_inset LatexCommand \label{description_memory-model_Stack}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The stack is represented by a separate stack frame for each code object
+ that is run.
+ Each frame is simple: A regular JavaScript array where we utilize the 
+\family typewriter
+push
+\family default
+ and 
+\family typewriter
+pop
+\family default
+-methods provided, and add our own 
+\family typewriter
+peek()
+\family default
+.
+ Representing the stack this way means that we do not have to keep track
+ of stack pointers at all.
+ It also means that JavaScript can automatically garbage collect stack entries
+ that have been popped, as well as entire frames that are no longer in use.
+\end_layout
+
+\begin_layout Subsubsection
+Local and global variables
+\begin_inset LatexCommand \label{sub:Local-and-global}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Local variables are stored in the respective code object's 
+\family typewriter
+co_varnames
+\family default
+ and 
+\family typewriter
+co_locals
+\family default
+.
+ The compiler resolves most of the names and adds them to 
+\family typewriter
+co_varnames
+\family default
+, and on runtime, the corresponding values are stored at the same index
+ in 
+\family typewriter
+co_locals
+\family default
+.
+ When a function is called, a new stack frame is created, with space allocated
+ for the local variables.
+\end_layout
+
+\begin_layout Standard
+Global variables are stored in the 
+\family typewriter
+Globals
+\family default
+ object, which consists of an array of arrays and some convenience methods.
+ The first inner array is a special array reserved for new global variables,
+ while the other inner arrays are added on runtime as direct references
+ to the outermost code objects's 
+\family typewriter
+co_varnames
+\family default
+ and 
+\family typewriter
+co_locals
+\family default
+.
+ The reason for this odd construction is the Python compilers lacking ability
+ to resolve whether a variable is local or global at compile-time, so the
+ best working solution we have come up with so far is the one just outlined.
+\end_layout
+
+\begin_layout Standard
+Lookup of unresolved variables, implemented as the byte code 
+\family typewriter
+LOAD_NAME
+\family default
+, is done by first looking through 
+\family typewriter
+co_varnames 
+\family default
+and secondly through the global variables.
+ Each of these lookups takes time linear in the number of local and global
+ variables, respectively.
+\end_layout
+
+\begin_layout Subsubsection
+Objects
+\end_layout
+
+\begin_layout Standard
+Python does, not surprisingly, use classes, objects and functions.
+ We have choosen to implement these elements as JavaScript objects.
+ The properties and relations of these are given in figure 
+\begin_inset LatexCommand \ref{python objects}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename types.eps
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{python objects}
+
+\end_inset
+
+Representation of Python objecs and classes
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Tuples, lists and dictionaries
+\begin_inset LatexCommand \label{Tuples,-lists-and}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Python has three basic collection types, namely tuples, lists and dictionaries.
+ Lists are mutable collections of values, corresponding to JavaScript arrays,
+ while tuples are immutable lists.
+ Dictionaries are a mutable collection of key-value pairs, similar to a
+ Javascript object.
+ The obvious approach was therefore to represent dictionaries as JavaScript
+ objects and lists and tuples as JavaScript arrays.
+ The three collection types are represented as PyTuple, PyList and PyDict,
+ which each has a 
+\family typewriter
+store
+\family default
+ property, that contains an array or an object, respectively.
+\end_layout
+
+\begin_layout Standard
+Methods on lists and dictionaries are implemented in JavaScript only, which
+ was chosen because it was the simplest approach at the time, although they
+ possibly to a greater extent could be part of the standard library which
+ is mostly implemented in Python.
+\end_layout
+
+\begin_layout Subsection
+Library
+\end_layout
+
+\begin_layout Standard
+We have started an implementation of the Python library in order to support
+ some of the most basic functionality.
+ While we have not implemented much, the idea was just as much to see if
+ we could get a library working at all.
+\end_layout
+
+\begin_layout Standard
+The library is primarily implemented in Python which seemed most elegant,
+ but we still had to establish some way of calling into JavaScript which
+ is done as in the following example: 
+\end_layout
+
+\begin_layout LyX-Code
+exec "new PEJS.prototype.types.PyTuple("+list+");" in "JavaScript", "result"
+ 
+\end_layout
+
+\begin_layout LyX-Code
+return result
+\end_layout
+
+\begin_layout Standard
+In the EXEC_STMT case in the interpreter, we test if the second parameter
+ is "JavaScript", in which case we evaluate the given statement and store
+ the result in the named variable, which is then accessible in Python.
+ This clearly enables arbitrary extensions of the library, as it is always
+ possible to switch to JavaScript implementation when Python is not sufficient.
+ It is also easy to add new implementation: One just writes the code in
+ the right place, and everything works automatically.
+\end_layout
+
+\begin_layout Standard
+The library .py-files are translated and the generated JavaScript file is
+ then referenced in the html, just like the interpreter itself.
+ Writing "import <module>
+\begin_inset Quotes srd
+\end_inset
+
+ then works exactly as it should.
+ The standard library is imported automatically, as it should be.
+\end_layout
+
+\begin_layout Subsection
+Test framework
+\end_layout
+
+\begin_layout Standard
+During the development of our VM, it became obvious that we needed to establish
+ some kind of systematic testing in order to make sure that we didn't break
+ existing functionality when refactoring and adding new features.
+ Thus, we set up a few scripts to automatically translate tests written
+ in Python into our JavaScript representation.
+ We could then benefit from the fact that our VM runs in a browser in that
+ we pretty quickly had a html interface (
+\family typewriter
+test/test.html
+\family default
+) working in which we could run all tests and also see detailed runs of
+ single tests.
+ We used the html interface for running benchmarks as well.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename testscreenshot.png
+	lyxscale 50
+	scale 35
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:Screenshot-of-full}
+
+\end_inset
+
+Screenshot of full test.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:Screenshot-of-full}
+
+\end_inset
+
+, each test can be clicked in order to run a trace of that particular test.
+ In figure 
+\begin_inset LatexCommand \ref{fig:Screenshot-of-single}
+
+\end_inset
+
+, each blue headline indicates that control has been transferred to another
+ code object.
+ The stack grows to the right.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename testscreenshot2.png
+	lyxscale 50
+	scale 35
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:Screenshot-of-single}
+
+\end_inset
+
+Screenshot of single test.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In addition to the html interface, we set up scripts for running the tests
+ and benchmarks in the console using Google's V8 to run our VM, as well
+ as directly in Python.
+\end_layout
+
+\begin_layout Standard
+The setup was fairly elegant, so tests could be added just by adding the
+ file containing the test code and running a single script (
+\family typewriter
+tools/createTest.py
+\family default
+ - see section 
+\begin_inset LatexCommand \ref{sec:How-to-run}
+
+\end_inset
+
+).
+ 
+\end_layout
+
+\begin_layout Standard
+After having established this small test framework, our development was
+ almost purely testdriven.
+ This made development somewhat more relaxed as the tests provided confidence
+ that a given modification actually worked.
+ The tests also encouraged us to a more experimental approach to possible
+ modifications - making a change and testing it was often much quicker than
+ figuring out if it would work in every situation.
+ Finally it was also quicker for us to correct errors, as the test overview
+ and especially the single test trace made it easy to identify problems.
+\newpage
+
+\end_layout
+
+\begin_layout Section
+Current status
+\end_layout
+
+\begin_layout Subsection
+Supported language
+\end_layout
+
+\begin_layout Standard
+In this section we describe what parts of the Python language our VM supports.
+ 
+\end_layout
+
+\begin_layout Standard
+We decided on implementing Python 2.4.3, as that was the version installed
+ on the department's machines.
+\end_layout
+
+\begin_layout Standard
+Everything described here is assured to some degree with test cases, but
+ it should be noted that there is lots of room for more thorough testing.
+ This also means that our claims of supported features below only holds
+ to the extent ensured by our tests.
+ At the deadline, we had 69 test cases and 36 benchmarks.
+ Examples of unsupported features can be seen in 
+\family typewriter
+test/unsupported.
+\end_layout
+
+\begin_layout Standard
+It should also be mentioned that we have no negative test cases and have
+ not attempted to catch illegal programs in our implementation.
+ Thus, running an illegal program will cause undefined behavior.
+\end_layout
+
+\begin_layout Subsubsection
+Basic arithmetics
+\end_layout
+
+\begin_layout Standard
+Basic arithmetic operations were fairly easily implemented, as we just used
+ the corresponding JavaScript operators.
+ This also means that the semantics have not been ensured any further than
+ what is specified in the test cases.
+ Longs are not supported, but floats are.
+ The implementation doesn't quite match Python's apparent intention of making
+ objects out of everything, which would imply that even the basic arithmetic
+ operators should be implemented as functions or methods.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Basic constructs
+\end_layout
+
+\begin_layout Standard
+Conditionals and loops are supported fully, and especially loops have been
+ tested reasonably well.
+ We support both the 
+\family typewriter
+range
+\family default
+ and the
+\family typewriter
+ xrange 
+\family default
+constructs which are typically used in 
+\family typewriter
+for
+\family default
+-loops.
+ The semantics are correct, as 
+\family typewriter
+range
+\family default
+ actually produces a list while 
+\family typewriter
+xrange
+\family default
+ is implemented in a more space efficient manner which generates each index
+ lazily.
+ Both are implemented in the library, purely in Python.
+\end_layout
+
+\begin_layout Subsubsection
+Functions/methods
+\end_layout
+
+\begin_layout Standard
+We implemented functions before classes, in order to be ready to implement
+ methods when introducing classes.
+ Functions and methods are fully supported, including nesting and recursion.
+ Keyword arguments and default arguments are working, and so is optional
+ parameters.
+ That is, both * and ** work and can be used.
+ When defining functions, * creates lists out of actual parameters while
+ ** creates dictionaries out of keyword parameters.
+ When calling functions, * is used for unfolding a list into parameters,
+ while ** unfolds a dictionary.
+\end_layout
+
+\begin_layout Subsubsection
+Classes and objects
+\end_layout
+
+\begin_layout Standard
+Classes and objects are supported.
+ We don't fully support the correct semantics when dynamically injecting
+ fields on classes.
+ In Python, update or addition of a field on a class is automatically pushed
+ to all instances of the class, overwriting or marking dirty every instance's
+ value for that field.
+ We have not implemented this behavior, as that would require every class
+ to hold references to all instances of it.
+ This is of course possible, but we decided not to implement it partly because
+ we discovered the issue shortly before deadline and partly because it would
+ not be very elegant.
+\end_layout
+
+\begin_layout Standard
+Inheritance was fairly easy to add on top of the basic class/object implementati
+on, as Python's inheritance rules are reasonably simple.
+ They simply state that the ordered list of base classes should be traversed
+ and the first field/method with matching name should be chosen.
+ This is working as it should which is ensured by a couple of tests.
+\end_layout
+
+\begin_layout Standard
+It should be noted that we have by no means examined every corner of the
+ language, and therefore there probably are subtle (and less subtle) object
+ related features we don't handle.
+\end_layout
+
+\begin_layout Subsubsection
+Lists, tuples and dictionaries
+\end_layout
+
+\begin_layout Standard
+These are the basic data structures in Python.
+ They have all been implemented directly in JavaScript since Python has
+ no arrays on which to build.
+ For more information see section 
+\begin_inset LatexCommand \ref{Tuples,-lists-and}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection
+Iterators
+\end_layout
+
+\begin_layout Standard
+In Python, any object may be 
+\emph on
+iterable, 
+\emph default
+meaning that it can return an iterator that can enumerate the object in
+ some sensible way, using the methods 
+\family typewriter
+next()
+\family default
+ and 
+\family typewriter
+getItem(...)
+\family default
+.
+ We've implemented the iterator for lists and tuples which works as it should.
+ It also works for general objects, where the object itself is responsible
+ for implementing the actual iterator.
+\end_layout
+
+\begin_layout Subsubsection
+Exceptions
+\begin_inset LatexCommand \label{current status - exceptions}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We have very basic support for exceptions.
+ A special case handles the StopIteration exception which is necessary for
+ iterators to work.
+ Aside from that, using the 
+\family typewriter
+raise 
+\family default
+keyword with no argument behaves correctly together with 
+\family typewriter
+try
+\family default
+ and 
+\family typewriter
+except.
+ 
+\family default
+It should also be possible to give an argument to 
+\family typewriter
+raise
+\family default
+, which will simply be ignored, but this has not been tested.
+\end_layout
+
+\begin_layout Subsection
+Optimizations
+\end_layout
+
+\begin_layout Subsubsection
+Stack
+\begin_inset LatexCommand \label{sub:Stack}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to allow JavaScript to garbage collect, we implemented a new stack
+ described in 
+\begin_inset LatexCommand \ref{description_memory-model_Stack}
+
+\end_inset
+
+.
+ The old one is described in the following.
+\end_layout
+
+\begin_layout Standard
+We implemented the stack as a JavaScript object with an array containing
+ the elements of the stack.
+ The stack object also has a bottom pointer(BP) and a stack pointer(SP)
+ pointing to the top and bottom of the current stackframe respectively.
+ When we call and return from functions we call the removeFrame and newFrame
+ methods, these modify the stack as shown in figure 
+\begin_inset LatexCommand \ref{stack}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename stack.eps
+	lyxscale 30
+	scale 24
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{stack}
+
+\end_inset
+
+Stack example
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+On removeFrame we syncronize the localvariables with the arguments on the
+ stack and sets TOS to the return value.
+ From figure 
+\begin_inset LatexCommand \ref{stack}
+
+\end_inset
+
+ it shows that we don't delete things from the stack again, we just overwrite
+ the contents when pushing data onto the stack.
+ It would have been advantageous to delete data over the SP when returning
+ from a method.
+ This would allow the JavaScript VM to garbage collect the used data.
+\end_layout
+
+\begin_layout Subsubsection
+Jumps
+\begin_inset LatexCommand \label{sub:Jumps}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A jump bytecode has an argument telling where to jump to.
+ In the first version of our code object the 
+\family typewriter
+co_code
+\family default
+ array, which contains the opcodes and arguments, contained each instruction
+ as a nested array.
+ This meant that we could not jump directly to that index calculated by
+ the compiler, since we had obscured the instruction array.
+ Instead we needed to search through each instruction in the array to see
+ if this had the offset we were looking for.
+ This original approach had the advantage that we could have the instruction
+ name and other information available, which helped us understand the programs,
+ but in an attempt to make it faster, we changed it.
+\end_layout
+
+\begin_layout Standard
+The approach was to create a single array with the opcodes and arguments.
+ An example of the 
+\family typewriter
+co_code 
+\family default
+array can be seen in algorithm 
+\begin_inset LatexCommand \ref{Helloworld.js codeObject}
+
+\end_inset
+
+.
+ This allowed us to jump directly to the instruction given by the argument
+ to the jump bytecode.
+ We were expecting a big improvement in performance as jumping directly
+ must be way faster than looking through an array.
+ In practice we only saw a slight increase in performance based on the bencmarks
+ in the test suite, from around 32 seconds to 31 seconds.
+ We think that is partly due to the structure of the tests where we don't
+ need to jump very far and therefore don't need to scan for the right offset
+ for very long, and partly because we have introduced a check in each fetch-deco
+de-execute cycle.
+\end_layout
+
+\begin_layout Subsubsection
+Refactoring
+\begin_inset LatexCommand \label{sub:Refactoring}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+When we started the implementation, many of the elements from figure 
+\begin_inset LatexCommand \ref{static-structure}
+
+\end_inset
+
+ was implemented as globals.
+ This was obviously a poor choice and we decided to refactor and introduce
+ the structure we have now.
+ We expected to see a performance decrease since lookup of the elements
+ would be more indirect.
+ It turned out that the refactoring had a huge positive impact on performance.
+ We went from times around 31 seconds to 11 seconds to execute our benchmarks.
+ We have discovered that this is because globals take a very long time to
+ resolve.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+JIT compilation and peephole optimization
+\end_layout
+
+\begin_layout Standard
+Shortly before the deadline, we tried, as an experiment, to implement a
+ sort of JIT compilation.
+ This works as follows.
+\end_layout
+
+\begin_layout Standard
+In the interpreter switch, it is clearly possible just generating and saving
+ JavaScript code as a string instead of actually executing it.
+ This way, the Python bytecodes are parsed, resulting in an equivalent JavaScrip
+t program which is then evaluated.
+ This should be somewhat faster because the program string only is generated
+ once - subsequent calls to the same object are evaluated immediately.
+ Generating code this way would also enable us to do peephole optimization
+ on our generated code, using string parsing.
+\end_layout
+
+\begin_layout Standard
+The obstructing complication is jumps.
+ JavaScript doesn't have have labels and gotos, and therefore we are forced
+ to bail out to interpret mode whenever a code object contains jumps.
+ 
+\end_layout
+
+\begin_layout Standard
+An improvement would be a more finegrained compilation, where we just generate
+ code between jumps and let jumps be handled in the interpreter.
+ We have not had time for trying this.
+\end_layout
+
+\begin_layout Standard
+
+\newpage
+
+\end_layout
+
+\begin_layout Subsection
+Benchmarks
+\end_layout
+
+\begin_layout Standard
+Here we provide performance measurements of execution times.
+ We used V8 0.4.5 (candidate) and Firefox 3.0.4 with SpiderMonkey 1.8.1.13.
+ The benchmarks are taken from the pybench benchmark suite.
+ 
+\end_layout
+
+\begin_layout Standard
+\align left
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename BenchV8highlights.eps
+	scale 55
+	rotateAngle -90
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:Selected-benchmarks-on}
+
+\end_inset
+
+Selected benchmarks on PEJS revisions
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:Selected-benchmarks-on}
+
+\end_inset
+
+.
+ Revision 57 is the original unoptimized version, revision 61 is refactoring,
+ see 
+\begin_inset LatexCommand \ref{sub:Refactoring}
+
+\end_inset
+
+.
+ Revision 85 is refactoring of a debug variable to be local instead of global.
+ revision 95 is after the new stack was implemented, see 
+\begin_inset LatexCommand \ref{sub:Stack}
+
+\end_inset
+
+.
+ For simplicity we have included a graph with selected benchmarks, the full
+ benchmark is in appendix 
+\begin_inset LatexCommand \ref{sec:Additional-benchmark}
+
+\end_inset
+
+.
+ We note that the new stack doesn't improve performance in all cases.
+ The cases with many method calls are penalized by having to create a new
+ stack frame for every method invocation.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename BenchPEJSonV8vsCPython.eps
+	scale 55
+	rotateAngle -90
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:PEJS-compared-to}
+
+\end_inset
+
+PEJS compared to CPython
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:PEJS-compared-to}
+
+\end_inset
+
+ we benchmark PEJS against CPython, it shows that we are approximately a
+ factor 2 to 20 slower.
+\end_layout
+
+\begin_layout Standard
+\align left
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename BenchV8vsSpiderMonkey.eps
+	scale 55
+	BoundingBox 50bp 50bp 554bp 770bp
+	rotateAngle -90
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:V8-vs.-SpiderMonkey}
+
+\end_inset
+
+V8 vs.
+ SpiderMonkey
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:V8-vs.-SpiderMonkey}
+
+\end_inset
+
+ we run PEJS on SpiderMonkey an V8, it shows that V8 is much faster in the
+ general case, except in ListListSlicing where SpiderMonkey is twice as
+ fast.
+ This is probably due to a slow implementation of 
+\family typewriter
+Array.slice(...)
+\family default
+ and 
+\family typewriter
+Array.splice(...)
+\family default
+ in V8.
+\end_layout
+
+\begin_layout Standard
+\align left
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename BenchV8optimized.eps
+	scale 55
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:JIT-Compilation}
+
+\end_inset
+
+JIT compilation benchmark
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In figure 
+\begin_inset LatexCommand \ref{fig:JIT-Compilation}
+
+\end_inset
+
+, we present the benchmarks for JIT compiling a specially generated benchmark.
+ First column is without JIT.
+ Second coloumn is with JIT.
+ Third coloumn is with JIT and peephole optimization.
+ Note that the peephole patterns is designed specifically for this case.
+ SpiderMonkey earns by the JIT compilation while it seems that V8 is doing
+ something similarly clever already.
+ Of course, the optimizations help both.
+\end_layout
+
+\begin_layout Subsection
+Alignment with goals
+\end_layout
+
+\begin_layout Standard
+Here we reflect on our progress in comparison with our initial plan (
+\begin_inset LatexCommand \ref{Goals}
+
+\end_inset
+
+) and in relation to the course objectives.
+\end_layout
+
+\begin_layout Standard
+When planning implementation in JavaScript, it wasn't completely clear to
+ us how we would or should handle heap representation and garbage collection.
+ This turned out to be completely trivial as we chose to simply implement
+ Python objects and code objects as regular JavaScript objects.
+ The consequence of this was that no heap and no garbage collector was necessary
+, nor would they make any sense.
+ This has definitely been a great help in having time for implementing a
+ larger subset of our target language, but on other hand we have not gained
+ much experience with regard to heap design and garbage collection.
+\end_layout
+
+\begin_layout Standard
+We were pleasently surprised of how easy it was to establish a library.
+ When starting development, we were not at all sure how or if we would be
+ able to get a library running.
+ This turned out not to be a problem, but we have not had time for extending
+ it very much.
+\end_layout
+
+\begin_layout Standard
+The only thing we're not satisfied with is the fact that the performance
+ of our VM is significantly lower than that of CPython.
+ We would have liked to optimize our code some more, but we were not able
+ to find a decent profiler for JavaScript.
+ FireBug for Firefox provided information in a useful format, but the results
+ were unreliable.
+ V8's profiler wasn't really useful as it provided information mostly on
+ the level of opcodes, which wasn't high level enough to extract sensible
+ information on where time was spent in our code.
+ Thus we could not identify time consuming code any better than by examining
+ the code manually.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Course objectives
+\end_layout
+
+\begin_layout Standard
+The only aspect of our project that relates directly to any of the course
+ objectives is the fact that we have implemented a variant of a JIT compiler.
+ Other than that we have gained a lot of experience on how to implement
+ a VM, allthough the project doesn't match the very specific course objectives
+ precisely.
+\end_layout
+
+\begin_layout Section
+Future work
+\begin_inset LatexCommand \label{future work}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this section we outline possibilities for future work on our VM.
+ 
+\end_layout
+
+\begin_layout Subsection
+Optimizations
+\end_layout
+
+\begin_layout Subsubsection
+Switch-case as array
+\end_layout
+
+\begin_layout Standard
+One attempt to minimize the interpreter overhead could be to replace the
+ switch-case with an array containing JavaScript functions corresponding
+ to the code executed in each case.
+ The array indexes should match the case number, so a fetch-decode-execute
+ cycle would look like sketched in algorithm 
+\begin_inset LatexCommand \ref{alg:switch-case_as_array}
+
+\end_inset
+
+, where 
+\family typewriter
+functions
+\family default
+ is the array replacing the switch-case.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+while(true) {
+\end_layout
+
+\begin_layout LyX-Code
+  bytecode = prog[pc];
+\end_layout
+
+\begin_layout LyX-Code
+  if (bytecode >= 90) {
+\end_layout
+
+\begin_layout LyX-Code
+    argument = prog[pc+2];
+\end_layout
+
+\begin_layout LyX-Code
+    pc += 3;
+\end_layout
+
+\begin_layout LyX-Code
+  } else {
+\end_layout
+
+\begin_layout LyX-Code
+    pc++;
+\end_layout
+
+\begin_layout LyX-Code
+  }
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+  functions[bytecode](argument);
+\end_layout
+
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{alg:switch-case_as_array}
+
+\end_inset
+
+Outline of the switch-case as array approach
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This approach will introduce an extra function call per fetch-decode-execute
+ cycle, but assuming constant-time lookup in the array, it might be feasible.
+ The actual impact should be benchmarked.
+\end_layout
+
+\begin_layout Standard
+The approach has many resemblances to the threaded code approach, as described
+ by Bell
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+Threaded Code, James R.
+ Bell, Communications of the ACM, June 1973
+\end_layout
+
+\end_inset
+
+, but with larger overhead.
+\end_layout
+
+\begin_layout Subsubsection
+Optimizations on byte code order and format
+\end_layout
+
+\begin_layout Standard
+Throughout the project, we have relied on the order in which the Python
+ compiler outputs byte codes.
+ In some cases, the way we handle byte codes does not correspond to the
+ optimal order, in which elements could be placed on the stack.
+ In the example shown as algorithm 
+\begin_inset LatexCommand \ref{alg:bytecodeorder}
+
+\end_inset
+
+, three elements are placed on stack in the order shown in figure 
+\begin_inset LatexCommand \ref{fig:bytecodeorder}
+
+\end_inset
+
+.
+ The present stack order makes it necessary to use two named local variables,
+ instead of supplying the arguments unnamed to the JavaScript 
+\family typewriter
+slice
+\family default
+ method as shown.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+//Present byte code order:
+\end_layout
+
+\begin_layout LyX-Code
+case 33: //SLICE+3
+\end_layout
+
+\begin_layout LyX-Code
+  var end = stack.pop();
+\end_layout
+
+\begin_layout LyX-Code
+  var start = stack.pop();
+\end_layout
+
+\begin_layout LyX-Code
+  stack.push(new this.types.PyList(stack.pop().store.slice(start,end)));
+\end_layout
+
+\begin_layout LyX-Code
+  break;
+\newline
+
+\newline
+//Optimized byte code order:
+\end_layout
+
+\begin_layout LyX-Code
+case 33: //SLICE+3
+\end_layout
+
+\begin_layout LyX-Code
+  stack.push(new this.types.PyList(stack.pop().store.slice(stack.pop(),
+\end_layout
+
+\begin_layout LyX-Code
+                                                           stack.pop())));
+\end_layout
+
+\begin_layout LyX-Code
+  break;
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{alg:bytecodeorder}
+
+\end_inset
+
+Examples of present and optimized byte code order usage.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename bytecodeorder.eps
+	lyxscale 50
+	scale 35
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:bytecodeorder}
+
+\end_inset
+
+Stack in present an optimized state before a SLICE+3 byte code
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Becuase JavaScript is a high-level language, the impact of this suggested
+ optimization is hard to predict, as a JavaScript compiler could optimize
+ the present implementation to be as performant as the suggested, optimized
+ implementation.
+\end_layout
+
+\begin_layout Subsubsection
+Library snapshot
+\end_layout
+
+\begin_layout Standard
+Upon startup of an execution we interpret the standard library every time.
+ Since the library is pretty static it could be advantageous to create a
+ snapshot of the library that could just be loaded instead of interpreting
+ the library declarations every time.
+ This would decrease load time, especially as the library's size increases.
+ In the current state the library is fairly small so the penalty is not
+ that big.
+\end_layout
+
+\begin_layout Subsection
+Python compiler
+\end_layout
+
+\begin_layout Standard
+Implementing a Python compiler in JavaScript that outputs the code objects
+ we need would allow us to have Python embedded in a html document.
+ There is no technical obsacles in the way of doing this, and if PEJS is
+ to have much use in the real world this would definitely be needed.
+ We have focused on the VM since that is what this course is about, but
+ it could be a nice sparetime project.
+\end_layout
+
+\begin_layout Subsection
+Library extension
+\end_layout
+
+\begin_layout Standard
+The library could be extended to implement a larger part of the standard
+ Python library.
+ More interestingly, it would be relevant to implement a library for interacting
+ with the DOM in the browser.
+ This would make it very feasible to use Python for writing web pages.
+ It would have to be done mostly in JavaScript, in order to utilize JavaScript's
+ DOM functionality.
+\end_layout
+
+\begin_layout Section
+Conclusions
+\end_layout
+
+\begin_layout Standard
+We can see that the our goal of being able to embed Python directly in html
+ and use it for implementing web pages is actually realistic.
+ We only need a Python compiler written in JavaScript and a Python library
+ for interacting with the browser DOM.
+ It is definitely possible to build a Python compiler in JavaScript, and
+ implementing a DOM library is also feasible.
+ It can simply be written as wrapper code on the JavaScript functions.
+\end_layout
+
+\begin_layout Standard
+This project has shown that it actually is possible to make a simple VM
+ and it's not that difficult.
+ This was a bit surprising for us, as we didn't expect the development to
+ go so smoothly as it has.
+ Also, building a VM on top of JavaScript is beginning to be feasible as
+ Javascript VM's improve.
+ The current V8 actually runs the code in a relatively acceptable speed,
+ depending on demands.
+ The benchmarks showing differences between V8 and SpiderMonkey clearly
+ illustrates that the speed of the underlying VM has a big impact on PEJS
+ performance, so as JavaScript VM's improve so will PEJS.
+\end_layout
+
+\begin_layout Standard
+
+\newpage
+
+\end_layout
+
+\begin_layout Section
+\start_of_appendix
+Directory structure
+\begin_inset LatexCommand \label{sec:Directory-structure}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For convenience we provide an overview of the directory structure and content
+ and purpose of the various files in the project.
+ Note that unimportant folders and files have been omitted.
+ The project files are available at
+\family typewriter
+ http://code.google.com/p/pejs.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+
+\color red
+src/ 
+\end_layout
+
+\begin_layout LyX-Code
+
+\color red
+  lib/
+\color inherit
+                   
+\color black
+Library functions, implemented in Python.
+\end_layout
+
+\begin_layout LyX-Code
+    
+\color blue
+stdlib.py            
+\color black
+Python standard library, imported by default.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+    string.py            
+\color black
+Python string library.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+    time.py              
+\color black
+Python time library.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+  interpreter.js    
+\color inherit
+     All of the actual virtual machine.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color red
+test/ 
+\color inherit
+                   Tests and benchmarks.
+ Note that benchmarks look like
+\end_layout
+
+\begin_layout LyX-Code
+                         tests, but don't actually test anything.
+\end_layout
+
+\begin_layout LyX-Code
+ 
+\color red
+ unsupported/
+\color inherit
+           Tests and benchmarks not currently supported.
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+    
+\series default
+\color blue
+<test or benchmark>.py
+\end_layout
+
+\begin_layout LyX-Code
+  
+\color blue
+test.html  
+\color inherit
+            Open this to run tests and see results in a browser 
+\end_layout
+
+\begin_layout LyX-Code
+                         (requires tools/createTest.py to be run first).
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+  testBenchmark.html   
+\color inherit
+  Run benchmarks in browser, output formatted for
+\end_layout
+
+\begin_layout LyX-Code
+                         copying to spiderlog.txt (accessible from test.html).
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+  
+\series default
+\color blue
+testSingle.html   
+\color inherit
+     Run single test and show execution and stack trace 
+\end_layout
+
+\begin_layout LyX-Code
+                         (should be accessed from test.html).
+\end_layout
+
+\begin_layout LyX-Code
+  
+\color blue
+<test or benchmark>.py
+\color inherit
+ Actual tests and benchmarks.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color red
+tools/  
+\color inherit
+                 Utility scripts.
+ Should be invoked from root folder
+\end_layout
+
+\begin_layout LyX-Code
+                         (e.g.
+ ./tools/createTest.py).
+\end_layout
+
+\begin_layout LyX-Code
+  
+\color blue
+prepareStandalone.js
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+  prepareStandaloneBenchmark.js
+\end_layout
+
+\begin_layout LyX-Code
+  
+\color blue
+compiler.py 
+\color inherit
+           Uses the Python compiler to translate from Python
+\end_layout
+
+\begin_layout LyX-Code
+                         source code to JavaScript containing Python bytecodes.
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+  
+\series default
+\color blue
+createTest.py  
+\color inherit
+        Translates all tests and benchmarks.
+ 
+\end_layout
+
+\begin_layout LyX-Code
+                         Necessary for test.html to work.
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+ 
+\series default
+\color blue
+ benchmarkInV8.sh   
+\color inherit
+    Performs benchmark in V8 and appends the result 
+\end_layout
+
+\begin_layout LyX-Code
+                         to v8log.txt.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+  cleanup.sh   
+\color inherit
+          Removes all generated files.
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+ 
+\series default
+\color blue
+ prepareStandalone.sh
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+  prepareStandaloneBenchmark.sh
+\end_layout
+
+\begin_layout LyX-Code
+  
+\color blue
+testInPython.sh  
+\color inherit
+      Runs tests in Python, outputting results to console.
+\end_layout
+
+\begin_layout LyX-Code
+
+\series bold
+ 
+\series default
+\color blue
+ testInV8.sh   
+\color inherit
+         Runs tests in V8, outputting results to console.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+spiderlog.txt   
+\series bold
+\color inherit
+         
+\series default
+Benchmark results from Firefox.
+\end_layout
+
+\begin_layout LyX-Code
+
+\color blue
+v8log.txt  
+\series bold
+\color inherit
+              
+\series default
+Benchmark results from V8.
+\end_layout
+
+\begin_layout Caption
+Directory and file structure.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\newpage
+
+\end_layout
+
+\begin_layout Section
+How to run
+\begin_inset LatexCommand \label{sec:How-to-run}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note: Our VM has been tested on SpiderMonkey and V8 (both standalone and
+ in Firefox/Chrome).
+ It doesn't run in Internet Explorer.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+Prerequisites
+\end_layout
+
+\begin_layout Itemize
+The py-files should be run with Python 2.4.3 installed.
+ In the zip-file provided, it is not necessary to run the createTest-script,
+ we have already translated the tests.
+\end_layout
+
+\begin_layout Itemize
+The bash scripts should be run in a Linux console.
+\end_layout
+
+\begin_layout Subsubsection*
+Run tests
+\end_layout
+
+\begin_layout Standard
+In order to see the tests/benchmarks run:
+\end_layout
+
+\begin_layout Enumerate
+execute 
+\family typewriter
+tools/createTest.py
+\end_layout
+
+\begin_layout Enumerate
+view 
+\family typewriter
+test/test.html
+\family default
+ (click each test to see execution trace)
+\end_layout
+
+\begin_layout Subsubsection*
+Add a test
+\end_layout
+
+\begin_layout Enumerate
+Create .py file in test/ (make sure it prints 42 at the end)
+\end_layout
+
+\begin_layout Enumerate
+execute 
+\family typewriter
+tools/createTest.py
+\end_layout
+
+\begin_layout Enumerate
+view 
+\family typewriter
+test/test.html
+\end_layout
+
+\begin_layout Subsubsection*
+Embed in html
+\end_layout
+
+\begin_layout Enumerate
+Create and write "
+\family typewriter
+myProgram.py
+\family default
+" file
+\end_layout
+
+\begin_layout Enumerate
+Translate with 
+\family typewriter
+"tools/compiler.py myProgram.py".
+\end_layout
+
+\begin_layout Enumerate
+Put lines
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+
+\family typewriter
+<script type="text/javascript" src="pejs/src/interpreter.js"></script>
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+<script type="text/javascript" src="pejs/src/lib/stdlib.js"></script>
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+<script type="text/javascript" src="myProgram.js"></script>
+\end_layout
+
+\begin_layout Standard
+in the head of an html file.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Put
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+
+\family typewriter
+<script type="text/javascript">
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+(new PEJS()).interpret("myProgram");
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+</script>
+\end_layout
+
+\begin_layout Standard
+in body of html.
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Additional benchmark
+\begin_inset LatexCommand \label{sec:Additional-benchmark}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename BenchV8revisions.eps
+	scale 75
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

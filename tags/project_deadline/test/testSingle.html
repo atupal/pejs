@@ -1,0 +1,85 @@
+<html>
+ <head>
+  <script type="text/javascript" src="../src/interpreter.js"></script>
+  <script type="text/javascript" src="../src/lib/lib.js"></script>
+  <script type="text/javascript" src="test.js"></script>
+  <script type="text/javascript">
+    importJS("../src/lib/",libArray);
+    importJS("",testArray);
+    
+    var progName;
+    var strHref = window.location.href;
+    if (strHref.indexOf("?") > -1) {
+      progName = strHref.substr(strHref.indexOf("?")+1);
+    }
+
+    function importJS(prefix, nameArray) {
+      for (var i=0; i<nameArray.length; i++) {
+        document.write("<script type=\"text/javascript\" src=\""+prefix+nameArray[i]+".js\"></scr"+"ipt>");
+      }
+    }
+    document.write("<title>Test Page for PEJS: Single test of "+ progName +"</title>");
+  </script>
+  <style type="text/css">
+    body {
+      font-family: Verdana, Tahoma, Sans;
+      font-size: 12pt;
+    }
+    td {
+      font-size: 10pt;
+      padding: 2pt;
+      border: 1pt silver solid
+    }
+    td.inst {
+      color: red;
+    }
+    td.stack {
+      color: green;
+    }
+    td.stackHeader {
+      color: green;
+      text-align: center;
+      font-weight: bold;
+    }
+    td.stackContent {
+      text-align: right;
+    }
+    td.stackPointer {
+      text-align: left;
+    }
+    td.red {
+      text-align: left;
+      font-weight: bold;
+      color: red;
+    }
+    td.green {
+      text-align: left;
+      font-weight: bold;
+      color: green;
+    }
+    td.blue {
+      text-align: left;
+      font-weight: bold;
+      color: blue;
+    }
+  </style>
+ </head>
+ <body>
+  <h1>PEJS Single Test</h1>
+  <a href="test.html">Back to Full Test</a><br/>
+  <table>
+    <tr>
+      <th>Offset</th>
+      <th>Instruction</th>
+      <th>Value</th>
+      <th>Type</th>
+      <th>Code</th>
+      <th>Arg#</th>
+      <th>Stack</th>
+    </tr>
+    <script type="text/javascript">
+      (new PEJS()).interpret(progName, true);
+    </script>
+  </table>
+</body>
+</html>
